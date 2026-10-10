@@ -1,0 +1,134 @@
+# Diseño
+
+El sistema visual sale de los mockups. El marcado de cada pantalla está en `docs/mockups/`: úsalo como referencia de estructura, medidas y textos. Esos archivos son del editor de diseño y no se abren solos en un navegador; lo útil es el HTML con estilos en línea que contienen.
+
+Lienzo original: <https://claude.ai/artifact/UzWBdHg2VRw3iBEHvmh9nM> (privado del fundador).
+
+## Principios
+
+- Pensado primero para celular (390 px de ancho) y para usar con una mano.
+- La acción principal de cada pantalla va abajo, en un pie fijo.
+- El estado de una cuenta siempre se dice con texto, nunca solo con color.
+- Los números usan cifras tabulares para que las columnas de dinero alineen.
+
+## Colores
+
+Defínelos como variables de tema en Tailwind; no escribas los valores sueltos en los componentes.
+
+shadcn/ui trae sus propias variables de tema (`background`, `foreground`, `primary`, `border`, `destructive` y otras). Asígnales estos valores para que sus componentes salgan ya con el aspecto de Arrendi: `fondo` a `background`, `texto` a `foreground`, `primario` a `primary`, `borde` a `border`, `borde-control` a `input`, `texto-secundario` a `muted-foreground`, `alerta` a `destructive`, y `primario` a `ring`. Los colores que no tienen equivalente (tintes y estados) se agregan como variables propias. Cada variable tiene un valor para el tema claro y otro para el oscuro.
+
+| Nombre | Claro | Oscuro | Uso |
+| --- | --- | --- | --- |
+| `fondo` | `#F3F5F4` | `#0F1513` | Fondo de la aplicación |
+| `superficie` | `#FFFFFF` | `#18201D` | Tarjetas, pie, barra de navegación |
+| `texto` | `#14201C` | `#E8EEEB` | Texto principal |
+| `texto-secundario` | `#55635E` | `#A3B0AB` | Etiquetas y texto de apoyo |
+| `texto-suave` | `#3A4743` | `#C5CFCB` | Texto sobre el fondo interno de una tarjeta |
+| `borde` | `#E1E6E3` | `#26302C` | Borde de tarjetas y divisores |
+| `borde-control` | `#C9D1CD` | `#6B7A73` | Borde de campos y botones secundarios |
+| `borde-punteado` | `#8E9A95` | `#8E9A95` | Botones de agregar y subir |
+| `primario` | `#0F6B4F` | `#3FB58E` | Botón principal, enlaces, selección |
+| `sobre-primario` | `#FFFFFF` | `#06231A` | Texto sobre un botón primario |
+| `primario-oscuro` | `#0A4E3A` | `#9FE0C8` | Texto sobre el tinte primario |
+| `primario-tinte` | `#D9EFE6` | `#143B2E` | Fondo de selección y de la etiqueta "pagada" |
+| `alerta` | `#8A3D06` | `#F2A66B` | Texto de "vencida" y acciones destructivas |
+| `alerta-tinte` | `#FBE6D4` | `#40240F` | Fondo de la etiqueta "vencida" |
+| `info` | `#1D4E89` | `#8DB8EC` | Texto de "parcial" |
+| `info-tinte` | `#DCE9F8` | `#15294A` | Fondo de la etiqueta "parcial" |
+| `resumen` | `#0F6B4F` | `#0F6B4F` | Fondo de la tarjeta resumen del inicio |
+| `resumen-interno` | `#0A4E3A` | `#0A4E3A` | Recuadros dentro de la tarjeta resumen |
+| `sobre-resumen` | `#FFFFFF` | `#FFFFFF` | Cifras sobre la tarjeta resumen |
+| `sobre-resumen-suave` | `#D6EDE4` | `#D6EDE4` | Texto de apoyo sobre la tarjeta resumen |
+
+### Tema claro y oscuro
+
+- **Tres opciones:** claro, oscuro y "igual que el sistema", que es la opción por defecto. El selector está en configuración.
+- **Implementación:** `next-themes` con la clase `dark` en el elemento raíz, que es como lo espera shadcn/ui. La elección se guarda en el dispositivo.
+- **Sin parpadeo:** el tema se aplica antes de pintar la página, para que no se vea un destello claro al abrir en oscuro.
+- **La tarjeta resumen es igual en ambos temas:** verde con texto blanco. Es el único bloque que no se invierte.
+- **En oscuro, el botón primario es verde claro con texto oscuro,** al revés que en claro. Por eso existe la variable `sobre-primario`: no escribas texto blanco fijo sobre el primario.
+- **El tema oscuro no tiene mockups.** La paleta oscura se derivó de la clara; el contraste de texto se calculó y cumple AA (4,5:1 o más) en todas las combinaciones de la tabla, pero nadie la ha visto aplicada. Revísala en pantalla durante la etapa 1 y ajusta los valores aquí si algo no se ve bien.
+- **PDF y correos:** siempre en claro.
+
+## Tipografía
+
+- **Familia:** Figtree (Google Fonts), pesos 400, 500, 600 y 700.
+- **Cifras:** `font-variant-numeric: tabular-nums` en toda la aplicación.
+
+| Uso | Tamaño | Peso |
+| --- | --- | --- |
+| Cifra principal del inicio | 34 px | 700 |
+| Título del alta guiada | 26 px | 700 |
+| Título de pantalla | 22 px | 700 |
+| Título con botón de volver | 18 px | 700 |
+| Texto de fila y de botón | 15 a 16 px | 600 |
+| Encabezado de sección | 15 px | 600 |
+| Texto de apoyo | 13 px | 400 |
+| Etiqueta de estado | 12 px | 600 |
+
+## Medidas
+
+- Margen lateral de pantalla: 20 px.
+- Radio: 16 px en tarjetas, 12 a 14 px en botones y campos, 8 px en etiquetas, 22 px en botones redondos y filtros.
+- Altura de campos: 48 px. Botón principal: 52 px. Botón secundario: 44 a 48 px.
+- Objetivo táctil mínimo: 44 px.
+
+## Componentes
+
+Los componentes se construyen sobre shadcn/ui, ajustando sus variantes y medidas a este diseño. La columna "Base" indica de qué componente de shadcn/ui parte cada uno; "propio" significa que se arma con Tailwind.
+
+| Componente | Base en shadcn/ui | Descripción |
+| --- | --- | --- |
+| `EtiquetaEstado` | `Badge` | Pastilla con texto: Pagada, Parcial, Vencida, Al día, En mora, Activo, Anulada. Una variante por estado |
+| `Tarjeta` | `Card` | Superficie blanca con borde y radio de 16 px |
+| `FilaCuenta` | propio | Unidad y arrendatario a la izquierda; valor y estado a la derecha; toda la fila es un enlace |
+| `TarjetaResumen` | `Card` y `Progress` | Bloque primario con recaudado, esperado, barra de avance y dos cifras |
+| `BotonPrincipal` | `Button` | Fondo primario, 52 px de alto, ancho completo |
+| `BotonSecundario` | `Button`, variante `outline` | Borde, fondo blanco |
+| `BotonPunteado` | `Button`, variante propia | Borde punteado; para agregar o subir |
+| `Campo` | `Field`, `Label` e `Input` | Etiqueta arriba, campo de 48 px, ayuda opcional debajo |
+| Desplegables | `Select` | Unidad, uso, día de pago, día de envío |
+| Casillas e interruptores | `Checkbox` y `Switch` | Recordatorios, enviar recibo, envío automático |
+| `SelectorOpciones` | `ToggleGroup` | Cuadrícula de botones con uno seleccionado (tipo de inmueble, medio de pago) |
+| `Filtros` | `ToggleGroup` | Pastillas de 44 px con una activa |
+| Confirmaciones | `AlertDialog` | Anular cuenta, terminar contrato, eliminar pago |
+| Avisos | `Sonner` | "Pago guardado", "Cuenta enviada", errores |
+| Carga | `Skeleton` | Mientras llegan los datos |
+| `BarraNavegacion` | propio | Cuatro pestañas: Inicio, Cuentas, Inmuebles, Ajustes |
+| `Encabezado` | propio | Título, con botón de volver o acción a la derecha |
+| `PieAccion` | propio | Franja blanca inferior con la acción principal |
+| `PasosAlta` | propio | "Paso N de 3" y barra de tres segmentos |
+
+- Los nombres de los componentes de shadcn/ui cambian entre versiones. Antes de agregar uno, confirma en su documentación vigente que existe con ese nombre y cómo se instala.
+- Los tamaños por defecto de shadcn/ui son más pequeños que los de este diseño. Ajusta las variantes de `Button`, `Input` y `Select` a las alturas de la sección "Medidas", en lugar de sobrescribirlas en cada uso.
+- Los formularios usan React Hook Form con Zod solo para la validación de forma en el navegador (campo vacío, correo mal escrito). Las reglas de negocio se validan en la API.
+
+Los íconos son de Lucide, que es la librería que usa shadcn/ui: de trazo, de 2 px, sin relleno.
+
+## Mapa de pantallas
+
+| Ruta | Pantalla | Mockup |
+| --- | --- | --- |
+| `/ingresar`, `/registro`, `/recuperar` | Acceso | Sin diseñar |
+| `/alta/inmueble` | Alta 1 | `Alta1.dc.html` |
+| `/alta/unidades` | Alta 2 | `Alta2.dc.html` |
+| `/alta/contrato` | Alta 3 | `Alta3.dc.html` |
+| `/` | Inicio | `Main.dc.html` |
+| `/cuentas` | Listado de cuentas | `Cuentas.dc.html` |
+| `/cuentas/nueva` | Cuenta manual | Sin diseñar |
+| `/cuentas/[id]` | Detalle de cuenta | `Cuenta.dc.html` |
+| `/cuentas/[id]/pago` | Registrar pago | `Pago.dc.html` |
+| `/inmuebles` | Inmuebles y unidades | `Inmuebles.dc.html` |
+| `/contratos/nuevo` | Crear contrato | Sin diseñar; sigue a Alta 3 |
+| `/contratos/[id]` | Contrato | `Contrato.dc.html` |
+| `/ajustes` | Configuración | `Ajustes.dc.html` |
+| `/ajustes/correo` | Texto del correo | Sin diseñar |
+
+## Diferencias entre los mockups y lo que se construye
+
+- Los nombres, valores y fechas de los mockups son datos de ejemplo.
+- En configuración, el desplegable "Enviar las cuentas" del mockup ofrece tres opciones. En el MVP es un selector del día del mes (1 a 28); la aprobación previa se controla por contrato con "Enviar cuentas automáticamente".
+- En el escritorio, el contenido se centra en una columna de 480 px como máximo. No hay diseño de escritorio propio en el MVP.
+- Los mockups solo muestran el tema claro.
+- El selector de tema en configuración no aparece en el mockup; va como una sección más, "Apariencia".
+- La marca visible es el nombre "Arrendi" en texto, en el acceso y en el pie del PDF. No hay logo todavía.

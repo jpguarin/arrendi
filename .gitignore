@@ -1,0 +1,85 @@
+# ============================
+# Node / pnpm
+# ============================
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ============================
+# Turborepo
+# ============================
+.turbo/
+
+# ============================
+# Next.js
+# ============================
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# ============================
+# Vercel
+# ============================
+.vercel/
+
+# ============================
+# Python
+# ============================
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ============================
+# Supabase CLI (local)
+# ============================
+supabase/.branches/
+supabase/.temp/
+
+# ============================
+# Variables de entorno
+# ============================
+.env
+.env.*
+!.env.example
+
+# ============================
+# Build / coverage
+# ============================
+dist/
+build/
+coverage/
+
+# ============================
+# PWA generado
+# ============================
+apps/web/public/sw.js
+apps/web/public/swe-worker-*.js
+
+# ============================
+# Playwright
+# ============================
+apps/e2e/test-results/
+apps/e2e/playwright-report/
+
+# ============================
+# IDE / SO
+# ============================
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.DS_Store
+Thumbs.db
+*.swp
+

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Alta guiada: primer contrato</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+a{color:#0F6B4F}a:hover{color:#0A4E3A}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F3F5F4; color: #14201C; font-family: 'Figtree', system-ui, sans-serif; display: flex; flex-direction: column; font-variant-numeric: tabular-nums">
+<header style="padding: 28px 20px 0; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 13px; font-weight: 600; color: #0F6B4F">Paso 3 de 3</div>
+<div role="img" aria-label="Paso 3 de 3" style="display: flex; gap: 6px">
+<div style="flex: 1; height: 6px; border-radius: 3px; background: #0F6B4F"></div>
+<div style="flex: 1; height: 6px; border-radius: 3px; background: #0F6B4F"></div>
+<div style="flex: 1; height: 6px; border-radius: 3px; background: #0F6B4F"></div>
+</div>
+</header>
+<main style="flex: 1; padding: 20px 20px 0; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.2">Tu primer contrato</h1>
+<p style="margin: 0; font-size: 15px; color: #55635E; line-height: 1.5">Con estos datos generamos la cuenta de cobro cada mes.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="unidad" style="font-size: 14px; font-weight: 600">Unidad</label>
+<select id="unidad" style="height: 48px; border: 1px solid #C9D1CD; border-radius: 12px; background: #FFFFFF; padding: 0 12px; font: 500 16px 'Figtree', sans-serif; color: #14201C"><option>Apto 1</option><option>Apto 2</option><option>Local</option></select>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="arr" style="font-size: 14px; font-weight: 600">Nombre del arrendatario</label>
+<input id="arr" type="text" value="Luisa Gómez" style="height: 48px; box-sizing: border-box; border: 1px solid #C9D1CD; border-radius: 12px; background: #FFFFFF; padding: 0 14px; font: 500 16px 'Figtree', sans-serif; color: #14201C">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="correo" style="font-size: 14px; font-weight: 600">Correo del arrendatario</label>
+<input id="correo" type="email" value="luisa.gomez@ejemplo.com" style="height: 48px; box-sizing: border-box; border: 1px solid #C9D1CD; border-radius: 12px; background: #FFFFFF; padding: 0 14px; font: 500 16px 'Figtree', sans-serif; color: #14201C">
+<div style="font-size: 13px; color: #55635E">Aquí le llegarán las cuentas, recordatorios y recibos.</div>
+</div>
+<div style="display: flex; gap: 12px">
+<div style="flex: 3; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<label for="canon" style="font-size: 14px; font-weight: 600">Canon mensual</label>
+<input id="canon" type="text" inputmode="numeric" value="$950.000" style="height: 48px; box-sizing: border-box; width: 100%; border: 1px solid #C9D1CD; border-radius: 12px; background: #FFFFFF; padding: 0 14px; font: 600 16px 'Figtree', sans-serif; color: #14201C">
+</div>
+<div style="flex: 2; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<label for="dia" style="font-size: 14px; font-weight: 600">Día de pago</label>
+<select id="dia" style="height: 48px; width: 100%; border: 1px solid #C9D1CD; border-radius: 12px; background: #FFFFFF; padding: 0 12px; font: 500 16px 'Figtree', sans-serif; color: #14201C"><option>5 del mes</option><option>1 del mes</option><option>10 del mes</option><option>15 del mes</option></select>
+</div>
+</div>
+<div style="display: flex; gap: 12px">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<label for="inicio" style="font-size: 14px; font-weight: 600">Inicio</label>
+<input id="inicio" type="date" value="2026-01-01" style="height: 48px; box-sizing: border-box; width: 100%; border: 1px solid #C9D1CD; border-radius: 12px; background: #FFFFFF; padding: 0 10px; font: 500 15px 'Figtree', sans-serif; color: #14201C">
+</div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<label for="fin" style="font-size: 14px; font-weight: 600">Fin</label>
+<input id="fin" type="date" value="2026-12-31" style="height: 48px; box-sizing: border-box; width: 100%; border: 1px solid #C9D1CD; border-radius: 12px; background: #FFFFFF; padding: 0 10px; font: 500 15px 'Figtree', sans-serif; color: #14201C">
+</div>
+</div>
+<button style="height: 48px; border-radius: 12px; border: 1.5px dashed #8E9A95; background: #FFFFFF; color: #14201C; font: 600 15px 'Figtree', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>
+Subir contrato firmado (opcional)
+</button>
+</main>
+<footer style="background: #FFFFFF; border-top: 1px solid #E1E6E3; padding: 14px 20px 12px; display: flex; flex-direction: column; gap: 4px">
+<a href="Main.dc.html" style="height: 52px; border-radius: 14px; background: #0F6B4F; color: #FFFFFF; font-weight: 600; font-size: 16px; text-decoration: none; display: flex; align-items: center; justify-content: center">Crear contrato y terminar</a>
+<a href="Main.dc.html" style="height: 44px; font-weight: 600; font-size: 15px; text-decoration: none; display: flex; align-items: center; justify-content: center">Agregar los contratos después</a>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
