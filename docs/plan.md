@@ -15,7 +15,7 @@ Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando,
 - [x] `apps/api/package.json` con scripts que ejecutan la API, las pruebas y el lint desde su entorno de Python.
 - [x] API: FastAPI con `GET /api/health`, configuración por variables de entorno, `ruff` y `pytest`.
 - [x] API: conexión a PostgreSQL con SQLAlchemy, sin reserva de conexiones.
-- [ ] API: Alembic configurado y primera migración con la tabla `owners`, su política de seguridad por fila y los roles de base de datos.
+- [x] API: Alembic configurado y primera migración con la tabla `owners`, su política de seguridad por fila y los roles de base de datos.
 - [ ] API: dependencia que valida el token de Supabase, abre la transacción y fija `app.owner_id`.
 - [ ] API: `GET /api/me`, que crea la fila del propietario en la primera llamada.
 - [ ] Web: Next.js con TypeScript y Tailwind, tema de colores y tipografía de `docs/diseno.md`.
@@ -25,7 +25,7 @@ Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando,
 - [ ] Web: registro, inicio de sesión, recuperación de contraseña y cierre de sesión con correo y contraseña.
 - [ ] Web: redirección de `/api` hacia la API y cliente con tipos generados (`pnpm gen:api`).
 - [ ] Web: PWA instalable, con manifiesto, service worker y pantalla sin conexión.
-- [ ] Prueba de aislamiento, contra un PostgreSQL local: con dos propietarios, ninguno ve la fila del otro.
+- [x] Prueba de aislamiento, contra un PostgreSQL local: con dos propietarios, ninguno ve la fila del otro.
 - [ ] Despliegue de los dos proyectos en Vercel.
 
 **Criterios de aceptación**

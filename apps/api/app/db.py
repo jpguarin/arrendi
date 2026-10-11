@@ -1,7 +1,9 @@
 from functools import lru_cache
+from uuid import UUID
 
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Connection, Engine, create_engine, text
 from sqlalchemy.engine import make_url
+from sqlalchemy.orm import Session
 from sqlalchemy.pool import NullPool
 
 from app.config import get_settings
@@ -28,3 +30,15 @@ def get_engine() -> Engine:
     if not url:
         raise RuntimeError("DATABASE_URL is not set")
     return create_db_engine(url)
+
+
+def set_owner_id(connection: Connection | Session, owner_id: UUID) -> None:
+    """Scopes the current transaction to one owner; the row security policies read it.
+
+    The third argument makes the value last only for this transaction. It must:
+    the pooler reuses the connection for other owners' requests.
+    """
+    connection.execute(
+        text("select set_config('app.owner_id', :owner_id, true)"),
+        {"owner_id": str(owner_id)},
+    )

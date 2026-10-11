@@ -41,7 +41,7 @@ El contrato es el centro: une una unidad con un arrendatario, y de él nacen las
 ## Convenciones
 
 - Claves primarias `uuid`, generadas en la base.
-- Todas las tablas llevan `owner_id`, `created_at` y `updated_at` (`timestamptz`).
+- Todas las tablas llevan `owner_id`, `created_at` y `updated_at` (`timestamptz`). Un disparador (`set_updated_at`) mantiene `updated_at` al día en cada modificación.
 - El dinero se guarda en pesos enteros (`bigint`).
 - Las fechas de negocio son `date`.
 - Los valores cerrados (estados, usos, medios) son `text` con una restricción `check`.
@@ -190,8 +190,8 @@ alter table properties enable row level security;
 alter table properties force row level security;
 
 create policy owner_isolation on properties
-  using (owner_id = current_setting('app.owner_id', true)::uuid)
-  with check (owner_id = current_setting('app.owner_id', true)::uuid);
+  using (owner_id = nullif(current_setting('app.owner_id', true), '')::uuid)
+  with check (owner_id = nullif(current_setting('app.owner_id', true), '')::uuid);
 ```
 
 En `owners` la política compara la columna `id`.
@@ -204,7 +204,7 @@ select set_config('app.owner_id', :owner_id, true);
 
 El tercer argumento `true` hace que el valor dure solo esa transacción. Esto es obligatorio: la API se conecta a través de un agrupador de conexiones, y un valor que durara más se filtraría a otra petición.
 
-Si la variable no está fijada, `current_setting(..., true)` devuelve nulo y la política no deja pasar ninguna fila. Ese es el comportamiento deseado.
+Si la variable no está fijada, `current_setting(..., true)` devuelve nulo y la política no deja pasar ninguna fila. Ese es el comportamiento deseado. En una conexión que ya la fijó en una transacción anterior, devuelve una cadena vacía en lugar de nulo; por eso la política usa `nullif`, para que ese caso tampoco deje pasar filas en vez de fallar.
 
 ## Roles de base de datos
 
@@ -221,15 +221,15 @@ Si la variable no está fijada, `current_setting(..., true)` devuelve nulo y la 
   alter role arrendi_tasks with login password '...';
   ```
 
-- La migración da a cada rol los permisos mínimos sobre las tablas (`select`, `insert`, `update`, `delete`) y fija permisos por defecto para las tablas futuras.
-- **La API de datos de Supabase no llega a estas tablas.** La migración revoca todos los permisos de los roles `anon` y `authenticated` sobre las tablas de Arrendi, de modo que la clave publicable no sirve para leerlas. Solo FastAPI accede a los datos.
+- Cada migración da a cada rol, de forma explícita, los permisos mínimos sobre las tablas que crea. No hay permisos por defecto para tablas futuras. En `owners`, `arrendi_api` puede leer, crear y modificar, y `arrendi_tasks` leer y modificar; ningún rol borra propietarios.
+- **La API de datos de Supabase no llega a estas tablas.** Cada migración revoca todos los permisos de los roles `anon`, `authenticated` y `service_role` sobre las tablas que crea, de modo que ni la clave publicable ni la secreta sirven para leerlas por esa vía. Solo FastAPI accede a los datos.
 - Por el agrupador de Supabase, un rol propio se conecta con el usuario `arrendi_api.<ref-del-proyecto>`.
 
 Por comprobar al crear los roles en `arrendi-dev`: que el usuario administrador de Supabase puede crear un rol con `bypassrls`. La página de roles de Supabase no lo documenta para roles propios.
 
 ## Base de datos de las pruebas
 
-Las pruebas de la API corren contra un PostgreSQL local, instalado con Homebrew, y nunca contra un proyecto de Supabase. Al empezar, las pruebas aplican las migraciones sobre una base vacía (lo que crea los roles) y se conectan como `arrendi_api` para comprobar el aislamiento con las mismas políticas que producción.
+Las pruebas de la API corren contra un PostgreSQL local, instalado con Homebrew, y nunca contra un proyecto de Supabase. Al empezar, las pruebas vacían la base, aplican las migraciones (lo que crea los roles) y se conectan como `arrendi_api` para comprobar el aislamiento con las mismas políticas que producción. La base de pruebas imita a Supabase creando los roles `anon`, `authenticated` y `service_role` con acceso a toda tabla nueva, para comprobar que las migraciones se lo quitan.
 
 ## Almacenamiento de archivos
 
