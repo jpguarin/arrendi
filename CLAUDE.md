@@ -28,7 +28,7 @@ Lee el documento que corresponda antes de tocar esa parte del sistema. Si el có
 - **Datos:** PostgreSQL en Supabase, con seguridad por fila. Supabase Storage para archivos.
 - **Acceso:** Supabase Auth, con Google y con correo y contraseña.
 - **PDF:** ReportLab. **Correo:** proveedor transaccional (por elegir).
-- **Pruebas:** pytest en la API, contra un PostgreSQL local instalado con Homebrew. Playwright de extremo a extremo, desde la etapa 5.
+- **Pruebas:** pytest en la API, contra un PostgreSQL local instalado con Homebrew. En la web, las funciones puras de `lib/` se prueban con el ejecutor de pruebas de Node (`node --test`), sin dependencias. Playwright de extremo a extremo, desde la etapa 5.
 - **Monorepo:** Turborepo con pnpm.
 - **Despliegue:** Vercel, dos proyectos (`arrendi-web` y `arrendi-api`) desde este repositorio. Sin Docker. La guía está en `docs/arquitectura.md`.
 
@@ -82,7 +82,7 @@ pip install -r requirements.txt -r requirements-dev.txt
 # Todo el proyecto, con Turborepo (desde la raíz)
 pnpm dev             # web en :3000 y API en :8000; la web redirige /api a la API (sin service worker)
 pnpm lint            # ruff en la API, eslint en la web
-pnpm test            # pytest en la API; necesita el PostgreSQL local encendido
+pnpm test            # pytest en la API (necesita el PostgreSQL local encendido) y las pruebas de la web
 pnpm build           # compila la web
 pnpm gen:api         # regenera apps/web/lib/api desde el OpenAPI de la API
 

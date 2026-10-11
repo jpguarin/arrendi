@@ -6,6 +6,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --test \"lib/**/*.test.ts\"",
     "gen:api": "openapi-typescript ../api/openapi.json -o lib/api/schema.d.ts"
   },
   "dependencies": {

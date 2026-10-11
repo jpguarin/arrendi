@@ -84,7 +84,7 @@ Antes de empezar: bucket creado y `SUPABASE_SECRET_KEY` puesta (ver "Lo que hace
 - `GET document`: comprueba el propietario y devuelve un enlace temporal de pocos minutos.
 - **Se comprueba:** un archivo `.pdf` falso, un archivo demasiado grande, el reemplazo, y que otro propietario recibe 404 en las tres rutas.
 
-### [ ] Paso 7. Tipos y base de la web
+### [x] Paso 7. Tipos y base de la web
 
 - `pnpm gen:api`, con los tipos nuevos en `apps/web/lib/api/schema.d.ts`.
 - Componentes de shadcn/ui por la CLI y adaptados al tema, con `cn` desde `@/lib/utils`: `select`, `toggle-group`, `alert-dialog`, `badge` (variantes de `StatusBadge`) y `switch`.

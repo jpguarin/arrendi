@@ -39,6 +39,8 @@
   --alert-tint: #fbe6d4;
   --info: #1d4e89;
   --info-tint: #dce9f8;
+  /* Behind a dialog. */
+  --overlay: rgb(20 32 28 / 0.5);
   /* The summary card looks the same in both themes. */
   --summary: #0f6b4f;
   --summary-inner: #0a4e3a;
@@ -75,6 +77,7 @@
   --alert-tint: #40240f;
   --info: #8db8ec;
   --info-tint: #15294a;
+  --overlay: rgb(0 0 0 / 0.65);
 }
 
 @theme inline {
@@ -109,6 +112,7 @@
   --color-alert-tint: var(--alert-tint);
   --color-info: var(--info);
   --color-info-tint: var(--info-tint);
+  --color-overlay: var(--overlay);
   --color-summary: var(--summary);
   --color-summary-inner: var(--summary-inner);
   --color-summary-foreground: var(--summary-foreground);

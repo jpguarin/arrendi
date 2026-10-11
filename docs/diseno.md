@@ -37,6 +37,7 @@ shadcn/ui usa además tres parejas que el diseño no nombra. Se asignan así: `s
 | `alert-tint` | `#FBE6D4` | `#40240F` | Fondo de la etiqueta "vencida" |
 | `info` | `#1D4E89` | `#8DB8EC` | Texto de "parcial" |
 | `info-tint` | `#DCE9F8` | `#15294A` | Fondo de la etiqueta "parcial" |
+| `overlay` | `#14201C` al 50 % | negro al 65 % | Velo detrás de un diálogo de confirmación |
 | `summary` | `#0F6B4F` | `#0F6B4F` | Fondo de la tarjeta resumen del inicio |
 | `summary-inner` | `#0A4E3A` | `#0A4E3A` | Recuadros dentro de la tarjeta resumen |
 | `summary-foreground` | `#FFFFFF` | `#FFFFFF` | Cifras sobre la tarjeta resumen |
@@ -81,7 +82,7 @@ Los componentes se construyen sobre shadcn/ui (con Radix como librería base), a
 
 | Componente | Base en shadcn/ui | Descripción |
 | --- | --- | --- |
-| `StatusBadge` | `Badge` | Pastilla con texto: Pagada, Parcial, Vencida, Al día, En mora, Activo, Anulada. Una variante por estado |
+| `StatusBadge` | `Badge` | Pastilla con texto: Pagada, Parcial, Vencida, Al día, En mora, Activo, Anulada. `Badge` tiene cuatro tonos: `positive` (Pagada, Al día, Activo), `alert` (Vencida, En mora), `info` (Parcial) y `neutral` (Vacía, Terminado, Anulada) |
 | `Card` | `Card` | Superficie blanca con borde y radio de 16 px |
 | `BillRow` | propio | Unidad y arrendatario a la izquierda; valor y estado a la derecha; toda la fila es un enlace |
 | `SummaryCard` | `Card` y `Progress` | Bloque primario con recaudado, esperado, barra de avance y dos cifras |
@@ -89,6 +90,8 @@ Los componentes se construyen sobre shadcn/ui (con Radix como librería base), a
 | `SecondaryButton` | `Button`, variante `outline` | Borde, fondo blanco |
 | `DashedButton` | `Button`, variante propia | Borde punteado; para agregar o subir |
 | `FormField` | `Field`, `Label` e `Input` | Etiqueta arriba, campo de 48 px, ayuda opcional debajo |
+| `MoneyField` | `FormField` | Campo de pesos: muestra `$950.000` y solo acepta dígitos |
+| `SelectField` | `Field`, `Label` y `Select` | Etiqueta arriba y desplegable de 48 px |
 | Desplegables | `Select` | Unidad, uso, día de pago, día de envío |
 | Casillas e interruptores | `Checkbox` y `Switch` | Recordatorios, enviar recibo, envío automático |
 | `OptionPicker` | `ToggleGroup` | Cuadrícula de botones con uno seleccionado (tipo de inmueble, medio de pago) |
@@ -96,7 +99,7 @@ Los componentes se construyen sobre shadcn/ui (con Radix como librería base), a
 | Confirmaciones | `AlertDialog` | Anular cuenta, terminar contrato, eliminar pago |
 | Avisos | `Sonner` | "Pago guardado", "Cuenta enviada", errores |
 | Carga | `Skeleton` | Mientras llegan los datos |
-| `BottomNav` | propio | Cuatro pestañas: Inicio, Cuentas, Inmuebles, Ajustes |
+| `BottomNav` | propio | Cuatro pestañas: Inicio, Cuentas, Inmuebles, Ajustes. Solo muestra las pantallas que ya existen: Inicio e Inmuebles en la etapa 2 |
 | `Header` | propio | Título, con botón de volver o acción a la derecha |
 | `ActionFooter` | propio | Franja blanca inferior con la acción principal |
 | `OnboardingSteps` | propio | "Paso N de 3" y barra de tres segmentos |
@@ -106,6 +109,8 @@ Los componentes se construyen sobre shadcn/ui (con Radix como librería base), a
 - `Button` tiene los tamaños `default` (52 px, acción principal), `md` (48 px), `sm` (44 px) e `icon` (44 px, redondo), y las variantes `default`, `outline` (secundario), `dashed` (agregar o subir), `ghost`, `destructive` y `link`. No hay tamaños menores a 44 px.
 - Los tamaños de letra de la tabla de tipografía son clases de Tailwind: `text-figure`, `text-title-onboarding`, `text-title`, `text-title-back`, `text-body`, `text-section`, `text-support` y `text-badge`.
 - `cn` se importa siempre de `@/lib/utils`, que conoce esos tamaños de letra. Los componentes de shadcn/ui llegan importándolo del paquete `cn`: cámbialo al agregarlos (el lint lo exige).
+- `Select`, `ToggleGroup`, `AlertDialog`, `Badge` y `Switch` ya están adaptados: el desplegable mide 48 px como un campo, las opciones de `ToggleGroup` 48 px, el interruptor 48 por 28 px con área táctil de 44 px, y el diálogo pone la acción arriba y "Cancelar" debajo, a todo el ancho.
+- El dinero y las fechas se muestran con `formatPesos` y `formatDate` de `lib/format.ts`, nunca con `Intl` ni `toLocaleString` directo: su resultado para Colombia cambia entre navegadores.
 - Los formularios usan React Hook Form con Zod solo para la validación de forma en el navegador (campo vacío, correo mal escrito). Las reglas de negocio se validan en la API.
 
 Los íconos son de Lucide, que es la librería que usa shadcn/ui: de trazo, de 2 px, sin relleno.
