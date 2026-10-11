@@ -50,6 +50,14 @@ def auth_unavailable() -> AppError:
     )
 
 
+def storage_unavailable() -> AppError:
+    return AppError(
+        503,
+        "No pudimos acceder a tus archivos. Inténtalo de nuevo en un momento.",
+        "storage_unavailable",
+    )
+
+
 def _response(status_code: int, detail: str, code: str) -> JSONResponse:
     body = ErrorResponse(detail=detail, code=code)
     return JSONResponse(status_code=status_code, content=body.model_dump())

@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.schemas.bill import BillSummary
 from app.schemas.common import Email, Name, OptionalText, PatchModel, Pesos, PositivePesos
 from app.schemas.property import UnitUse
 
@@ -92,3 +93,5 @@ class LeaseResponse(BaseModel):
     document_uploaded_at: datetime | None
     unit: LeaseUnit
     tenant: TenantResponse
+    # The latest ones, newest first, voided ones too.
+    recent_bills: list[BillSummary]

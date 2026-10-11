@@ -229,6 +229,78 @@ export interface paths {
         patch: operations["update_settings_api_settings_patch"];
         trace?: never;
     };
+    "/api/leases/{lease_id}/bills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Issue Monthly Bill
+         * @description The bill of the current month, by hand. The daily task issues the same one.
+         */
+        post: operations["issue_monthly_bill_api_leases__lease_id__bills_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Bills */
+        get: operations["list_bills_api_bills_get"];
+        put?: never;
+        /** Create Bill */
+        post: operations["create_bill_api_bills_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bills/{bill_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Bill */
+        get: operations["get_bill_api_bills__bill_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bills/{bill_id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Pdf Url */
+        get: operations["get_pdf_url_api_bills__bill_id__pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -244,6 +316,159 @@ export interface components {
             tenant_name: string;
             /** Rent */
             rent: number;
+        };
+        /**
+         * BillCreate
+         * @description A manual bill: an extra charge on a lease, apart from the monthly rent.
+         */
+        BillCreate: {
+            /**
+             * Lease Id
+             * Format: uuid
+             */
+            lease_id: string;
+            /** Description */
+            description: string;
+            /** Amount */
+            amount: number;
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+        };
+        /**
+         * BillIssuer
+         * @description The owner, as the bill shows them.
+         */
+        BillIssuer: {
+            /** Name */
+            name: string;
+            /** Document Number */
+            document_number: string | null;
+            /** Payment Details */
+            payment_details: string | null;
+        };
+        /** BillItemResponse */
+        BillItemResponse: {
+            /** Description */
+            description: string;
+            /** Amount */
+            amount: number;
+        };
+        /** BillResponse */
+        BillResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: number;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "monthly" | "manual";
+            /** Period */
+            period: string | null;
+            /**
+             * Issue Date
+             * Format: date
+             */
+            issue_date: string;
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /** Total */
+            total: number;
+            /** Balance */
+            balance: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "partial" | "paid" | "overdue" | "voided";
+            /**
+             * Lease Id
+             * Format: uuid
+             */
+            lease_id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Tenant Name */
+            tenant_name: string;
+            /** Items */
+            items: components["schemas"]["BillItemResponse"][];
+            /** Property Name */
+            property_name: string;
+            /** Tenant Document Number */
+            tenant_document_number: string | null;
+            issuer: components["schemas"]["BillIssuer"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Voided At */
+            voided_at: string | null;
+        };
+        /** BillSummary */
+        BillSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: number;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "monthly" | "manual";
+            /** Period */
+            period: string | null;
+            /**
+             * Issue Date
+             * Format: date
+             */
+            issue_date: string;
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /** Total */
+            total: number;
+            /** Balance */
+            balance: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "partial" | "paid" | "overdue" | "voided";
+            /**
+             * Lease Id
+             * Format: uuid
+             */
+            lease_id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Tenant Name */
+            tenant_name: string;
         };
         /** DocumentConfirm */
         DocumentConfirm: {
@@ -336,6 +561,8 @@ export interface components {
             document_uploaded_at: string | null;
             unit: components["schemas"]["LeaseUnit"];
             tenant: components["schemas"]["TenantResponse"];
+            /** Recent Bills */
+            recent_bills: components["schemas"]["BillSummary"][];
         };
         /** LeaseUnit */
         LeaseUnit: {
@@ -1409,6 +1636,310 @@ export interface operations {
             };
             /** @description Unprocessable Entity */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    issue_monthly_bill_api_leases__lease_id__bills_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lease_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_bills_api_bills_get: {
+        parameters: {
+            query?: {
+                unit_id?: string | null;
+                status?: ("receivable" | "paid" | "voided") | null;
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillSummary"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_bill_api_bills_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_bill_api_bills__bill_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_pdf_url_api_bills__bill_id__pdf_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentUrlResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

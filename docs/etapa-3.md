@@ -68,7 +68,7 @@ En los pasos 2, 5 y 7 la prueba va primero.
 - `app/dates.py`: `today_in_bogota()`, que las pruebas pueden fijar.
 - **Se comprueba:** el PDF empieza por `%PDF-` y contiene los textos esperados; formatos de fecha y dinero.
 
-### [ ] Paso 5. Servicio de emisión
+### [x] Paso 5. Servicio de emisión
 
 `app/services/bills.py`, en la transacción de la petición:
 
@@ -80,7 +80,7 @@ La mensual: contrato activo, periodo del mes en curso, vencimiento en `due_day`,
 
 - **Se comprueba:** consecutivos 1..N sin saltos ni repetidos con N emisiones simultáneas; una emisión que falla no deja hueco; una mensual por contrato y periodo, también con dos peticiones a la vez; tras anular se puede generar otra; nace `overdue` o `pending` según la fecha; cambiar el canon después no altera la cuenta.
 
-### [ ] Paso 6. Rutas de cuentas
+### [x] Paso 6. Rutas de cuentas
 
 - `app/schemas/bill.py` y `app/routes/bills.py`: `POST /api/leases/{id}/bills`, `POST /api/bills`, `GET /api/bills` (filtros `unit_id`, `status`, `from`, `to`), `GET /api/bills/{id}` y `GET /api/bills/{id}/pdf` (enlace de 5 minutos).
 - `GET /api/leases/{id}`: campo `recent_bills`.

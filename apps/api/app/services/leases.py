@@ -15,6 +15,7 @@ from app.schemas.lease import (
     TenantCreate,
     TenantResponse,
 )
+from app.services.bills import recent_bills
 
 # Every query here runs inside the owner's transaction: row security already limits it to
 # their rows, so another owner's id simply finds nothing.
@@ -65,6 +66,7 @@ def lease_response(session: Session, lease: Lease) -> LeaseResponse:
             document_number=tenant.document_number,
             phone=tenant.phone,
         ),
+        recent_bills=recent_bills(session, lease.id),
     )
 
 

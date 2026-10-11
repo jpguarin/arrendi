@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from app.errors import ErrorResponse, register_error_handlers
-from app.routes import health, leases, me, onboarding, properties, settings
+from app.routes import bills, health, leases, me, onboarding, properties, settings
 
 app = FastAPI(
     title="Arrendi",
@@ -15,3 +15,4 @@ app.include_router(properties.router, prefix="/api")
 app.include_router(leases.router, prefix="/api")
 app.include_router(onboarding.router, prefix="/api")
 app.include_router(settings.router, prefix="/api")
+app.include_router(bills.router, prefix="/api")

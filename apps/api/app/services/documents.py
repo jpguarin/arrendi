@@ -6,7 +6,7 @@ from fastapi import BackgroundTasks
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.errors import AppError, not_found
+from app.errors import AppError, not_found, storage_unavailable
 from app.models import Lease
 from app.schemas.document import (
     DocumentConfirm,
@@ -35,14 +35,6 @@ def _unsupported_type() -> AppError:
 
 def _too_large() -> AppError:
     return AppError(422, "El archivo supera los 10 MB.", "file_too_large")
-
-
-def storage_unavailable() -> AppError:
-    return AppError(
-        503,
-        "No pudimos acceder a tus archivos. Inténtalo de nuevo en un momento.",
-        "storage_unavailable",
-    )
 
 
 def safe_name(filename: str, extension: str) -> str:

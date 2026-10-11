@@ -91,6 +91,7 @@ def test_create_a_lease_with_a_new_tenant(
             "document_number": "52.123.456",
             "phone": None,
         },
+        "recent_bills": [],
     }
 
 

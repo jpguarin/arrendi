@@ -1,0 +1,63 @@
+from datetime import date, datetime
+from typing import Annotated, Literal
+from uuid import UUID
+
+from pydantic import BaseModel, StringConstraints
+
+from app.schemas.common import PositivePesos
+
+BillStatus = Literal["pending", "partial", "paid", "overdue", "voided"]
+BillOrigin = Literal["monthly", "manual"]
+# `receivable` gathers pending, partial and overdue: what is still owed.
+BillStatusFilter = Literal["receivable", "paid", "voided"]
+
+Description = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+
+
+class BillCreate(BaseModel):
+    """A manual bill: an extra charge on a lease, apart from the monthly rent."""
+
+    lease_id: UUID
+    description: Description
+    amount: PositivePesos
+    due_date: date
+
+
+class BillSummary(BaseModel):
+    id: UUID
+    number: int
+    origin: BillOrigin
+    # First day of the month being billed; null in manual bills.
+    period: date | None
+    issue_date: date
+    due_date: date
+    total: int
+    # Never stored: the total minus what has been paid.
+    balance: int
+    status: BillStatus
+    lease_id: UUID
+    unit_id: UUID
+    unit_name: str
+    tenant_name: str
+
+
+class BillItemResponse(BaseModel):
+    description: str
+    amount: int
+
+
+class BillIssuer(BaseModel):
+    """The owner, as the bill shows them."""
+
+    name: str
+    document_number: str | None
+    payment_details: str | None
+
+
+class BillResponse(BillSummary):
+    items: list[BillItemResponse]
+    property_name: str
+    tenant_document_number: str | None
+    issuer: BillIssuer
+    created_at: datetime
+    voided_at: datetime | None

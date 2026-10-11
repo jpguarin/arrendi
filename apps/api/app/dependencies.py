@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from datetime import date
 from functools import lru_cache
 from typing import Annotated
 
@@ -9,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import AuthUnavailableError, AuthUser, InvalidTokenError, TokenVerifier
 from app.config import get_settings
+from app.dates import today_in_bogota
 from app.db import get_engine, set_owner_id
 from app.errors import auth_unavailable, unauthorized
 from app.storage import Storage, SupabaseStorage
@@ -35,6 +37,10 @@ def get_storage() -> Storage:
 
 
 FileStorage = Annotated[Storage, Depends(get_storage)]
+
+
+# The business date of the request. A dependency so the tests can pick the day.
+Today = Annotated[date, Depends(today_in_bogota)]
 
 
 def get_db_engine() -> Engine:
