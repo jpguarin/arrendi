@@ -107,7 +107,12 @@ def test_monthly_bill_takes_its_terms_from_the_lease(
         "items": [{"description": "Canon de arrendamiento", "amount": 950000}],
         "property_name": "Casa ana",
         "tenant_document_number": None,
-        "issuer": {"name": "Ana", "document_number": None, "payment_details": None},
+        "issuer": {
+            "name": "Ana",
+            "document_type": "cc",
+            "document_number": None,
+            "payment_details": None,
+        },
         "created_at": None,
         "voided_at": None,
     }
@@ -124,18 +129,23 @@ def test_pdf_carries_the_owners_details(
     api.patch(
         "/api/settings",
         headers=ana,
-        json={"document_number": "52.123.456", "payment_details": "Nequi 300 123 4567"},
+        json={
+            "document_type": "nit",
+            "document_number": "900.123.456-7",
+            "payment_details": "Nequi 300 123 4567",
+        },
     )
 
     bill = monthly(api, ana, anas.lease_id).json()
 
     assert bill["issuer"] == {
         "name": "Ana",
-        "document_number": "52.123.456",
+        "document_type": "nit",
+        "document_number": "900.123.456-7",
         "payment_details": "Nequi 300 123 4567",
     }
     (pdf,) = storage.objects.values()
-    assert b"C.C./NIT 52.123.456" in pdf and b"Pagar a: Nequi 300 123 4567" in pdf
+    assert b"NIT 900.123.456-7" in pdf and b"Pagar a: Nequi 300 123 4567" in pdf
 
 
 def test_bill_past_its_due_date_is_born_overdue(

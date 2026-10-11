@@ -18,6 +18,8 @@ Tomadas el 11 de octubre de 2026, porque los documentos no las cubrían:
 2. **Ajustes mínimo, adelantado.** El PDF necesita tus datos y los de pago, así que `GET` y `PATCH /api/settings` y la pantalla `/settings` llegan en esta etapa solo con nombre, documento y datos de pago. Día de envío, recordatorios, copia y tema siguen en la etapa 4.
 3. **Vencimiento ya pasado.** Una cuenta cuyo vencimiento es anterior a hoy nace `overdue`.
 
+4. **Tipo de documento del propietario.** Ajustes deja elegir entre cédula y NIT (`owners.document_type`, migración `0004`), y la cuenta lo escribe como "C.C." o "NIT". El documento del arrendatario no tiene tipo todavía: la cuenta lo muestra como "C.C./NIT".
+
 ## Límites asumidos
 
 - **Sin pagos ni notificaciones:** esas tablas llegan en las etapas 4 y 5. El detalle de la cuenta devuelve `balance` (igual al total) y no trae `payments` ni `notifications` hasta entonces.
@@ -32,7 +34,7 @@ Tomadas el 11 de octubre de 2026, porque los documentos no las cubrían:
 
 | Cuándo | Qué | Dónde |
 | --- | --- | --- |
-| Después del paso 2 | Aplicar la migración `0003` con `alembic upgrade head` | `arrendi-dev`, antes de subir el código que la usa |
+| Después del paso 2 | Aplicar las migraciones `0003` y `0004` con `alembic upgrade head` | `arrendi-dev`, antes de subir el código que la usa |
 | Antes de generar cuentas | Cargar nombre, cédula y datos de pago | Ajustes |
 | Al final | Generar las 3 cuentas del mes, abrir un PDF en el iPhone, anular una y generarla de nuevo | `arrendi-web.vercel.app` |
 

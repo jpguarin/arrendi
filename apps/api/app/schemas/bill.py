@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, StringConstraints
 
 from app.schemas.common import PositivePesos
+from app.schemas.settings import DocumentType
 
 BillStatus = Literal["pending", "partial", "paid", "overdue", "voided"]
 BillOrigin = Literal["monthly", "manual"]
@@ -50,6 +51,7 @@ class BillIssuer(BaseModel):
     """The owner, as the bill shows them."""
 
     name: str
+    document_type: DocumentType
     document_number: str | None
     payment_details: str | None
 

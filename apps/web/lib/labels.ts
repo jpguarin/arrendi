@@ -3,6 +3,7 @@ import type { components } from "@/lib/api/schema";
 type Schemas = components["schemas"];
 export type PropertyType = Schemas["PropertyCreate"]["type"];
 export type UnitUse = Schemas["UnitCreate"]["use"];
+export type DocumentType = Schemas["SettingsResponse"]["document_type"];
 export type BillStatus = Schemas["BillSummary"]["status"];
 
 // What the owner reads for each value the API stores in English.
@@ -17,6 +18,13 @@ export const UNIT_USE_LABELS: Record<UnitUse, string> = {
   residential: "Vivienda",
   commercial: "Comercial",
 };
+
+// How a bill names the owner's document, and how Ajustes offers the choice.
+export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = { cc: "C.C.", nit: "NIT" };
+export const DOCUMENT_TYPE_OPTIONS: { value: DocumentType; label: string }[] = [
+  { value: "cc", label: "Cédula" },
+  { value: "nit", label: "NIT" },
+];
 
 // The status is always said with text; the tone only supports it (docs/diseno.md).
 export const BILL_STATUS: Record<

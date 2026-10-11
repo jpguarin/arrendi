@@ -35,6 +35,7 @@ def settings_response(owner: Owner) -> SettingsResponse:
     return SettingsResponse(
         name=owner.name,
         email=owner.email,
+        document_type=owner.document_type,
         document_number=owner.document_number,
         payment_details=owner.payment_details,
     )

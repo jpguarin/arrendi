@@ -70,6 +70,7 @@ def _document(session: Session, bill: Bill, voided: bool = False) -> BillDocumen
         issue_date=bill.issue_date,
         due_date=bill.due_date,
         owner_name=owner.name,
+        owner_document_type=owner.document_type,
         owner_document=owner.document_number,
         tenant_name=tenant.name,
         tenant_document=tenant.document_number,
@@ -268,6 +269,7 @@ def bill_response(session: Session, bill: Bill) -> BillResponse:
         tenant_document_number=tenant.document_number,
         issuer=BillIssuer(
             name=owner.name,
+            document_type=owner.document_type,
             document_number=owner.document_number,
             payment_details=owner.payment_details,
         ),

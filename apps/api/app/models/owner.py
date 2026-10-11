@@ -10,11 +10,16 @@ from app.models.base import Base
 
 class Owner(Base):
     __tablename__ = "owners"
-    __table_args__ = (CheckConstraint("send_day between 1 and 28", name="owners_send_day_check"),)
+    __table_args__ = (
+        CheckConstraint("send_day between 1 and 28", name="owners_send_day_check"),
+        CheckConstraint("document_type in ('cc', 'nit')", name="owners_document_type_check"),
+    )
 
     # Same id as the user in Supabase Auth.
     id: Mapped[UUID] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(Text)
+    # What `document_number` is: a cédula or a NIT.
+    document_type: Mapped[str] = mapped_column(Text, server_default=text("'cc'"))
     document_number: Mapped[str | None] = mapped_column(Text)
     email: Mapped[str] = mapped_column(Text)
     payment_details: Mapped[str | None] = mapped_column(Text)

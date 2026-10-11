@@ -9,6 +9,7 @@ BILL = BillDocument(
     issue_date=date(2026, 10, 1),
     due_date=date(2026, 10, 5),
     owner_name="Ana Gomez",
+    owner_document_type="cc",
     owner_document="52.123.456",
     tenant_name="Carlos Rojas",
     tenant_document="80.111.222",
@@ -44,7 +45,8 @@ def test_pdf_shows_everything_the_tenant_needs() -> None:
         b"0031",
         b"1 de octubre de 2026",
         b"Ana Gomez",
-        b"C.C./NIT 52.123.456",
+        b"C.C. 52.123.456",
+        b"C.C./NIT 80.111.222",
         b"Carlos Rojas",
         b"80.111.222",
         b"Canon de arrendamiento",
@@ -65,9 +67,16 @@ def test_pdf_leaves_out_what_the_owner_has_not_filled_in() -> None:
         replace(BILL, owner_document=None, tenant_document=None, payment_details=None)
     )
 
-    assert b"C.C./NIT" not in pdf
+    assert b"C.C." not in pdf
     assert b"Pagar a" not in pdf
     assert b"Vence el" in pdf
+
+
+def test_pdf_says_whether_the_owners_document_is_a_cedula_or_a_nit() -> None:
+    pdf = render_bill(replace(BILL, owner_document_type="nit", owner_document="900.123.456-7"))
+
+    assert b"NIT 900.123.456-7" in pdf
+    assert b"C.C. 900" not in pdf
 
 
 def test_voided_bill_is_marked() -> None:

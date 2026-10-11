@@ -46,6 +46,8 @@ class BillDocument:
     issue_date: date
     due_date: date
     owner_name: str
+    # "cc" or "nit": what the owner's document is.
+    owner_document_type: str
     owner_document: str | None
     tenant_name: str
     tenant_document: str | None
@@ -55,7 +57,11 @@ class BillDocument:
     voided: bool = False
 
 
+OWNER_DOCUMENT_LABELS = {"cc": "C.C.", "nit": "NIT"}
+
+
 def _with_document(name: str, document: str | None) -> str:
+    # The tenant's document has no type yet: it may be either.
     return f"{name} · C.C./NIT {document}" if document else name
 
 
@@ -90,7 +96,8 @@ def render_bill(bill: BillDocument) -> bytes:
     canvas.setFillColor(MUTED)
     canvas.setFont(REGULAR, 11)
     if bill.owner_document:
-        canvas.drawRightString(RIGHT, y - 12, f"C.C./NIT {bill.owner_document}")
+        label = OWNER_DOCUMENT_LABELS[bill.owner_document_type]
+        canvas.drawRightString(RIGHT, y - 12, f"{label} {bill.owner_document}")
     y -= 20
     canvas.drawString(
         MARGIN, y, f"{format_number(bill.number)} · {format_long_date(bill.issue_date)}"

@@ -55,6 +55,7 @@ El contrato es el centro: une una unidad con un arrendatario, y de él nacen las
 | --- | --- | --- |
 | `id` | uuid, PK | Igual al id del usuario en Supabase Auth |
 | `name` | text | |
+| `document_type` | text, por defecto `cc` | `cc` (cédula) o `nit`: qué es `document_number` |
 | `document_number` | text, nulo | Cédula o NIT |
 | `email` | text | |
 | `payment_details` | text, nulo | Texto libre que aparece en cada cuenta |

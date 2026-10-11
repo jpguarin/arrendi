@@ -31,7 +31,7 @@ import {
   formatMonth,
   formatPesos,
 } from "@/lib/format";
-import { BILL_STATUS } from "@/lib/labels";
+import { BILL_STATUS, DOCUMENT_TYPE_LABELS } from "@/lib/labels";
 
 type Bill = components["schemas"]["BillResponse"];
 
@@ -61,7 +61,7 @@ function DocumentPreview({ bill }: { bill: Bill }) {
           {bill.issuer.document_number && (
             <>
               <br />
-              C.C./NIT {bill.issuer.document_number}
+              {DOCUMENT_TYPE_LABELS[bill.issuer.document_type]} {bill.issuer.document_number}
             </>
           )}
         </p>

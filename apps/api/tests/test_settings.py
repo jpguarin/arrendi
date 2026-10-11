@@ -16,6 +16,7 @@ def test_settings_start_with_what_the_token_says(
     assert response.json() == {
         "name": "Ana Gómez",
         "email": "ana@example.com",
+        "document_type": "cc",
         "document_number": None,
         "payment_details": None,
     }
@@ -31,7 +32,11 @@ def test_update_changes_only_the_fields_sent(
     first = api.patch(
         "/api/settings",
         headers=headers,
-        json={"document_number": " 52.123.456 ", "payment_details": details},
+        json={
+            "document_type": "nit",
+            "document_number": " 900.123.456-7 ",
+            "payment_details": details,
+        },
     )
     second = api.patch("/api/settings", headers=headers, json={"name": "Ana María Gómez"})
 
@@ -39,7 +44,8 @@ def test_update_changes_only_the_fields_sent(
     assert second.json() == {
         "name": "Ana María Gómez",
         "email": "ana@example.com",
-        "document_number": "52.123.456",
+        "document_type": "nit",
+        "document_number": "900.123.456-7",
         "payment_details": details,
     }
     assert api.get("/api/settings", headers=headers).json() == second.json()
@@ -63,13 +69,19 @@ def test_optional_fields_are_cleared_with_null_or_blank(
     assert response.json()["payment_details"] is None
 
 
-def test_name_cannot_be_cleared(
+def test_name_and_document_type_cannot_be_cleared(
     api: TestClient, make_token: MakeToken, two_owners: tuple[UUID, UUID]
 ) -> None:
     ana, _ = two_owners
     headers = bearer(make_token(ana))
 
-    for body in ({"name": None}, {"name": "  "}, {"payment_details": "x" * 501}):
+    for body in (
+        {"name": None},
+        {"name": "  "},
+        {"payment_details": "x" * 501},
+        {"document_type": None},
+        {"document_type": "passport"},
+    ):
         response = api.patch("/api/settings", headers=headers, json=body)
         assert response.status_code == 422
         assert response.json()["code"] == "validation_error"

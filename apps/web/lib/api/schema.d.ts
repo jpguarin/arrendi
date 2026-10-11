@@ -361,6 +361,11 @@ export interface components {
         BillIssuer: {
             /** Name */
             name: string;
+            /**
+             * Document Type
+             * @enum {string}
+             */
+            document_type: "cc" | "nit";
             /** Document Number */
             document_number: string | null;
             /** Payment Details */
@@ -721,6 +726,11 @@ export interface components {
             name: string;
             /** Email */
             email: string;
+            /**
+             * Document Type
+             * @enum {string}
+             */
+            document_type: "cc" | "nit";
             /** Document Number */
             document_number: string | null;
             /** Payment Details */
@@ -730,6 +740,8 @@ export interface components {
         SettingsUpdate: {
             /** Name */
             name?: string | null;
+            /** Document Type */
+            document_type?: ("cc" | "nit") | null;
             /** Document Number */
             document_number?: string | null;
             /** Payment Details */
