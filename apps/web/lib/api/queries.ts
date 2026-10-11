@@ -233,3 +233,28 @@ export function useUpdateSettings() {
     },
   });
 }
+
+// The email goes out right after the API answers, so the answer still says "pending".
+// Asking again a moment later brings how it went.
+const DELIVERY_WAIT_MS = 2500;
+
+function putEmailedBill(client: QueryClient, bill: Bill) {
+  putBill(client, bill);
+  setTimeout(() => client.invalidateQueries({ queryKey: billKey(bill.id) }), DELIVERY_WAIT_MS);
+}
+
+/** Emails the bill to the tenant, or emails it again. */
+export function useSendBill() {
+  const client = useQueryClient();
+  return $api.useMutation("post", "/api/bills/{bill_id}/send", {
+    onSuccess: (bill) => putEmailedBill(client, bill),
+  });
+}
+
+/** Emails the tenant a reminder of a bill that still has a balance. */
+export function useRemindBill() {
+  const client = useQueryClient();
+  return $api.useMutation("post", "/api/bills/{bill_id}/remind", {
+    onSuccess: (bill) => putEmailedBill(client, bill),
+  });
+}

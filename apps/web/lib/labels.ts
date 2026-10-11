@@ -38,6 +38,31 @@ export const BILL_STATUS: Record<
   voided: { label: "Anulada", tone: "neutral" },
 };
 
+type Notification = Schemas["NotificationResponse"];
+
+// What each email was, as the activity of a bill tells it.
+export const NOTIFICATION_LABELS: Record<Notification["type"], string> = {
+  bill: "Enviada por correo con el PDF",
+  resend: "Reenviada por correo",
+  reminder_1: "Recordatorio por correo",
+  reminder_2: "Segundo recordatorio por correo",
+  manual_reminder: "Recordatorio por correo",
+  receipt: "Recibo por correo",
+};
+
+// How it went, when it did not simply go out.
+export const DELIVERY_PROBLEMS: Partial<Record<Notification["delivery_status"], string>> = {
+  pending: "enviando…",
+  failed: "no se pudo enviar",
+  bounced: "rebotó",
+};
+
+// The day of the month the bills go out.
+export const SEND_DAY_OPTIONS = Array.from({ length: 28 }, (_, index) => ({
+  value: String(index + 1),
+  label: `El día ${index + 1} de cada mes`,
+}));
+
 export const PROPERTY_TYPE_OPTIONS = (Object.keys(PROPERTY_TYPE_LABELS) as PropertyType[]).map(
   (value) => ({ value, label: PROPERTY_TYPE_LABELS[value] }),
 );

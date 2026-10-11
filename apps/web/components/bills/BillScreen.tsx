@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
 import { openTemporaryLink } from "@/lib/api/documents";
 import { errorMessage, hasCode } from "@/lib/api/errors";
-import { useBill, useVoidBill } from "@/lib/api/queries";
+import { useBill, useRemindBill, useSendBill, useVoidBill } from "@/lib/api/queries";
 import type { components } from "@/lib/api/schema";
 import {
   formatBillNumber,
@@ -31,7 +31,13 @@ import {
   formatMonth,
   formatPesos,
 } from "@/lib/format";
-import { BILL_STATUS, DOCUMENT_TYPE_LABELS } from "@/lib/labels";
+import {
+  BILL_STATUS,
+  DELIVERY_PROBLEMS,
+  DOCUMENT_TYPE_LABELS,
+  NOTIFICATION_LABELS,
+} from "@/lib/labels";
+import { cn } from "@/lib/utils";
 
 type Bill = components["schemas"]["BillResponse"];
 
@@ -99,8 +105,12 @@ function DocumentPreview({ bill }: { bill: Bill }) {
 export function BillScreen({ billId }: { billId: string }) {
   const { data: bill, error: loadError, refetch } = useBill(billId);
   const voidBill = useVoidBill();
+  const send = useSendBill();
+  const remind = useRemindBill();
   const [opening, setOpening] = useState(false);
   const [pdfError, setPdfError] = useState<string>();
+  // What the last email asked for was, until the next one.
+  const [emailed, setEmailed] = useState<string>();
 
   if (!bill) {
     return (
@@ -122,7 +132,36 @@ export function BillScreen({ billId }: { billId: string }) {
   const status = BILL_STATUS[bill.status];
   // A bill with payments is not voided; neither is one already voided.
   const voidable = bill.status === "pending" || bill.status === "overdue";
-  const error = pdfError ?? (voidBill.error ? errorMessage(voidBill.error) : undefined);
+  const changeError = voidBill.error ?? send.error ?? remind.error;
+  const error = pdfError ?? (changeError ? errorMessage(changeError) : undefined);
+  const path = { bill_id: billId };
+  const voided = bill.status === "voided";
+  // Whether the tenant has the bill: an email with it went out, or is on its way.
+  const wasSent = bill.notifications.some(
+    (notification) =>
+      (notification.type === "bill" || notification.type === "resend") &&
+      notification.delivery_status !== "failed",
+  );
+  const hasBalance = !voided && bill.status !== "paid";
+  const emailing = send.isPending || remind.isPending;
+
+  function sendBill() {
+    setEmailed(undefined);
+    send.mutate(
+      { params: { path } },
+      { onSuccess: () => setEmailed("La cuenta va en camino al correo del arrendatario.") },
+    );
+  }
+
+  function sendReminder() {
+    setEmailed(undefined);
+    remind.mutate(
+      { params: { path } },
+      {
+        onSuccess: () => setEmailed("El recordatorio va en camino al correo del arrendatario."),
+      },
+    );
+  }
 
   async function openPdf() {
     setOpening(true);
@@ -145,7 +184,11 @@ export function BillScreen({ billId }: { billId: string }) {
       </Header>
       <main className="flex flex-1 flex-col gap-4.5 px-5 pt-2 pb-6">
         {error && <FormMessage tone="error">{error}</FormMessage>}
-        {bill.status === "voided" && (
+        {!error && emailed && <FormMessage tone="success">{emailed}</FormMessage>}
+        {!voided && !wasSent && !emailing && (
+          <FormMessage tone="info">Esta cuenta aún no se le ha enviado al arrendatario.</FormMessage>
+        )}
+        {voided && (
           <FormMessage tone="info">
             Esta cuenta está anulada: ya no se cobra. Conserva su consecutivo y su PDF.
           </FormMessage>
@@ -157,7 +200,7 @@ export function BillScreen({ billId }: { billId: string }) {
           <h2 id="activity" className="text-section font-semibold">
             Actividad
           </h2>
-          {/* Emails and payments join this list in stages 4 and 5. */}
+          {/* Newest first. Payments join this list in stage 5. */}
           <ol className="flex flex-col gap-2.5 text-section">
             {bill.voided_at && (
               <li className="flex justify-between gap-3">
@@ -165,6 +208,32 @@ export function BillScreen({ billId }: { billId: string }) {
                 <span className="text-muted-foreground">{formatDateTime(bill.voided_at)}</span>
               </li>
             )}
+            {bill.notifications.map((notification) => {
+              const problem = DELIVERY_PROBLEMS[notification.delivery_status];
+              return (
+                <li key={notification.id} className="flex justify-between gap-3">
+                  <span className="min-w-0">
+                    {NOTIFICATION_LABELS[notification.type]}
+                    {problem && (
+                      <span
+                        className={cn(
+                          "font-semibold",
+                          notification.delivery_status === "pending"
+                            ? "text-muted-foreground"
+                            : "text-alert",
+                        )}
+                      >
+                        {" "}
+                        · {problem}
+                      </span>
+                    )}
+                  </span>
+                  <span className="shrink-0 text-muted-foreground">
+                    {formatDateTime(notification.sent_at ?? notification.created_at)}
+                  </span>
+                </li>
+              );
+            })}
             <li className="flex justify-between gap-3">
               <span>Generada</span>
               <span className="text-muted-foreground">{formatDateTime(bill.created_at)}</span>
@@ -173,9 +242,39 @@ export function BillScreen({ billId }: { billId: string }) {
         </section>
       </main>
       <ActionFooter>
-        <div className={voidable ? "grid grid-cols-2 gap-2" : "grid"}>
+        {!voided && !wasSent && (
+          <Button disabled={emailing} onClick={sendBill}>
+            {send.isPending ? "Enviando…" : "Enviar al arrendatario"}
+          </Button>
+        )}
+        {wasSent && hasBalance && (
+          <Button
+            variant="outline"
+            size="md"
+            disabled={emailing}
+            onClick={sendReminder}
+          >
+            {remind.isPending ? "Enviando…" : "Enviar recordatorio"}
+          </Button>
+        )}
+        <div
+          className={cn(
+            "grid gap-2",
+            voidable && wasSent ? "grid-cols-3" : voidable || wasSent ? "grid-cols-2" : "",
+          )}
+        >
+          {!voided && wasSent && (
+            <Button
+              variant="outline"
+              size="md"
+              disabled={emailing}
+              onClick={sendBill}
+            >
+              {send.isPending ? "Enviando…" : "Reenviar"}
+            </Button>
+          )}
           <Button variant="outline" size="md" disabled={opening} onClick={openPdf}>
-            {opening ? "Abriendo…" : "Descargar PDF"}
+            {opening ? "Abriendo…" : wasSent && voidable ? "PDF" : "Descargar PDF"}
           </Button>
           {voidable && (
             <AlertDialog>
@@ -196,7 +295,7 @@ export function BillScreen({ billId }: { billId: string }) {
                 <AlertDialogFooter>
                   <AlertDialogAction
                     variant="destructive"
-                    onClick={() => voidBill.mutate({ params: { path: { bill_id: billId } } })}
+                    onClick={() => voidBill.mutate({ params: { path } })}
                   >
                     Anular cuenta
                   </AlertDialogAction>
