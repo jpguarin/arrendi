@@ -38,6 +38,11 @@ export function GoogleButton() {
   const [error, setError] = useState<string>();
 
   async function signIn() {
+    if (!navigator.onLine) {
+      // Leaving for Google without a connection would land on the browser's error page.
+      setError("No hay conexión. Revisa tu internet e inténtalo de nuevo.");
+      return;
+    }
     setOpening(true);
     setError(undefined);
     const { error } = await createClient().auth.signInWithOAuth({

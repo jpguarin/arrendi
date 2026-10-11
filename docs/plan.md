@@ -24,7 +24,7 @@ Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando,
 - [ ] Web: acceso con Google mediante Supabase Auth.
 - [ ] Web: registro, inicio de sesión, recuperación de contraseña y cierre de sesión con correo y contraseña.
 - [x] Web: redirección de `/api` hacia la API y cliente con tipos generados (`pnpm gen:api`).
-- [ ] Web: PWA instalable, con manifiesto, service worker y pantalla sin conexión.
+- [x] Web: PWA instalable, con manifiesto, service worker y pantalla sin conexión.
 - [x] Prueba de aislamiento, contra un PostgreSQL local: con dos propietarios, ninguno ve la fila del otro.
 - [ ] Despliegue de los dos proyectos en Vercel.
 

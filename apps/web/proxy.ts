@@ -4,8 +4,9 @@ import { updateSession, withSession } from "@/lib/supabase/proxy";
 
 // Screens for people who are not signed in.
 const SIGNED_OUT_ONLY = ["/login", "/signup", "/reset-password"];
-// Open to everyone: the links that come back from an email or from Google.
-const PUBLIC_PREFIXES = ["/auth/"];
+// Open to everyone: the links that come back from an email or from Google, and what
+// the installed app needs before anyone signs in.
+const PUBLIC_PREFIXES = ["/auth/", "/serwist/", "/~offline", "/manifest.webmanifest"];
 
 export async function proxy(request: NextRequest) {
   const { response, signedIn } = await updateSession(request);

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree } from "next/font/google";
+import { PwaProvider } from "@/components/PwaProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { BACKGROUND_DARK, BACKGROUND_LIGHT } from "@/lib/theme";
 import "./globals.css";
@@ -13,6 +14,7 @@ const figtree = Figtree({
 export const metadata: Metadata = {
   title: "Arrendi",
   description: "Genera tus cuentas de cobro cada mes, envíalas por correo y sabe quién te debe.",
+  appleWebApp: { capable: true, title: "Arrendi", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
@@ -27,7 +29,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="es-CO" className={`${figtree.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full font-sans">
         <ThemeProvider>
-          <div className="mx-auto flex min-h-dvh w-full max-w-app flex-col">{children}</div>
+          <PwaProvider>
+            <div className="mx-auto flex min-h-dvh w-full max-w-app flex-col">{children}</div>
+          </PwaProvider>
         </ThemeProvider>
       </body>
     </html>

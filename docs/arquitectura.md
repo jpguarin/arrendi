@@ -179,12 +179,13 @@ Supabase retira las claves antiguas `anon` y `service_role` a finales de 2026; p
 ## PWA
 
 - **Instalable:** manifiesto con nombre, íconos y colores, y apertura a pantalla completa.
-- **Service worker:** guarda la estructura de la aplicación para que abra rápido y muestre una pantalla clara sin conexión. Con Turbopack, Serwist no lo compila a un archivo en `public/`: lo sirve una ruta de Next (`app/serwist/[path]/route.ts`) en `/serwist/sw.js`. Esa ruta no tiene reglas de negocio.
+- **Service worker:** guarda la estructura de la aplicación para que abra rápido y muestre una pantalla clara sin conexión. Con Turbopack, Serwist no lo compila a un archivo en `public/`: lo sirve una ruta de Next (`app/serwist/[path]/route.ts`) en `/serwist/sw.js`, generada al compilar. Esa ruta no tiene reglas de negocio. En desarrollo el service worker está apagado, para no servir archivos viejos; se prueba con `pnpm build` y `next start`.
 - **Sin conexión:** se puede abrir la aplicación, pero consultar y registrar requiere conexión.
-- **Nada sensible en el dispositivo:** las respuestas de `/api` y los archivos no se guardan en caché.
+- **Nada sensible en el dispositivo:** las respuestas de `/api` y los archivos no se guardan en caché. El service worker manda siempre a la red todo lo que va a `/api`, a `/auth` y a cualquier otro origen (Supabase y los enlaces temporales de archivos).
 - **Tema:** el color de la barra del sistema (`theme-color`) cambia con el tema claro u oscuro.
 - **Cámara:** el comprobante y el contrato se adjuntan desde la cámara o los archivos del celular.
-- **Actualizaciones:** al publicar una versión nueva, la aplicación avisa y se recarga.
+- **Actualizaciones:** al publicar una versión nueva, la aplicación muestra el aviso "Hay una versión nueva de Arrendi." con el botón "Actualizar", y se recarga cuando el propietario lo toca. No se recarga sola, para no interrumpir un formulario a medias.
+- **Íconos:** provisionales, en `apps/web/public/icons/` y `apps/web/app/` (`icon.png`, `apple-icon.png`).
 
 ## PDF
 
