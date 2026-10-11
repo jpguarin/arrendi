@@ -46,6 +46,16 @@ def get_engine() -> Engine:
     return create_db_engine(settings.database_url, keep_connections=settings.environment == "local")
 
 
+@lru_cache
+def get_tasks_engine() -> Engine:
+    """Connects as `arrendi_tasks`, which skips row security. Only for the daily task and
+    the email provider's notices, which have no owner in the request."""
+    settings = get_settings()
+    if not settings.database_url_tasks:
+        raise RuntimeError("DATABASE_URL_TASKS is not set")
+    return create_db_engine(settings.database_url_tasks)
+
+
 def set_owner_id(connection: Connection | Session, owner_id: UUID) -> None:
     """Scopes the current transaction to one owner; the row security policies read it.
 
