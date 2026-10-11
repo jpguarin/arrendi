@@ -21,7 +21,7 @@ from sqlalchemy.engine import make_url
 
 from app.auth import TokenVerifier
 from app.db import create_db_engine
-from app.dependencies import get_db_engine, get_token_verifier
+from app.dependencies import get_db_engine, get_storage, get_token_verifier
 from app.main import app
 
 API_DIR = Path(__file__).resolve().parent.parent
@@ -270,6 +270,39 @@ def new_user_ids(admin_engine: Engine) -> Iterator[tuple[UUID, UUID]]:
     ids = (uuid4(), uuid4())
     yield ids
     delete_owners(admin_engine, list(ids))
+
+
+class FakeStorage:
+    """Stands in for Supabase Storage: keeps the files in memory."""
+
+    def __init__(self) -> None:
+        self.objects: dict[str, bytes] = {}
+
+    def upload(self, path: str, content: bytes) -> None:
+        """What the browser does with the signed upload link."""
+        self.objects[path] = content
+
+    def create_upload_url(self, path: str) -> str:
+        return f"https://storage.test/upload/{path}?token=signed"
+
+    def size(self, path: str) -> int | None:
+        return len(self.objects[path]) if path in self.objects else None
+
+    def read_start(self, path: str, length: int) -> bytes:
+        return self.objects[path][:length]
+
+    def delete(self, path: str) -> None:
+        self.objects.pop(path, None)
+
+    def create_download_url(self, path: str, expires_in: int) -> str:
+        return f"https://storage.test/download/{path}?token=signed&expires_in={expires_in}"
+
+
+@pytest.fixture
+def storage(api: TestClient) -> FakeStorage:
+    fake = FakeStorage()
+    app.dependency_overrides[get_storage] = lambda: fake
+    return fake
 
 
 def bearer(token: str) -> dict[str, str]:

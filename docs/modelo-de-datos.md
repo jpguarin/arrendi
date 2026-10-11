@@ -237,10 +237,12 @@ Las pruebas de la API corren contra un PostgreSQL local, instalado con Homebrew,
 Un solo contenedor privado. Las rutas empiezan por el propietario:
 
 ```
-{owner_id}/leases/{lease_id}/{nombre}
+{owner_id}/leases/{lease_id}/{upload_id}/{nombre}
 {owner_id}/bills/{bill_id}.pdf
 {owner_id}/proofs/{payment_id}/{nombre}
 ```
+
+Cada subida va a una carpeta nueva (`upload_id`): así el archivo que se reemplaza sigue intacto hasta que el nuevo se confirma, y un enlace de subida nunca puede sobrescribir un archivo ya asociado. El nombre se limpia: solo letras sin tilde, números, guiones y la extensión que corresponde al tipo.
 
 Solo la API da acceso. Para subir, la API comprueba el propietario y devuelve un enlace firmado de subida para esa ruta; para mostrar, devuelve un enlace temporal de pocos minutos. Con esos enlaces, el navegador sube y descarga directo del almacenamiento: el archivo no pasa por la API, porque Vercel limita el cuerpo de una petición a 4,5 MB. El flujo está en `docs/api.md`.
 

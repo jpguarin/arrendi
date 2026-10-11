@@ -50,7 +50,7 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 | `POST /api/leases/{id}/end` | Pasa el contrato a terminado. 400 `lease_already_ended` si ya lo estaba |
 | `POST /api/leases/{id}/document/upload-url` | Primer paso de la subida. Recibe `filename`, `content_type` y `size`; devuelve el enlace firmado de subida y la ruta del objeto |
 | `POST /api/leases/{id}/document` | Segundo paso. Confirma la subida: valida el archivo guardado, lo asocia al contrato y borra el anterior si lo reemplaza |
-| `GET /api/leases/{id}/document` | Devuelve un enlace temporal al documento |
+| `GET /api/leases/{id}/document` | Devuelve un enlace temporal al documento (`url`, `name` y `expires_in`, 5 minutos). 404 `document_not_found` si el contrato no tiene |
 
 ## Cuentas de cobro
 
@@ -99,4 +99,5 @@ Estas rutas no usan el token del propietario.
   1. La web pide a la API un enlace firmado de subida (`.../upload-url`), indicando nombre, tipo y tamaño. La API comprueba que el recurso es del propietario y que el tipo y el tamaño están permitidos, y devuelve el enlace y la ruta del objeto. El enlace sirve para esa ruta y vence en pocas horas.
   2. El navegador envía el archivo directo a Supabase Storage con ese enlace.
   3. La web confirma a la API (`POST .../document`). La API lee del objeto su tamaño real y sus primeros bytes, valida el tipo por contenido, guarda la ruta en la base y borra el archivo anterior. Si no valida, borra el objeto y responde 422.
+  Errores: 422 `unsupported_file_type` y 422 `file_too_large` (al pedir el enlace o al confirmar), 400 `document_not_uploaded` (se confirma sin haber subido) y 503 `storage_unavailable`. La confirmación solo acepta una ruta que la API haya entregado para ese mismo contrato; cualquier otra responde 404.
   Un archivo subido y nunca confirmado queda huérfano en el almacenamiento; no se asocia a nada y no se puede abrir desde la API.

@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     database_url: str = ""
     database_url_migrations: str = ""
     supabase_url: str = ""
+    # Only for file storage; see app/storage.py.
+    supabase_secret_key: str = ""
+    storage_bucket: str = "arrendi"
 
 
 @lru_cache

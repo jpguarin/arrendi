@@ -73,7 +73,7 @@ Pruebas primero.
 - `POST /api/onboarding` en `app/routes/onboarding.py` y `app/services/onboarding.py`: inmueble, unidades (mínimo una) y, opcionalmente, arrendatario y contrato, en una transacción.
 - **Se comprueba:** todo o nada (si el contrato falla, no queda nada creado), sin unidades es 422, aislamiento.
 
-### [ ] Paso 6. Documento del contrato
+### [x] Paso 6. Documento del contrato
 
 Antes de empezar: bucket creado y `SUPABASE_SECRET_KEY` puesta (ver "Lo que haces tú").
 

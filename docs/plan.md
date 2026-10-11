@@ -46,7 +46,7 @@ Objetivo: cargar la casa, sus unidades, los arrendatarios y los contratos.
 
 - [x] Migración: `properties`, `units`, `tenants`, `leases`, con políticas y restricciones.
 - [x] API: rutas de inmuebles, unidades y contratos de `docs/api.md`, incluida `POST /api/onboarding`.
-- [ ] API: subida y consulta del documento del contrato, con validación de tipo y tamaño.
+- [x] API: subida y consulta del documento del contrato, con validación de tipo y tamaño.
 - [ ] Web: alta guiada en tres pasos.
 - [ ] Web: pantalla de inmuebles y unidades, con estado vacío.
 - [ ] Web: pantalla de contrato, y crear, editar y terminar contrato.

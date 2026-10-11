@@ -11,6 +11,7 @@ from app.auth import AuthUnavailableError, AuthUser, InvalidTokenError, TokenVer
 from app.config import get_settings
 from app.db import get_engine, set_owner_id
 from app.errors import auth_unavailable, unauthorized
+from app.storage import Storage, SupabaseStorage
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -21,6 +22,19 @@ def get_token_verifier() -> TokenVerifier:
     if not supabase_url:
         raise RuntimeError("SUPABASE_URL is not set")
     return TokenVerifier.for_supabase(supabase_url)
+
+
+@lru_cache
+def get_storage() -> Storage:
+    settings = get_settings()
+    if not settings.supabase_url or not settings.supabase_secret_key:
+        raise RuntimeError("SUPABASE_URL and SUPABASE_SECRET_KEY are not set")
+    return SupabaseStorage(
+        settings.supabase_url, settings.supabase_secret_key, settings.storage_bucket
+    )
+
+
+FileStorage = Annotated[Storage, Depends(get_storage)]
 
 
 def get_db_engine() -> Engine:

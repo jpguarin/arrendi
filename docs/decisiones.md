@@ -26,6 +26,7 @@
 | Documento del contrato | Se puede subir; un archivo por contrato |
 | Subida de archivos | Directa al almacenamiento con un enlace firmado que entrega la API, porque Vercel limita el cuerpo de una petición a 4,5 MB. La API valida el tipo real al confirmar |
 | Clave secreta de Supabase | Solo en el módulo de almacenamiento de la API, además de la tarea diaria, para crear enlaces firmados |
+| Cliente HTTP de la API | `httpx2`, el mismo paquete que ya usaban las pruebas; pasa a `requirements.txt` para hablar con Storage. No se usa el SDK de Supabase en la API |
 | Barra de navegación | Muestra solo las pantallas que ya existen; Cuentas y Ajustes se suman en su etapa |
 
 ## Provisionales
@@ -66,6 +67,7 @@ No son decisiones de producto, sino datos técnicos que cambian y que este repos
 
 ### Verificado el 11 de octubre de 2026
 
+- Supabase Storage, probado contra `arrendi-dev`: el enlace firmado de subida acepta un `PUT` con el archivo como cuerpo y sin claves; no sirve para sobrescribir un archivo que ya existe; el contenedor rechaza tipos no permitidos y más de 10 MB; un archivo de 7 MB sube bien; sin enlace no hay acceso.
 - Una función de Vercel admite un cuerpo de petición de hasta 4,5 MB (error 413 si lo supera) y, con Fluid compute, hasta 300 s de duración en el plan Hobby.
 
 ### Verificado el 10 de octubre de 2026
