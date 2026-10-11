@@ -11,9 +11,9 @@ Seis etapas, en orden. Cada una termina con sus criterios de aceptación cumplid
 Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando, sin funcionalidad de negocio todavía.
 
 - [x] Documentos al día: código en inglés y hallazgos de la documentación vigente.
-- [ ] Monorepo con Turborepo y pnpm según `CLAUDE.md`: `pnpm-workspace.yaml`, `turbo.json` y los scripts `dev`, `lint`, `test`, `build` y `gen:api` en la raíz.
-- [ ] `apps/api/package.json` con scripts que ejecutan la API, las pruebas y el lint desde su entorno de Python.
-- [ ] API: FastAPI con `GET /api/health`, configuración por variables de entorno, `ruff` y `pytest`.
+- [x] Monorepo con Turborepo y pnpm según `CLAUDE.md`: `pnpm-workspace.yaml`, `turbo.json` y los scripts `dev`, `lint`, `test`, `build` y `gen:api` en la raíz.
+- [x] `apps/api/package.json` con scripts que ejecutan la API, las pruebas y el lint desde su entorno de Python.
+- [x] API: FastAPI con `GET /api/health`, configuración por variables de entorno, `ruff` y `pytest`.
 - [ ] API: conexión a PostgreSQL con SQLAlchemy, sin reserva de conexiones.
 - [ ] API: Alembic configurado y primera migración con la tabla `owners`, su política de seguridad por fila y los roles de base de datos.
 - [ ] API: dependencia que valida el token de Supabase, abre la transacción y fija `app.owner_id`.
