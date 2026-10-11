@@ -25,7 +25,7 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 
 | Ruta | Qué hace |
 | --- | --- |
-| `GET /api/me` | Devuelve el propietario y si completó el alta (`onboarding_complete`). Crea su fila si es la primera vez. En la etapa 1 `onboarding_complete` es siempre `false`; se calcula desde la etapa 2. |
+| `GET /api/me` | Devuelve el propietario y si completó el alta (`onboarding_complete`). Crea su fila si es la primera vez. En la etapa 1 `onboarding_complete` es siempre `false`; se calcula desde la etapa 2. El nombre y el correo salen del token solo al crear la fila; después manda lo que el propietario guardó. Si el token no trae nombre se usa el correo, y sin correo responde 400 (`email_required`). |
 | `PATCH /api/settings` | Actualiza nombre, documento, datos de pago, día de envío, recordatorios y copia |
 | `GET /api/settings` | Devuelve la configuración |
 | `POST /api/onboarding` | Crea inmueble, unidades y, opcionalmente, arrendatario y contrato, en una transacción |

@@ -20,7 +20,7 @@ from sqlalchemy import Engine, text
 from app.auth import TokenVerifier
 from app.dependencies import CurrentUser, OwnerSession, get_db_engine, get_token_verifier
 from app.errors import AppError, register_error_handlers
-from tests.conftest import ISSUER, MakeToken
+from tests.conftest import ISSUER, MakeToken, bearer
 
 UNAUTHORIZED = {"detail": "Tu sesión no es válida. Vuelve a ingresar.", "code": "unauthorized"}
 
@@ -59,10 +59,6 @@ def sample_app(api_engine: Engine, token_verifier: TokenVerifier) -> FastAPI:
 def api(sample_app: FastAPI) -> Iterator[TestClient]:
     with TestClient(sample_app) as client:
         yield client
-
-
-def bearer(token: str) -> dict[str, str]:
-    return {"Authorization": f"Bearer {token}"}
 
 
 def name_of(admin_engine: Engine, owner_id: UUID) -> str:

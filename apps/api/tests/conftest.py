@@ -21,6 +21,7 @@ from sqlalchemy.engine import make_url
 
 from app.auth import TokenVerifier
 from app.db import create_db_engine
+from app.dependencies import get_db_engine, get_token_verifier
 from app.main import app
 
 API_DIR = Path(__file__).resolve().parent.parent
@@ -187,3 +188,26 @@ def make_token(signing_key: EllipticCurvePrivateKey) -> MakeToken:
         return jwt.encode(payload, key, algorithm=algorithm)
 
     return make
+
+
+@pytest.fixture
+def api(api_engine: Engine, token_verifier: TokenVerifier) -> Iterator[TestClient]:
+    """The real app, connected to the test database and trusting the test signing key."""
+    app.dependency_overrides[get_db_engine] = lambda: api_engine
+    app.dependency_overrides[get_token_verifier] = lambda: token_verifier
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def new_user_ids(admin_engine: Engine) -> Iterator[tuple[UUID, UUID]]:
+    """Ids of two users who have signed up in Supabase but never called the API."""
+    ids = (uuid4(), uuid4())
+    yield ids
+    with admin_engine.begin() as connection:
+        connection.execute(text("delete from owners where id = any(:ids)"), {"ids": list(ids)})
+
+
+def bearer(token: str) -> dict[str, str]:
+    return {"Authorization": f"Bearer {token}"}
