@@ -111,13 +111,13 @@ En esta tabla, `owner_id` es la propia columna `id`.
 | `due_day` | smallint | Día de pago. Entre 1 y 28 |
 | `start_date` | date | |
 | `end_date` | date, nulo | Posterior a `start_date` |
-| `deposit` | bigint, nulo | |
+| `deposit` | bigint, nulo | Cero o más |
 | `status` | text | `active`, `ended` |
 | `auto_send` | boolean, por defecto true | |
 | `document_path` | text, nulo | Ruta en el almacenamiento |
 | `document_uploaded_at` | timestamptz, nulo | |
 
-Restricción: índice único parcial sobre `unit_id` donde `status = 'active'`.
+Restricción: índice único parcial sobre `unit_id` donde `status = 'active'`. Decide la base, no el código, cuál gana si dos peticiones crean a la vez un contrato para la misma unidad.
 
 ### bills
 

@@ -2,7 +2,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Protocol
+from typing import NamedTuple, Protocol
 from uuid import UUID, uuid4
 
 import jwt
@@ -133,6 +133,63 @@ def two_owners(admin_engine: Engine) -> Iterator[tuple[UUID, UUID]]:
     yield ana, beto
     with admin_engine.begin() as connection:
         connection.execute(text("delete from owners where id in (:ana, :beto)"), locals())
+
+
+class Tree(NamedTuple):
+    """One owner's property, unit, tenant and active lease."""
+
+    property_id: UUID
+    unit_id: UUID
+    tenant_id: UUID
+    lease_id: UUID
+
+
+def create_tree(connection: Connection, owner_id: UUID, suffix: str) -> Tree:
+    ids = Tree(uuid4(), uuid4(), uuid4(), uuid4())
+    params = {"owner_id": owner_id, "suffix": suffix} | ids._asdict()
+    connection.execute(
+        text(
+            "insert into properties (id, owner_id, name, type) "
+            "values (:property_id, :owner_id, 'Casa ' || :suffix, 'house')"
+        ),
+        params,
+    )
+    connection.execute(
+        text(
+            "insert into units (id, owner_id, property_id, name, use) "
+            "values (:unit_id, :owner_id, :property_id, 'Apto ' || :suffix, 'residential')"
+        ),
+        params,
+    )
+    connection.execute(
+        text(
+            "insert into tenants (id, owner_id, name, email) "
+            "values (:tenant_id, :owner_id, 'Arrendatario ' || :suffix, :suffix || '@example.com')"
+        ),
+        params,
+    )
+    connection.execute(
+        text(
+            "insert into leases (id, owner_id, unit_id, tenant_id, rent, due_day, start_date) "
+            "values (:lease_id, :owner_id, :unit_id, :tenant_id, 950000, 5, '2026-01-01')"
+        ),
+        params,
+    )
+    return ids
+
+
+@pytest.fixture
+def trees(admin_engine: Engine, two_owners: tuple[UUID, UUID]) -> Iterator[tuple[Tree, Tree]]:
+    """A property with a unit, tenant and active lease for each of the two owners."""
+    ana, beto = two_owners
+    with admin_engine.begin() as connection:
+        created = create_tree(connection, ana, "ana"), create_tree(connection, beto, "beto")
+    yield created
+    with admin_engine.begin() as connection:
+        for table in ("leases", "tenants", "units", "properties"):
+            connection.execute(
+                text(f"delete from {table} where owner_id in (:ana, :beto)"), locals()
+            )
 
 
 ISSUER = "https://test-project.supabase.co/auth/v1"

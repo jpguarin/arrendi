@@ -44,7 +44,7 @@ Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando,
 
 Objetivo: cargar la casa, sus unidades, los arrendatarios y los contratos.
 
-- [ ] Migración: `properties`, `units`, `tenants`, `leases`, con políticas y restricciones.
+- [x] Migración: `properties`, `units`, `tenants`, `leases`, con políticas y restricciones.
 - [ ] API: rutas de inmuebles, unidades y contratos de `docs/api.md`, incluida `POST /api/onboarding`.
 - [ ] API: subida y consulta del documento del contrato, con validación de tipo y tamaño.
 - [ ] Web: alta guiada en tres pasos.

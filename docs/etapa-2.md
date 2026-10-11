@@ -42,7 +42,7 @@ Guía de trabajo de la etapa 2 (inmuebles y contratos). Las tareas y los criteri
 - `CLAUDE.md` (regla 2), `docs/arquitectura.md` (variable `SUPABASE_SECRET_KEY`, bucket, guía de despliegue) y `docs/decisiones.md` (subida directa y el límite de 4,5 MB).
 - **Se comprueba:** los documentos no se contradicen entre sí.
 
-### [ ] Paso 2. Migración `0002` y modelos
+### [x] Paso 2. Migración `0002` y modelos
 
 Pruebas primero.
 
