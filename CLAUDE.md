@@ -19,6 +19,7 @@ Lee el documento que corresponda antes de tocar esa parte del sistema. Si el có
 | `docs/plan.md` | Etapas, tareas y criterios de aceptación |
 | `docs/etapa-2.md` | Guía paso a paso de la etapa 2 (inmuebles y contratos), ya cerrada. Sirve de registro de lo decidido |
 | `docs/etapa-3.md` | Guía paso a paso de la etapa 3 (cuentas de cobro), ya cerrada. Sirve de registro de lo decidido |
+| `docs/etapa-4.md` | Guía paso a paso de la etapa 4 (correo y tarea diaria), en curso |
 | `docs/decisiones.md` | Decisiones tomadas, provisionales y pendientes |
 | `docs/mockups/` | Marcado de las 10 pantallas diseñadas, como referencia visual |
 
@@ -28,7 +29,7 @@ Lee el documento que corresponda antes de tocar esa parte del sistema. Si el có
 - **Web:** Next.js (App Router), React, TypeScript, Tailwind CSS, shadcn/ui para los componentes, TanStack Query para los datos de la API, Serwist para la PWA.
 - **Datos:** PostgreSQL en Supabase, con seguridad por fila. Supabase Storage para archivos.
 - **Acceso:** Supabase Auth, con Google y con correo y contraseña.
-- **PDF:** ReportLab. **Correo:** proveedor transaccional (por elegir).
+- **PDF:** ReportLab. **Correo:** Resend, con plantillas en Jinja2.
 - **Pruebas:** pytest en la API, contra un PostgreSQL local instalado con Homebrew. En la web, las funciones puras de `lib/` se prueban con el ejecutor de pruebas de Node (`node --test`), sin dependencias. Playwright de extremo a extremo, desde la etapa 5.
 - **Monorepo:** Turborepo con pnpm.
 - **Despliegue:** Vercel, dos proyectos (`arrendi-web` y `arrendi-api`) desde este repositorio. Sin Docker. La guía está en `docs/arquitectura.md`.

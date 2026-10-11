@@ -183,11 +183,13 @@ En el MVP cada cuenta tiene un solo concepto. La tabla existe para admitir despu
 | `type` | text | `bill`, `reminder_1`, `reminder_2`, `receipt`, `manual_reminder`, `resend` |
 | `channel` | text | `email` en el MVP |
 | `recipient` | text | Correo al que se envió |
-| `delivery_status` | text | `sent`, `bounced`, `failed` |
+| `delivery_status` | text | `pending` (apartada, aún sin enviar), `sent`, `bounced`, `failed` |
 | `provider_id` | text, nulo | Para cruzar los avisos de rebote |
-| `sent_at` | timestamptz | |
+| `sent_at` | timestamptz, nulo | Cuándo salió; nulo mientras no haya salido |
 
-Restricción: índice único parcial sobre `(bill_id, type)` donde `type in ('bill', 'reminder_1', 'reminder_2')`.
+Restricción: índice único parcial sobre `(bill_id, type)` donde `type in ('bill', 'reminder_1', 'reminder_2')`. Índice sobre `provider_id`, para los avisos de rebote.
+
+Permisos: `arrendi_api` y `arrendi_tasks` leen, crean y modifican notificaciones.
 
 ## Seguridad por fila
 

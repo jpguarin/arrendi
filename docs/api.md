@@ -26,7 +26,7 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 | Ruta | Qué hace |
 | --- | --- |
 | `GET /api/me` | Devuelve el propietario y si completó el alta (`onboarding_complete`). Crea su fila si es la primera vez. `onboarding_complete` es verdadero cuando el propietario tiene al menos un inmueble. El nombre y el correo salen del token solo al crear la fila; después manda lo que el propietario guardó. Si el token no trae nombre se usa el correo, y sin correo responde 400 (`email_required`). |
-| `PATCH /api/settings` | Actualiza nombre, tipo de documento (`document_type`: `cc` o `nit`), documento y datos de pago (`name`, `document_number`, `payment_details`). Solo cambian los campos enviados. Desde la etapa 4, también día de envío, recordatorios y copia |
+| `PATCH /api/settings` | Actualiza nombre, tipo de documento (`document_type`: `cc` o `nit`), documento y datos de pago (`name`, `document_number`, `payment_details`). Solo cambian los campos enviados. También día de envío (`send_day`, 1 a 28), recordatorios (`reminder_1`, `reminder_2`) y copia (`email_copy`) |
 | `GET /api/settings` | Devuelve la configuración |
 | `POST /api/onboarding` | Crea el primer inmueble (`property`), sus unidades (`units`, de 1 a 50) y, opcionalmente, el arrendatario y el contrato (`lease`, que señala la unidad con `unit_index`), en una transacción. 409 `onboarding_already_complete` si el propietario ya tiene un inmueble |
 
@@ -59,10 +59,10 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 | --- | --- |
 | `GET /api/bills` | Lista cuentas. Filtros: `unit_id`, `status` (`receivable`, `paid`, `voided`), `from`, `to` |
 | `POST /api/bills` | Crea una cuenta manual sobre un contrato activo: `lease_id`, `description`, `amount` y `due_date`. Responde 201. 400 `lease_not_active` si el contrato está terminado |
-| `GET /api/bills/{id}` | Devuelve la cuenta con conceptos, saldo (`balance`), unidad, arrendatario y los datos del propietario que muestra el documento. Los pagos llegan en la etapa 5 y las notificaciones en la 4 |
+| `GET /api/bills/{id}` | Devuelve la cuenta con conceptos, saldo (`balance`), unidad, arrendatario y los datos del propietario que muestra el documento. Trae sus notificaciones (`notifications`, de la más nueva a la más vieja). Los pagos llegan en la etapa 5 |
 | `GET /api/bills/{id}/pdf` | Devuelve un enlace temporal al PDF (`url`, `name` y `expires_in`, 5 minutos) |
-| `POST /api/bills/{id}/send` | Envía o reenvía la cuenta por correo |
-| `POST /api/bills/{id}/remind` | Envía un recordatorio manual. 400 si no tiene saldo |
+| `POST /api/bills/{id}/send` | Envía la cuenta por correo, o la reenvía si ya se había enviado. 400 `bill_voided` si está anulada |
+| `POST /api/bills/{id}/remind` | Envía un recordatorio manual. 400 `bill_has_no_balance` si no tiene saldo; 400 `bill_voided` si está anulada |
 | `POST /api/bills/{id}/void` | Anula la cuenta. 400 `bill_has_payments` si tiene pagos; 400 `bill_already_voided` si ya estaba anulada |
 
 El filtro `receivable` reúne `pending`, `partial` y `overdue`. Sin filtro de estado, las anuladas no se incluyen.
@@ -70,6 +70,8 @@ El filtro `receivable` reúne `pending`, `partial` y `overdue`. Sin filtro de es
 El listado va de la más nueva a la más vieja. `from` y `to` (fechas, inclusive) filtran por el mes al que pertenece la cuenta: el `period` de la mensual y el vencimiento de la manual.
 
 La cuenta mensual y la manual se crean con el PDF ya guardado. Si el almacenamiento falla, responden 503 `storage_unavailable` y no se crea nada: el consecutivo no se gasta.
+
+Enviar y recordar responden con la cuenta y la notificación recién creada en estado `pending`: el correo sale después de responder. Si el proveedor falla, la notificación queda `failed` y se ve en la actividad de la cuenta.
 
 Hasta la etapa 5 no hay tabla de pagos: una cuenta "tiene pagos" cuando su estado es `partial` o `paid`.
 
@@ -94,8 +96,8 @@ Estas rutas no usan el token del propietario.
 
 | Ruta | Quién la llama | Protección |
 | --- | --- | --- |
-| `GET /api/cron/daily` | El Cron Job de Vercel | Secreto en la cabecera `Authorization` |
-| `POST /api/webhooks/email` | El proveedor de correo | Firma del proveedor |
+| `GET /api/cron/daily` | El Cron Job de Vercel | `Authorization: Bearer <CRON_SECRET>`. Responde cuántas cuentas generó, cuántas marcó vencidas, cuántos correos envió y cuántos errores hubo |
+| `POST /api/webhooks/email` | Resend | Firma en las cabeceras `svix-*`, con `EMAIL_WEBHOOK_SECRET`. Un rebote deja la notificación `bounced` |
 | `GET /api/health` | Monitoreo | Ninguna; no expone datos |
 
 ## Subida de archivos

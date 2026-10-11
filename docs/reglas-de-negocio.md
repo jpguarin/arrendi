@@ -77,11 +77,12 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 
 | Correo | Cuándo sale | Contenido | Adjunto |
 | --- | --- | --- | --- |
-| `bill` | Al generar, si el contrato tiene envío automático; o cuando el propietario la envía | Periodo, valor, vencimiento y datos de pago | PDF de la cuenta |
+| `bill` | Cuando la tarea diaria la genera, si el contrato tiene envío automático; o cuando el propietario la envía | Periodo, valor, vencimiento y datos de pago | PDF de la cuenta |
 | `reminder_1` | Al día siguiente del vencimiento, si hay saldo | Saldo pendiente y datos de pago | PDF de la cuenta |
 | `reminder_2` | A los 7 días del vencimiento, si hay saldo | Saldo pendiente y días de atraso | PDF de la cuenta |
 | `receipt` | Al registrar un pago, si el propietario lo marca | Valor recibido, fecha, medio y saldo restante | Ninguno |
 | `manual_reminder` | Cuando el propietario lo pide | Saldo pendiente y datos de pago | PDF de la cuenta |
+| `resend` | Cuando el propietario reenvía una cuenta ya enviada | Lo mismo que `bill` | PDF de la cuenta |
 
 - Remitente con el nombre del propietario; las respuestas van al correo del propietario (`Reply-To`).
 - El propietario puede activar o desactivar cada recordatorio automático y recibir copia de cada correo.
@@ -89,6 +90,11 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 - Los correos automáticos (`bill`, `reminder_1`, `reminder_2`) salen una sola vez por cuenta. Los manuales y los reenvíos no tienen ese límite.
 - Si el proveedor avisa de un rebote, la notificación queda `bounced` y el inicio lo muestra.
 - El correo se envía después de confirmar la transacción.
+- **A mano no se envía solo:** la cuenta que el propietario genera a mano (la mensual desde el contrato o una manual) queda sin enviar hasta que él la envía, aunque el contrato tenga envío automático.
+- **Recordatorios solo de cuentas enviadas:** una cuenta que nunca se le envió al arrendatario no recibe recordatorios automáticos.
+- **Una cuenta anulada no se envía ni se recuerda.**
+- **Envío en dos tiempos:** la notificación se crea `pending` dentro de la transacción y, tras confirmarla, el correo sale y la notificación pasa a `sent` o `failed`. La tarea diaria reintenta los correos automáticos que quedaron `pending` o `failed`.
+- **Desvío:** mientras exista un buzón de pruebas configurado, todo correo va a ese buzón y no al arrendatario. Ver `docs/arquitectura.md`.
 
 ## Tarea diaria
 
@@ -96,7 +102,7 @@ Corre una vez al día, en la mañana de Colombia. "Hoy" es la fecha en `America/
 
 1. **Generar cuentas.** Para cada propietario, si su día de envío ya llegó en el mes en curso, se genera la cuenta del periodo actual de cada contrato activo que aún no la tenga. Si el contrato tiene envío automático, se envía; si no, queda sin enviar a la espera del propietario.
 2. **Marcar vencidas.** Las cuentas `pending` o `partial` con vencimiento anterior a hoy pasan a `overdue`.
-3. **Enviar recordatorios.** `reminder_1` a las cuentas vencidas cuyo vencimiento fue hace 1 día o más y no lo tienen; `reminder_2` a las que vencieron hace 7 días o más y no lo tienen. Solo si el propietario tiene activo ese recordatorio.
+3. **Enviar recordatorios.** `reminder_1` a las cuentas vencidas cuyo vencimiento fue hace 1 día o más y no lo tienen; `reminder_2` a las que vencieron hace 7 días o más y no lo tienen. Solo si el propietario tiene activo ese recordatorio y la cuenta ya se envió. Como mucho un recordatorio por cuenta en cada ejecución: si una cuenta merece los dos, `reminder_2` sale en la siguiente.
 
 Condiciones:
 

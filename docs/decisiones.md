@@ -32,6 +32,10 @@
 | Cuenta mensual a mano | `POST /api/leases/{id}/bills` genera la del mes en curso, con el mismo servicio que usa la tarea diaria |
 | Ajustes mínimo en la etapa 3 | Nombre, documento y datos de pago se adelantan a la etapa 3, porque el PDF los necesita. El resto de la configuración sigue en la etapa 4 |
 | Cuenta con vencimiento pasado | Nace `overdue`, sin esperar a la tarea diaria |
+| Proveedor de correo | Resend, por su API HTTP con `httpx2`, sin SDK |
+| Correos hasta la etapa 6 | Todos van al buzón de pruebas (`EMAIL_TEST_INBOX`), también en Producción, con el destinatario real en el asunto. Con el dominio propio, la variable se quita de Producción |
+| Cuenta generada a mano | No se envía sola: queda con el botón "Enviar". Solo la tarea diaria envía sola |
+| Recordatorios | Solo de cuentas que ya se enviaron, y uno por cuenta en cada ejecución de la tarea |
 | PDF | ReportLab con Helvetica, que ya trae; no se empaqueta Figtree |
 
 ## Provisionales
@@ -55,7 +59,7 @@ Hay que resolverlas antes de la etapa indicada.
 
 | Decisión | Antes de |
 | --- | --- |
-| Proveedor de correo y dominio de envío | Etapa 4 |
+| Dominio de envío del correo | Etapa 6 |
 | Plan de Vercel: confirmar si el gratuito admite uso comercial | Etapa 6 |
 | Verificar dominio y registro de marca de Arrendi ante la SIC | Etapa 6 |
 | Confirmar con un contador si basta la cuenta de cobro o hará falta factura electrónica | Etapa 6 |
@@ -67,11 +71,12 @@ Hay que resolverlas antes de la etapa indicada.
 No son decisiones de producto, sino datos técnicos que cambian y que este repositorio no fija:
 
 - Requisitos de Google para publicar la pantalla de consentimiento a usuarios externos.
-- Cómo protege Vercel las llamadas de un Cron Job.
 - Si la protección de despliegues de Vercel bloquea la redirección de la web hacia la API de vista previa.
 
 ### Verificado el 11 de octubre de 2026
 
+- Vercel llama al Cron Job con `Authorization: Bearer <CRON_SECRET>`, no reintenta si falla y puede, rara vez, llamar dos veces o ninguna: la tarea debe ser idempotente y recuperarse sola.
+- Resend: `POST https://api.resend.com/emails` con adjuntos en Base64 y cabecera `Idempotency-Key` (vale 24 horas). Sus avisos llegan firmados con las cabeceras `svix-id`, `svix-timestamp` y `svix-signature`.
 - Supabase Storage acepta desde el navegador el `PUT` de subida con `Content-Type` (CORS: cualquier origen), comprobado con la petición previa contra `arrendi-dev`.
 - Supabase Storage, probado contra `arrendi-dev`: el enlace firmado de subida acepta un `PUT` con el archivo como cuerpo y sin claves; no sirve para sobrescribir un archivo que ya existe; el contenedor rechaza tipos no permitidos y más de 10 MB; un archivo de 7 MB sube bien; sin enlace no hay acceso.
 - Una función de Vercel admite un cuerpo de petición de hasta 4,5 MB (error 413 si lo supera) y, con Fluid compute, hasta 300 s de duración en el plan Hobby.
