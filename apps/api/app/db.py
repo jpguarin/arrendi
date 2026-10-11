@@ -14,22 +14,36 @@ def to_psycopg_url(url: str) -> str:
     return make_url(url).set(drivername="postgresql+psycopg").render_as_string(hide_password=False)
 
 
-def create_db_engine(url: str) -> Engine:
-    # The API runs in functions behind Supabase's pooler in transaction mode:
-    # no pool of our own, and no prepared statements.
+def create_db_engine(url: str, keep_connections: bool = False) -> Engine:
+    """An engine for Supabase's pooler in transaction mode: no prepared statements.
+
+    By default it has no pool of its own, which is what a function that lives for one
+    request needs. `keep_connections` reuses a few connections instead; see `get_engine`.
+    """
+    connect_args = {"prepare_threshold": None}
+    if not keep_connections:
+        return create_engine(to_psycopg_url(url), poolclass=NullPool, connect_args=connect_args)
     return create_engine(
         to_psycopg_url(url),
-        poolclass=NullPool,
-        connect_args={"prepare_threshold": None},
+        connect_args=connect_args,
+        pool_size=5,
+        max_overflow=5,
+        # The computer sleeps and the network changes; check before using a kept connection.
+        pool_pre_ping=True,
+        pool_recycle=300,
     )
 
 
 @lru_cache
 def get_engine() -> Engine:
-    url = get_settings().database_url
-    if not url:
+    settings = get_settings()
+    if not settings.database_url:
         raise RuntimeError("DATABASE_URL is not set")
-    return create_db_engine(url)
+    # On the developer's computer the database is far away: opening a connection takes
+    # about six round trips, more than the rest of the request. Keeping connections there
+    # is safe (the owner is set per transaction) and halves the wait. On Vercel the API
+    # runs next to the database and a function must not hold connections between requests.
+    return create_db_engine(settings.database_url, keep_connections=settings.environment == "local")
 
 
 def set_owner_id(connection: Connection | Session, owner_id: UUID) -> None:

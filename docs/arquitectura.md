@@ -98,6 +98,7 @@ Se hace a mano en el panel, en cada proyecto de Supabase:
 
 - La API corre en funciones, que no mantienen conexiones abiertas entre peticiones.
 - Se conecta a través del agrupador de conexiones de Supabase en **modo transacción** (puerto 6543), sin reserva propia de conexiones en SQLAlchemy (`NullPool`).
+- **En local sí reserva unas pocas conexiones** (`ENVIRONMENT=local`). Desde el computador del fundador cada viaje a la base tarda unos 100 ms y abrir una conexión son unos seis viajes, más que el resto de la petición; reutilizarla baja una consulta de 1,2 s a 0,7 s. Es seguro porque el propietario se fija por transacción. En Vercel la API corre en la misma región que la base (`us-east-1`) y ese costo no existe.
 - El modo transacción no admite sentencias preparadas: el driver (`psycopg`) se configura con ellas desactivadas.
 - Un rol propio se conecta por el agrupador con el usuario `arrendi_api.<ref-del-proyecto>`. El servidor del agrupador se copia del panel de Supabase.
 - `app.owner_id` se fija con alcance de transacción. Es obligatorio con un agrupador: ver `docs/modelo-de-datos.md`.

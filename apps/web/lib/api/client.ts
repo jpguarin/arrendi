@@ -29,6 +29,30 @@ const auth: Middleware = {
   },
 };
 
+// Reads that are on their way, by address and session.
+const inFlight = new Map<string, Promise<Response>>();
+
+/**
+ * Sends a read only once while it is on its way: whoever asks for the same thing in
+ * the meantime gets the same answer.
+ *
+ * Two parts of a screen often need the same data at the same moment, and in development
+ * React mounts every screen twice on purpose, which sent every first load twice.
+ * Nothing is kept once the answer arrives, so the next visit asks again.
+ */
+async function fetchOnce(request: Request): Promise<Response> {
+  if (request.method !== "GET") return fetch(request);
+
+  const key = `${request.url}\n${request.headers.get("Authorization") ?? ""}`;
+  let pending = inFlight.get(key);
+  if (!pending) {
+    pending = fetch(request).finally(() => inFlight.delete(key));
+    inFlight.set(key, pending);
+  }
+  // Each caller reads its own copy; a response can only be read once.
+  return (await pending).clone();
+}
+
 // Same origin: Next.js forwards /api to FastAPI (see next.config.ts).
-export const api = createClient<paths>({ baseUrl: "" });
+export const api = createClient<paths>({ baseUrl: "", fetch: fetchOnce });
 api.use(auth);
