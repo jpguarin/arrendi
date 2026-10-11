@@ -141,6 +141,10 @@ Restricciones:
 - Único `(owner_id, number)`.
 - Índice único parcial sobre `(lease_id, period)` donde `origin = 'monthly'` y `status <> 'voided'`.
 - Índice sobre `(status, due_date)` para la tarea diaria.
+- `period` existe solo en las mensuales y es siempre el primer día del mes.
+- `voided_at` existe solo en las anuladas.
+
+Permisos: `arrendi_api` y `arrendi_tasks` leen, crean y modifican cuentas (la tarea diaria las genera y las marca vencidas).
 
 ### bill_items
 
@@ -151,6 +155,8 @@ Restricciones:
 | `bill_id` | uuid, FK | |
 | `description` | text | |
 | `amount` | bigint | Mayor que cero |
+
+Los conceptos de una cuenta emitida no cambian: ningún rol puede modificarlos, solo leerlos y crearlos.
 
 En el MVP cada cuenta tiene un solo concepto. La tabla existe para admitir después servicios, mora o reparaciones.
 

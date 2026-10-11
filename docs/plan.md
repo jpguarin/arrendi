@@ -65,7 +65,7 @@ Objetivo: cargar la casa, sus unidades, los arrendatarios y los contratos.
 
 Objetivo: generar cuentas con consecutivo y PDF, a mano, sin correo todavía.
 
-- [ ] Migración: `bills` y `bill_items`, con sus índices únicos.
+- [x] Migración: `bills` y `bill_items`, con sus índices únicos.
 - [ ] API: servicio que genera la cuenta mensual de un contrato, con consecutivo transaccional.
 - [ ] API: generación del PDF con ReportLab y guardado en el almacenamiento.
 - [ ] API: rutas de cuentas de `docs/api.md`, salvo enviar y recordar.

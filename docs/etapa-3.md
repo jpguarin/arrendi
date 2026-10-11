@@ -49,7 +49,7 @@ En los pasos 2, 5 y 7 la prueba va primero.
 - `docs/decisiones.md`, `docs/diseno.md` (pestañas Cuentas y Ajustes, diferencias con los mockups), `docs/plan.md` (Ajustes mínimo en la etapa 3) y `CLAUDE.md` (este documento en la tabla).
 - **Se comprueba:** los documentos no se contradicen entre sí.
 
-### [ ] Paso 2. Migración `0003` y modelos
+### [x] Paso 2. Migración `0003` y modelos
 
 - `apps/api/migrations/versions/0003_bills.py`, con `0002` como molde: `bills` y `bill_items`, claves foráneas compuestas con `owner_id`, `unique (owner_id, id)`, `check` de `origin`, `status` y `total > 0`, único `(owner_id, number)`, índice único parcial `(lease_id, period) where origin = 'monthly' and status <> 'voided'`, índice `(status, due_date)`, y `check` de que `period` existe solo en las mensuales.
 - Seguridad por fila, disparador y revocación a los roles de Supabase. `arrendi_api`: select, insert, update. `arrendi_tasks`: select, insert y update en `bills`; select e insert en `bill_items`.
