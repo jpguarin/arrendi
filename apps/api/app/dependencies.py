@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.auth import AuthUnavailableError, AuthUser, InvalidTokenError, TokenVerifier
 from app.config import get_settings
 from app.dates import today_in_bogota
-from app.db import get_engine, set_owner_id
+from app.db import get_engine, get_tasks_engine, set_owner_id
 from app.email.sender import EmailSender, build_sender
 from app.errors import auth_unavailable, unauthorized
 from app.storage import Storage, SupabaseStorage
@@ -54,6 +54,10 @@ Today = Annotated[date, Depends(today_in_bogota)]
 
 def get_db_engine() -> Engine:
     return get_engine()
+
+
+def get_tasks_db_engine() -> Engine:
+    return get_tasks_engine()
 
 
 def get_bearer_token(

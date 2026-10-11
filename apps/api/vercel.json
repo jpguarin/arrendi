@@ -5,5 +5,11 @@
     "app/main.py": {
       "excludeFiles": "{tests/**,migrations/**,alembic.ini,openapi.json}"
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/daily",
+      "schedule": "0 11 * * *"
+    }
+  ]
 }
