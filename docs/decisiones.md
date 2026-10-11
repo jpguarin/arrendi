@@ -24,6 +24,9 @@
 | Next.js | Versión 16.4, con Turbopack. Sin `cacheComponents` ni `partialPrefetching`, que la plantilla trae activos: todas las pantallas son privadas y por propietario, y esas opciones obligan a aislar cada lectura de la sesión |
 | Suscripción y límites por plan | Fuera del MVP |
 | Documento del contrato | Se puede subir; un archivo por contrato |
+| Subida de archivos | Directa al almacenamiento con un enlace firmado que entrega la API, porque Vercel limita el cuerpo de una petición a 4,5 MB. La API valida el tipo real al confirmar |
+| Clave secreta de Supabase | Solo en el módulo de almacenamiento de la API, además de la tarea diaria, para crear enlaces firmados |
+| Barra de navegación | Muestra solo las pantallas que ya existen; Cuentas y Ajustes se suman en su etapa |
 
 ## Provisionales
 
@@ -58,9 +61,12 @@ Hay que resolverlas antes de la etapa indicada.
 No son decisiones de producto, sino datos técnicos que cambian y que este repositorio no fija:
 
 - Requisitos de Google para publicar la pantalla de consentimiento a usuarios externos.
-- Duración máxima y tamaño máximo de cuerpo de una función de Vercel.
 - Cómo protege Vercel las llamadas de un Cron Job.
 - Si la protección de despliegues de Vercel bloquea la redirección de la web hacia la API de vista previa.
+
+### Verificado el 11 de octubre de 2026
+
+- Una función de Vercel admite un cuerpo de petición de hasta 4,5 MB (error 413 si lo supera) y, con Fluid compute, hasta 300 s de duración en el plan Hobby.
 
 ### Verificado el 10 de octubre de 2026
 

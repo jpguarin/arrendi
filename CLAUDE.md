@@ -98,14 +98,14 @@ alembic revision --autogenerate -m "descripcion"
 ## Reglas que no se rompen
 
 1. **La lógica de negocio vive solo en FastAPI.** En Next.js no se crean rutas de API ni acciones de servidor con reglas de negocio. Next.js dibuja la interfaz y llama a `/api`. Las únicas rutas de Next son las de infraestructura listadas en `docs/decisiones.md` (service worker y regreso del acceso).
-2. **Aislamiento por propietario.** Toda tabla lleva `owner_id` y una política de seguridad por fila. Cada transacción de una petición fija `app.owner_id` antes de consultar. La clave de servicio y el rol que salta las políticas solo se usan en la tarea diaria y en los avisos del correo.
+2. **Aislamiento por propietario.** Toda tabla lleva `owner_id` y una política de seguridad por fila. Cada transacción de una petición fija `app.owner_id` antes de consultar. El rol que salta las políticas solo se usa en la tarea diaria y en los avisos del correo. La clave secreta de Supabase solo se usa en el módulo de almacenamiento de la API (`app/storage.py`), que antes comprueba el propietario.
 3. **Toda funcionalidad nueva incluye la prueba de aislamiento:** un propietario no puede leer ni modificar datos de otro.
 4. **El dinero son pesos enteros** (`bigint` en la base, `int` en Python). Nunca decimales ni `float`.
 5. **Una cuenta emitida no se edita.** Se anula y se genera otra. Una cuenta con pagos no se anula.
 6. **El consecutivo se asigna dentro de una transacción** que bloquea la fila del propietario. Sin saltos ni duplicados.
 7. **La tarea diaria es idempotente.** Ejecutarla dos veces el mismo día no crea cuentas ni envía correos repetidos.
 8. **Los correos se envían después de confirmar la transacción,** nunca dentro de ella.
-9. **Los archivos son privados.** Solo la API lee y escribe en el almacenamiento, y entrega enlaces temporales tras comprobar el propietario.
+9. **Los archivos son privados.** El bucket no tiene acceso público ni políticas para los usuarios. Solo la API lo gobierna: entrega enlaces temporales de subida y de lectura, siempre tras comprobar el propietario.
 10. **Los secretos no entran al repositorio.** Van en `.env` (ignorado) y en las variables de Vercel.
 11. **Sin Docker.**
 12. **Fuera del MVP:** suscripción y límites por plan, WhatsApp, portal del arrendatario, reparto de servicios, pagos en línea, notificaciones push, modo sin conexión con escritura. No los construyas ni dejes código a medias para ellos.

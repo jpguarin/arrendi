@@ -34,7 +34,7 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 
 | Ruta | Qué hace |
 | --- | --- |
-| `GET /api/properties` | Lista los inmuebles con sus unidades, y por unidad el contrato activo y su estado (al día, en mora, pago parcial, vacía) |
+| `GET /api/properties` | Lista los inmuebles con sus unidades, y por unidad el contrato activo y su `status`. Hasta la etapa 5 el estado es `vacant` (sin contrato activo) o `up_to_date` (con contrato activo); desde entonces también `overdue` y `partial`, calculados con las cuentas |
 | `POST /api/properties` | Crea un inmueble |
 | `PATCH /api/properties/{id}` | Edita un inmueble |
 | `POST /api/properties/{id}/units` | Agrega una unidad |
@@ -48,7 +48,8 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 | `GET /api/leases/{id}` | Devuelve contrato, arrendatario, unidad y sus últimas cuentas |
 | `PATCH /api/leases/{id}` | Edita canon, día de pago, fechas, depósito, envío automático y datos del arrendatario |
 | `POST /api/leases/{id}/end` | Pasa el contrato a terminado |
-| `POST /api/leases/{id}/document` | Sube o reemplaza el documento firmado |
+| `POST /api/leases/{id}/document/upload-url` | Primer paso de la subida. Recibe `filename`, `content_type` y `size`; devuelve el enlace firmado de subida y la ruta del objeto |
+| `POST /api/leases/{id}/document` | Segundo paso. Confirma la subida: valida el archivo guardado, lo asocia al contrato y borra el anterior si lo reemplaza |
 | `GET /api/leases/{id}/document` | Devuelve un enlace temporal al documento |
 
 ## Cuentas de cobro
@@ -94,4 +95,8 @@ Estas rutas no usan el token del propietario.
 
 - Tipos permitidos: PDF, JPG y PNG. El tipo real se valida leyendo el contenido, no solo la extensión.
 - Tamaño máximo: 10 MB (decisión provisional, ver `docs/decisiones.md`).
-- Vercel limita el tamaño del cuerpo de una petición a una función. Verifica el límite vigente antes de implementar la subida; si 10 MB lo supera, la alternativa es que la API entregue un enlace firmado de subida y el navegador envíe el archivo directo al almacenamiento.
+- **Subida directa al almacenamiento.** Vercel limita el cuerpo de una petición a una función a 4,5 MB (consultado el 11 de octubre de 2026), así que los archivos no pasan por la API. El flujo, igual para el contrato y, en la etapa 5, para el comprobante del pago:
+  1. La web pide a la API un enlace firmado de subida (`.../upload-url`), indicando nombre, tipo y tamaño. La API comprueba que el recurso es del propietario y que el tipo y el tamaño están permitidos, y devuelve el enlace y la ruta del objeto. El enlace sirve para esa ruta y vence en pocas horas.
+  2. El navegador envía el archivo directo a Supabase Storage con ese enlace.
+  3. La web confirma a la API (`POST .../document`). La API lee del objeto su tamaño real y sus primeros bytes, valida el tipo por contenido, guarda la ruta en la base y borra el archivo anterior. Si no valida, borra el objeto y responde 422.
+  Un archivo subido y nunca confirmado queda huérfano en el almacenamiento; no se asocia a nada y no se puede abrir desde la API.

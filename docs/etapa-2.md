@@ -28,14 +28,14 @@ Guía de trabajo de la etapa 2 (inmuebles y contratos). Las tareas y los criteri
 
 | Cuándo | Qué | Dónde |
 | --- | --- | --- |
-| Antes del paso 6 | Crear el bucket privado con límite de 10 MB y solo PDF, JPG y PNG | Supabase, `arrendi-dev` → Storage |
+| Antes del paso 6 | Crear el contenedor privado `arrendi` con límite de 10 MB y solo PDF, JPG y PNG (ver `docs/modelo-de-datos.md`) | Supabase, `arrendi-dev` → Storage |
 | Antes del paso 6 | Poner `SUPABASE_SECRET_KEY` (clave secreta de `arrendi-dev`) | `apps/api/.env` y variables de `arrendi-api` en Vercel. No la pegues en el chat |
 | Después del paso 2 | Aplicar la migración `0002` con `alembic upgrade head` (conexión del agrupador de sesión) | `arrendi-dev`, antes de subir el código que la usa |
 | Al final | Probar en el iPhone: subir un PDF, cerrarlo y volver a abrirlo | `arrendi-web.vercel.app` |
 
 ## Pasos
 
-### [ ] Paso 1. Documentos al día
+### [x] Paso 1. Documentos al día
 
 - `docs/api.md`: la subida en dos pasos. `POST /api/leases/{id}/document/upload-url` devuelve el enlace firmado y la ruta; `POST /api/leases/{id}/document` confirma, valida y guarda. Estado de la unidad `vacant` o `up_to_date`.
 - `docs/modelo-de-datos.md`: unicidad `(owner_id, id)` en cada tabla y claves foráneas compuestas; el bucket privado y su creación a mano.

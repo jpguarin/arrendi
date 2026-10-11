@@ -9,7 +9,7 @@ Cron Job de Vercel ────────────┘                      
                                                                           └──> Proveedor de correo ──> Arrendatario
 ```
 
-Solo la API toca la base de datos, los archivos y el correo. La única excepción es el inicio de sesión, que la web hace directamente contra Supabase Auth.
+Solo la API toca la base de datos y el correo, y solo ella da acceso a los archivos: comprueba el propietario y entrega enlaces temporales, con los que el navegador sube o descarga el archivo directo del almacenamiento (Vercel limita el cuerpo de una petición a 4,5 MB). La única excepción es el inicio de sesión, que la web hace directamente contra Supabase Auth.
 
 ## Stack
 
@@ -126,10 +126,10 @@ El nombre `arrendi-api` está escrito en `apps/web/next.config.ts`: la web lo us
 
 Se hace una vez. Los pasos en Vercel y Supabase los hace el fundador en sus cuentas.
 
-1. **Supabase.** En `arrendi-dev` y en `arrendi-prod`: seguir "Configuración de Supabase Auth", aplicar las migraciones (`alembic upgrade head` con `DATABASE_URL_MIGRATIONS` de ese proyecto) y activar el acceso de los roles con el SQL de `docs/modelo-de-datos.md`.
+1. **Supabase.** En `arrendi-dev` y en `arrendi-prod`: seguir "Configuración de Supabase Auth", crear el contenedor privado de archivos (ver "Almacenamiento de archivos" en `docs/modelo-de-datos.md`), aplicar las migraciones (`alembic upgrade head` con `DATABASE_URL_MIGRATIONS` de ese proyecto) y activar el acceso de los roles con el SQL de `docs/modelo-de-datos.md`.
 2. **Proyecto `arrendi-api` en Vercel.** Importar el repositorio con carpeta raíz `apps/api` y el tipo de proyecto FastAPI.
-   - Variables de producción, con los valores de `arrendi-prod`: `ENVIRONMENT=production`, `DATABASE_URL` y `SUPABASE_URL`.
-   - Variables de vista previa, con los valores de `arrendi-dev`: `ENVIRONMENT=preview`, `DATABASE_URL` y `SUPABASE_URL`.
+   - Variables de producción, con los valores de `arrendi-prod`: `ENVIRONMENT=production`, `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY` y `STORAGE_BUCKET` (desde la etapa 2).
+   - Variables de vista previa, con los valores de `arrendi-dev`: `ENVIRONMENT=preview`, `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY` y `STORAGE_BUCKET`.
    - `apps/api/vercel.json` define `installCommand`: al detectar `turbo.json`, Vercel ejecutaba `pnpm install` y nunca instalaba `requirements.txt` (la función fallaba con `No module named 'fastapi'`). Comprobado el 10 de octubre de 2026.
    - En la protección de despliegues, elegir "ninguna". La web llama a la API de vista previa de servidor a servidor, sin sesión de Vercel, y la protección por defecto la bloquearía. La API ya exige el token de Supabase en todo lo que tiene datos.
 3. **Enlace entre proyectos.** Copiar el id del proyecto `arrendi-api` (empieza por `prj_`) en `apps/web/vercel.json`, en `relatedProjects`. No es un secreto.

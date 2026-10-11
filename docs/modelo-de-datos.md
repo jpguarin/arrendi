@@ -45,6 +45,7 @@ El contrato es el centro: une una unidad con un arrendatario, y de él nacen las
 - El dinero se guarda en pesos enteros (`bigint`).
 - Las fechas de negocio son `date`.
 - Los valores cerrados (estados, usos, medios) son `text` con una restricción `check`.
+- **Las claves foráneas llevan el propietario.** Una clave foránea no pasa por la seguridad por fila, así que una fila podría apuntar a la de otro propietario con solo conocer su id. Para impedirlo, cada tabla que se referencia tiene `unique (owner_id, id)` y cada clave foránea es compuesta: `foreign key (owner_id, property_id) references properties (owner_id, id)`, y lo mismo para `unit_id`, `tenant_id`, `lease_id` y `bill_id`. La base rechaza el cruce aunque la API tuviera un error.
 
 ## Tablas
 
@@ -241,4 +242,10 @@ Un solo contenedor privado. Las rutas empiezan por el propietario:
 {owner_id}/proofs/{payment_id}/{nombre}
 ```
 
-Solo la API lee y escribe. Para mostrar un archivo, la API comprueba el propietario y devuelve un enlace temporal de pocos minutos.
+Solo la API da acceso. Para subir, la API comprueba el propietario y devuelve un enlace firmado de subida para esa ruta; para mostrar, devuelve un enlace temporal de pocos minutos. Con esos enlaces, el navegador sube y descarga directo del almacenamiento: el archivo no pasa por la API, porque Vercel limita el cuerpo de una petición a 4,5 MB. El flujo está en `docs/api.md`.
+
+El contenedor se crea a mano en cada proyecto de Supabase, antes de la etapa 2:
+
+- Nombre `arrendi` (variable `STORAGE_BUCKET`), **privado**, con límite de tamaño de 10 MB y tipos permitidos `application/pdf`, `image/jpeg` e `image/png`.
+- Sin políticas sobre `storage.objects`: ningún usuario accede por la API de Storage con su sesión. Solo la API, con la clave secreta, crea los enlaces.
+- La API vuelve a validar tamaño y tipo real al confirmar, porque el límite del contenedor no revisa el contenido.
