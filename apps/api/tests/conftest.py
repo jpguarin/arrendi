@@ -119,7 +119,7 @@ def tasks_engine(admin_engine: Engine, admin_url: str) -> Iterator[Engine]:
 
 
 # Children first: the foreign keys do not cascade.
-OWNED_TABLES = ("bill_items", "bills", "leases", "tenants", "units", "properties")
+OWNED_TABLES = ("notifications", "bill_items", "bills", "leases", "tenants", "units", "properties")
 
 
 def delete_owners(admin_engine: Engine, owner_ids: list[UUID]) -> None:
