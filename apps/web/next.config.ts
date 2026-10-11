@@ -1,8 +1,15 @@
 import { withSerwist } from "@serwist/turbopack";
+import { withRelatedProject } from "@vercel/related-projects";
 import type { NextConfig } from "next";
 
 // The browser only ever talks to the web's own origin; Next.js forwards /api to FastAPI.
-const apiUrl = process.env.API_URL ?? "http://localhost:8000";
+// On Vercel the address comes from the API project linked in vercel.json, so each
+// preview of the web reaches the preview of the API on the same branch. Elsewhere it
+// is API_URL.
+const apiUrl = withRelatedProject({
+  projectName: "arrendi-api",
+  defaultHost: process.env.API_URL ?? "http://localhost:8000",
+});
 
 const nextConfig: NextConfig = {
   // CLAUDE.md is the only rules file for agents in this repository.

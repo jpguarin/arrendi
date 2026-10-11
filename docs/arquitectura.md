@@ -110,8 +110,10 @@ Dos proyectos conectados a este repositorio, cada uno con su carpeta raíz dentr
 
 | Proyecto | Carpeta raíz | Qué es |
 | --- | --- | --- |
-| `web` | `apps/web/` | Next.js |
-| `api` | `apps/api/` | FastAPI, como una sola función de Vercel |
+| `arrendi-web` | `apps/web/` | Next.js |
+| `arrendi-api` | `apps/api/` | FastAPI, como una sola función de Vercel |
+
+El nombre `arrendi-api` está escrito en `apps/web/next.config.ts`: la web lo usa para encontrar la API. Si el proyecto se llama distinto en Vercel, hay que cambiarlo ahí.
 
 - **Punto de entrada de la API:** Vercel detecta la instancia `app` en `apps/api/app/main.py`.
 - **Un solo dominio:** Next.js redirige `/api/:ruta*` hacia el proyecto `api` con una regla `rewrites`. El navegador nunca ve dos orígenes, así que no hace falta CORS.
@@ -119,6 +121,25 @@ Dos proyectos conectados a este repositorio, cada uno con su carpeta raíz dentr
 - **Proyectos sin cambios:** Vercel omite el despliegue del proyecto que un commit no toca. Requiere que cada aplicación tenga un `package.json` con nombre único; el de `apps/api` lo cumple.
 - **Tarea diaria:** un Cron Job en `apps/api/vercel.json` llama a `/api/cron/daily` a las 11:00 UTC, que son las 6:00 a. m. en Colombia.
 - **Tiempo máximo:** cada llamada tiene un límite de duración, configurable en `vercel.json` con la clave `functions` y la entrada `app/main.py`. La tarea diaria procesa por lotes.
+
+### Guía de despliegue
+
+Se hace una vez. Los pasos en Vercel y Supabase los hace el fundador en sus cuentas.
+
+1. **Supabase.** En `arrendi-dev` y en `arrendi-prod`: seguir "Configuración de Supabase Auth", aplicar las migraciones (`alembic upgrade head` con `DATABASE_URL_MIGRATIONS` de ese proyecto) y activar el acceso de los roles con el SQL de `docs/modelo-de-datos.md`.
+2. **Proyecto `arrendi-api` en Vercel.** Importar el repositorio con carpeta raíz `apps/api` y el tipo de proyecto FastAPI.
+   - Variables de producción, con los valores de `arrendi-prod`: `ENVIRONMENT=production`, `DATABASE_URL` y `SUPABASE_URL`.
+   - Variables de vista previa, con los valores de `arrendi-dev`: `ENVIRONMENT=preview`, `DATABASE_URL` y `SUPABASE_URL`.
+   - En la protección de despliegues, elegir "ninguna". La web llama a la API de vista previa de servidor a servidor, sin sesión de Vercel, y la protección por defecto la bloquearía. La API ya exige el token de Supabase en todo lo que tiene datos.
+3. **Enlace entre proyectos.** Copiar el id del proyecto `arrendi-api` (empieza por `prj_`) en `apps/web/vercel.json`, en `relatedProjects`. No es un secreto.
+4. **Proyecto `arrendi-web` en Vercel.** Importar el mismo repositorio con carpeta raíz `apps/web` y el tipo Next.js.
+   - Variables de producción, de `arrendi-prod`: `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+   - Variables de vista previa, de `arrendi-dev`: las mismas dos.
+   - `API_URL` no se define en Vercel.
+5. **Direcciones de retorno en Supabase.** Agregar el dominio de producción de la web en `arrendi-prod`, y el patrón de las vistas previas de la web en `arrendi-dev`.
+6. **Comprobar.** `https://<dominio de la web>/api/health` debe responder `{"status":"ok"}`: prueba que la web llega a la API.
+
+`requirements.txt` solo lleva lo que la API necesita al ejecutarse. Alembic, las pruebas y las migraciones se quedan fuera del paquete (`requirements-dev.txt` y `excludeFiles` en `apps/api/vercel.json`).
 
 ### Límites conocidos
 

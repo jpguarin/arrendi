@@ -29,7 +29,7 @@ Lee el documento que corresponda antes de tocar esa parte del sistema. Si el có
 - **PDF:** ReportLab. **Correo:** proveedor transaccional (por elegir).
 - **Pruebas:** pytest en la API, contra un PostgreSQL local instalado con Homebrew. Playwright de extremo a extremo, desde la etapa 5.
 - **Monorepo:** Turborepo con pnpm.
-- **Despliegue:** Vercel, dos proyectos (`web` y `api`) desde este repositorio. Sin Docker.
+- **Despliegue:** Vercel, dos proyectos (`arrendi-web` y `arrendi-api`) desde este repositorio. Sin Docker. La guía está en `docs/arquitectura.md`.
 
 ## Estructura
 
@@ -38,7 +38,7 @@ Es un monorepo con Turborepo y espacios de trabajo de pnpm. Cada aplicación viv
 ```
 arrendi/
   apps/
-    api/                 FastAPI (proyecto "api" en Vercel)
+    api/                 FastAPI (proyecto "arrendi-api" en Vercel)
       app/
         main.py          punto de entrada: la instancia `app`
         routes/          una por recurso
@@ -53,7 +53,7 @@ arrendi/
       package.json       solo scripts, para que Turborepo ejecute la API
       requirements.txt
       vercel.json
-    web/                 Next.js (proyecto "web" en Vercel)
+    web/                 Next.js (proyecto "arrendi-web" en Vercel)
       app/               pantallas
       components/ui/     componentes de shadcn/ui, adaptados al tema
       components/        componentes propios de Arrendi
@@ -79,7 +79,7 @@ cd apps/api && python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt -r requirements-dev.txt
 
 # Todo el proyecto, con Turborepo (desde la raíz)
-pnpm dev             # web en :3000 y API en :8000; la web redirige /api a la API
+pnpm dev             # web en :3000 y API en :8000; la web redirige /api a la API (sin service worker)
 pnpm lint            # ruff en la API, eslint en la web
 pnpm test            # pytest en la API; necesita el PostgreSQL local encendido
 pnpm build           # compila la web

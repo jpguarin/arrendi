@@ -20,7 +20,9 @@
       ],
       "env": [
         "API_URL",
-        "VERCEL_GIT_COMMIT_SHA"
+        "VERCEL_GIT_COMMIT_SHA",
+        "VERCEL_RELATED_PROJECTS",
+        "VERCEL_ENV"
       ]
     },
     "gen:api": {
