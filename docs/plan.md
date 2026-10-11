@@ -2,7 +2,7 @@
 
 Seis etapas, en orden. Cada una termina con sus criterios de aceptación cumplidos y sus casillas marcadas. No se empieza una etapa sin cerrar la anterior.
 
-**Etapa en curso: 3**
+**Etapa en curso: 4**
 
 ---
 
@@ -71,11 +71,11 @@ Objetivo: generar cuentas con consecutivo y PDF, a mano, sin correo todavía.
 - [x] API: rutas de cuentas de `docs/api.md`, salvo enviar y recordar.
 - [x] API: anulación.
 - [x] API: `GET` y `PATCH /api/settings` con nombre, documento y datos de pago, que el PDF necesita.
-- [ ] Web: listado de cuentas con filtros.
-- [ ] Web: detalle de cuenta con vista del documento y descarga del PDF.
-- [ ] Web: crear cuenta manual.
-- [ ] Web: generar la cuenta del mes desde el contrato, y sus últimas cuentas.
-- [ ] Web: configuración con nombre, documento y datos de pago.
+- [x] Web: listado de cuentas con filtros.
+- [x] Web: detalle de cuenta con vista del documento y descarga del PDF.
+- [x] Web: crear cuenta manual.
+- [x] Web: generar la cuenta del mes desde el contrato, y sus últimas cuentas.
+- [x] Web: configuración con nombre, documento y datos de pago.
 - [x] Pruebas: consecutivo sin saltos con generación concurrente; una cuenta mensual por contrato y periodo; no se anula una cuenta con pagos.
 
 **Criterios de aceptación**

@@ -1,6 +1,6 @@
 # Etapa 3: guía paso a paso
 
-Guía de trabajo de la etapa 3 (cuentas de cobro). Las tareas y los criterios de aceptación oficiales están en `docs/plan.md`; este documento detalla el orden, qué hace cada paso y cómo se comprueba. Se marca cada paso al terminarlo.
+Guía de trabajo de la etapa 3 (cuentas de cobro), ya cerrada. Las tareas y los criterios de aceptación oficiales están en `docs/plan.md`; este documento detalla el orden, qué hace cada paso y cómo se comprueba. Se marca cada paso al terminarlo.
 
 **Objetivo:** generar cuentas con consecutivo y PDF, a mano, sin correo ni pagos todavía.
 
@@ -115,11 +115,13 @@ La mensual: contrato activo, periodo del mes en curso, vencimiento en `due_day`,
 - Contrato: sección "Cuentas de cobro" con las últimas, "Ver todas" y el botón "Generar cuenta del mes". Aviso con enlace a Ajustes si faltan los datos de pago.
 - **Se comprueba:** ambos temas en cada pantalla.
 
-### [ ] Paso 12. Cierre
+### [x] Paso 12. Cierre
 
 - `pnpm lint`, `pnpm test` y `pnpm build` pasan (11 de octubre de 2026).
-- Falta: aplicar la migración `0003` en `arrendi-dev` y revisar las pantallas nuevas en el navegador, en tema claro y oscuro. Hasta entonces las casillas de la web en `docs/plan.md` quedan sin marcar.
-- Casillas de la etapa 3 en `docs/plan.md`. La etapa pasa a 4 cuando confirmes los criterios de aceptación.
+- Migraciones `0003` y `0004` aplicadas en `arrendi-dev`.
+- El fundador recorrió los criterios de aceptación y revisó las pantallas nuevas en tema claro y oscuro, en local (11 de octubre de 2026).
+- Casillas de la etapa 3 marcadas en `docs/plan.md`; la etapa en curso pasa a 4.
+- Queda por comprobar tras el despliegue: abrir un PDF desde el iPhone en `arrendi-web.vercel.app`. La etapa pasa a 4 cuando confirmes los criterios de aceptación.
 
 ## Verificación de extremo a extremo
 
