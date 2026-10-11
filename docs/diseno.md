@@ -82,7 +82,7 @@ Los componentes se construyen sobre shadcn/ui (con Radix como librería base), a
 
 | Componente | Base en shadcn/ui | Descripción |
 | --- | --- | --- |
-| `StatusBadge` | `Badge` | Pastilla con texto: Pagada, Parcial, Vencida, Al día, En mora, Activo, Anulada. `Badge` tiene cuatro tonos: `positive` (Pagada, Al día, Activo), `alert` (Vencida, En mora), `info` (Parcial) y `neutral` (Vacía, Terminado, Anulada) |
+| `StatusBadge` | `Badge` | Pastilla con texto: Pagada, Parcial, Vencida, Al día, En mora, Activo, Anulada. `Badge` tiene cuatro tonos: `positive` (Pagada, Al día, Activo), `alert` (Vencida, En mora), `info` (Parcial) y `neutral` (Pendiente, Vacía, Terminado, Anulada) |
 | `Card` | `Card` | Superficie blanca con borde y radio de 16 px |
 | `BillRow` | propio | Unidad y arrendatario a la izquierda; valor y estado a la derecha; toda la fila es un enlace |
 | `SummaryCard` | `Card` y `Progress` | Bloque primario con recaudado, esperado, barra de avance y dos cifras |
@@ -90,6 +90,7 @@ Los componentes se construyen sobre shadcn/ui (con Radix como librería base), a
 | `SecondaryButton` | `Button`, variante `outline` | Borde, fondo blanco |
 | `DashedButton` | `Button`, variante propia | Borde punteado; para agregar o subir |
 | `FormField` | `Field`, `Label` e `Input` | Etiqueta arriba, campo de 48 px, ayuda opcional debajo |
+| `TextareaField` | `Field`, `Label` y `Textarea` | Como `FormField`, para un texto de varias líneas (datos de pago) |
 | `MoneyField` | `FormField` | Campo de pesos: muestra `$950.000` y solo acepta dígitos |
 | `SelectField` | `Field`, `Label` y `Select` | Etiqueta arriba y desplegable de 48 px |
 | Desplegables | `Select` | Unidad, uso, día de pago, día de envío |

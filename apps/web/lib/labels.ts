@@ -3,6 +3,7 @@ import type { components } from "@/lib/api/schema";
 type Schemas = components["schemas"];
 export type PropertyType = Schemas["PropertyCreate"]["type"];
 export type UnitUse = Schemas["UnitCreate"]["use"];
+export type BillStatus = Schemas["BillSummary"]["status"];
 
 // What the owner reads for each value the API stores in English.
 export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
@@ -15,6 +16,18 @@ export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
 export const UNIT_USE_LABELS: Record<UnitUse, string> = {
   residential: "Vivienda",
   commercial: "Comercial",
+};
+
+// The status is always said with text; the tone only supports it (docs/diseno.md).
+export const BILL_STATUS: Record<
+  BillStatus,
+  { label: string; tone: "positive" | "alert" | "info" | "neutral" }
+> = {
+  pending: { label: "Pendiente", tone: "neutral" },
+  partial: { label: "Parcial", tone: "info" },
+  paid: { label: "Pagada", tone: "positive" },
+  overdue: { label: "Vencida", tone: "alert" },
+  voided: { label: "Anulada", tone: "neutral" },
 };
 
 export const PROPERTY_TYPE_OPTIONS = (Object.keys(PROPERTY_TYPE_LABELS) as PropertyType[]).map(

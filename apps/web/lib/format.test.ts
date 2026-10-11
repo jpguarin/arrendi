@@ -1,7 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { formatDate, formatDateTime, formatPesos, parsePesos, todayInBogota } from "./format.ts";
+import {
+  formatBillNumber,
+  formatDate,
+  formatDateTime,
+  formatDayMonth,
+  formatLongDate,
+  formatMonth,
+  formatPesos,
+  parsePesos,
+  todayInBogota,
+} from "./format.ts";
 
 test("pesos have a dot every three digits and no decimals", () => {
   assert.equal(formatPesos(0), "$0");
@@ -59,4 +69,21 @@ test("today is the day in Colombia, not in UTC", () => {
   // 2:00 UTC on the 1st is still the 31st at 21:00 in Bogotá.
   assert.equal(todayInBogota(new Date("2026-11-01T02:00:00Z")), "2026-10-31");
   assert.equal(todayInBogota(new Date("2026-11-01T05:00:00Z")), "2026-11-01");
+});
+
+test("a bill number has at least four digits", () => {
+  assert.equal(formatBillNumber(1), "N.º 0001");
+  assert.equal(formatBillNumber(31), "N.º 0031");
+  assert.equal(formatBillNumber(12345), "N.º 12345");
+});
+
+test("a month is written with its name and year", () => {
+  assert.equal(formatMonth("2026-10-01"), "Octubre 2026");
+  assert.equal(formatMonth("2026-10"), "Octubre 2026");
+  assert.equal(formatMonth("2027-01-01", "short"), "Ene 2027");
+});
+
+test("a date can be written long, or short without its year", () => {
+  assert.equal(formatLongDate("2026-10-05"), "5 de octubre de 2026");
+  assert.equal(formatDayMonth("2026-10-05"), "5 oct");
 });

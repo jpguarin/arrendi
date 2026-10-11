@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api, type ApiError } from "./client";
 import { apiErrorMessage, CONNECTION_ERROR } from "./errors";
 
 // The same limits the API enforces; checking here saves the owner a failed upload.
@@ -45,6 +45,31 @@ export async function uploadLeaseDocument(leaseId: string, file: File): Promise<
     });
     return confirmed.data ? undefined : apiErrorMessage(confirmed.error);
   } catch {
+    return CONNECTION_ERROR;
+  }
+}
+
+/**
+ * Opens a private file in a new tab, with the temporary link the API hands out for it.
+ * Returns an error message, or undefined if it worked. Call it straight from the tap.
+ */
+export async function openTemporaryLink(
+  request: () => Promise<{ data?: { url: string }; error?: ApiError }>,
+): Promise<string | undefined> {
+  // Opened now, during the tap: a window opened after waiting for the API is blocked
+  // as a pop-up, above all on iPhone.
+  const tab = window.open("", "_blank");
+  try {
+    const { data, error } = await request();
+    if (!data) {
+      tab?.close();
+      return apiErrorMessage(error);
+    }
+    if (tab) tab.location.href = data.url;
+    else window.location.assign(data.url);
+    return undefined;
+  } catch {
+    tab?.close();
     return CONNECTION_ERROR;
   }
 }

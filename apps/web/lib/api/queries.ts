@@ -14,11 +14,21 @@ type Me = Schemas["MeResponse"];
 type Property = Schemas["PropertyResponse"];
 type Unit = Schemas["UnitResponse"];
 type Lease = Schemas["LeaseResponse"];
+type Bill = Schemas["BillResponse"];
+type Settings = Schemas["SettingsResponse"];
+export type BillFilters = { unit_id?: string; status?: "receivable" | "paid" | "voided" };
 
 const ME = $api.queryOptions("get", "/api/me").queryKey;
 const PROPERTIES = $api.queryOptions("get", "/api/properties").queryKey;
 const leaseKey = (leaseId: string) =>
   $api.queryOptions("get", "/api/leases/{lease_id}", { params: { path: { lease_id: leaseId } } })
+    .queryKey;
+
+const SETTINGS = $api.queryOptions("get", "/api/settings").queryKey;
+// Every list of bills, whatever its filters: the key of each one starts like this.
+const BILL_LISTS = ["get", "/api/bills"] as const;
+const billKey = (billId: string) =>
+  $api.queryOptions("get", "/api/bills/{bill_id}", { params: { path: { bill_id: billId } } })
     .queryKey;
 
 // Reads
@@ -29,6 +39,15 @@ export const useProperties = () => $api.useQuery("get", "/api/properties");
 
 export const useLease = (leaseId: string) =>
   $api.useQuery("get", "/api/leases/{lease_id}", { params: { path: { lease_id: leaseId } } });
+
+export const useSettings = () => $api.useQuery("get", "/api/settings");
+
+/** The bills that match the filters. Without a status, voided ones are left out. */
+export const useBills = (filters: BillFilters = {}) =>
+  $api.useQuery("get", "/api/bills", { params: { query: filters } });
+
+export const useBill = (billId: string) =>
+  $api.useQuery("get", "/api/bills/{bill_id}", { params: { path: { bill_id: billId } } });
 
 // What a write leaves in memory. The answer of the API goes straight in, so the next
 // screen shows the change at once.
@@ -88,6 +107,13 @@ function putLease(client: QueryClient, lease: Lease) {
     })),
   );
   markStale(client, PROPERTIES);
+}
+
+function putBill(client: QueryClient, bill: Bill) {
+  client.setQueryData<Bill>(billKey(bill.id), bill);
+  markStale(client, BILL_LISTS);
+  // The lease shows its latest bills, and it may be the screen that is open right now.
+  client.invalidateQueries({ queryKey: leaseKey(bill.lease_id) });
 }
 
 // Writes
@@ -170,4 +196,40 @@ export function useRefreshLease(leaseId: string) {
     () => client.invalidateQueries({ queryKey: leaseKey(leaseId) }),
     [client, leaseId],
   );
+}
+
+/** Issues the bill of the current month for a lease. */
+export function useGenerateMonthlyBill() {
+  const client = useQueryClient();
+  return $api.useMutation("post", "/api/leases/{lease_id}/bills", {
+    onSuccess: (bill) => putBill(client, bill),
+  });
+}
+
+/** Issues a manual bill: an extra charge on a lease. */
+export function useCreateBill() {
+  const client = useQueryClient();
+  return $api.useMutation("post", "/api/bills", {
+    onSuccess: (bill) => putBill(client, bill),
+  });
+}
+
+export function useVoidBill() {
+  const client = useQueryClient();
+  return $api.useMutation("post", "/api/bills/{bill_id}/void", {
+    onSuccess: (bill) => putBill(client, bill),
+  });
+}
+
+export function useUpdateSettings() {
+  const client = useQueryClient();
+  return $api.useMutation("patch", "/api/settings", {
+    onSuccess: (settings) => {
+      client.setQueryData<Settings>(SETTINGS, settings);
+      // The home screen greets the owner by name.
+      client.setQueryData<Me>(ME, (me) => me && { ...me, name: settings.name });
+      // Each bill shows the owner's details as they are now.
+      markStale(client, ["get", "/api/bills/{bill_id}"]);
+    },
+  });
 }

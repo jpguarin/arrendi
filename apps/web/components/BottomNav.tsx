@@ -1,15 +1,16 @@
 "use client";
 
-import { Building2, House } from "lucide-react";
+import { Building2, FileText, House, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 
-// Only the screens that exist. Cuentas and Ajustes join when they are built.
 const TABS = [
   { href: "/", label: "Inicio", Icon: House },
+  { href: "/bills", label: "Cuentas", Icon: FileText },
   { href: "/properties", label: "Inmuebles", Icon: Building2 },
+  { href: "/settings", label: "Ajustes", Icon: SlidersHorizontal },
 ] as const;
 
 function isCurrent(pathname: string, href: string): boolean {
