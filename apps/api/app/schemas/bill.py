@@ -56,6 +56,22 @@ class BillIssuer(BaseModel):
     payment_details: str | None
 
 
+NotificationType = Literal[
+    "bill", "reminder_1", "reminder_2", "receipt", "manual_reminder", "resend"
+]
+DeliveryStatus = Literal["pending", "sent", "bounced", "failed"]
+
+
+class NotificationResponse(BaseModel):
+    id: UUID
+    type: NotificationType
+    recipient: str
+    # `pending` until the email goes out, right after the request that asked for it.
+    delivery_status: DeliveryStatus
+    created_at: datetime
+    sent_at: datetime | None
+
+
 class BillResponse(BillSummary):
     items: list[BillItemResponse]
     property_name: str
@@ -63,3 +79,5 @@ class BillResponse(BillSummary):
     issuer: BillIssuer
     created_at: datetime
     voided_at: datetime | None
+    # Newest first.
+    notifications: list[NotificationResponse]

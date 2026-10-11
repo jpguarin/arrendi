@@ -70,12 +70,12 @@ En los pasos 2, 5 y 6 la prueba va primero.
 - `app/storage.py`: método `download`, para adjuntar el PDF guardado.
 - **Se comprueba:** la petición a Resend contra un servidor simulado; fuera de producción ningún destinatario real sale, con o sin buzón configurado.
 
-### [ ] Paso 4. Plantillas
+### [x] Paso 4. Plantillas
 
 - `app/email/templates/` en Jinja2, en HTML y en texto: `bill`, `reminder_1`, `reminder_2`, `manual_reminder` y `receipt`. En claro, legibles si el cliente de correo las oscurece. Reutilizan `app/pdf/format.py` para dinero y fechas.
 - **Se comprueba:** cada plantilla trae lo que pide `docs/reglas-de-negocio.md` (periodo, valor, vencimiento, saldo, días de atraso, datos de pago); el texto de usuario va escapado en el HTML.
 
-### [ ] Paso 5. Enviar, reenviar y recordar
+### [x] Paso 5. Enviar, reenviar y recordar
 
 - `app/services/notifications.py`: aparta la notificación en la transacción y envía después de confirmarla, con `BackgroundTasks`, como la anulación en `app/services/bills.py`.
 - `POST /api/bills/{id}/send`: `bill` la primera vez y `resend` después. `POST /api/bills/{id}/remind`: `manual_reminder`; 400 si no tiene saldo. Ninguna de las dos sobre cuentas anuladas.

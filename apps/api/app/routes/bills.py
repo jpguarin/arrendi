@@ -2,13 +2,14 @@ from datetime import date
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from sqlalchemy import Engine
 
-from app.dependencies import FileStorage, OwnerSession, Today
+from app.dependencies import FileStorage, Mailer, OwnerSession, Today, get_db_engine
 from app.errors import ErrorResponse
 from app.schemas.bill import BillCreate, BillResponse, BillStatusFilter, BillSummary
 from app.schemas.document import DocumentUrlResponse
-from app.services import bills
+from app.services import bills, notifications
 
 router = APIRouter(responses={401: {"model": ErrorResponse}})
 NOT_FOUND = {404: {"model": ErrorResponse}}
@@ -63,3 +64,48 @@ def void_bill(
     bill_id: UUID, session: OwnerSession, storage: FileStorage, background: BackgroundTasks
 ) -> BillResponse:
     return bills.void_bill(session, storage, background, bill_id)
+
+
+# Email. The notification is set aside here and the email goes out after the response,
+# which is after the commit: never inside the transaction.
+
+DbEngine = Annotated[Engine, Depends(get_db_engine)]
+EMAIL = NOT_FOUND | {400: {"model": ErrorResponse}}
+
+
+@router.post("/bills/{bill_id}/send", responses=EMAIL)
+def send_bill(
+    bill_id: UUID,
+    session: OwnerSession,
+    engine: DbEngine,
+    mailer: Mailer,
+    storage: FileStorage,
+    today: Today,
+    background: BackgroundTasks,
+) -> BillResponse:
+    """Sends the bill to the tenant, or sends it again."""
+    bill = bills.get_bill(session, bill_id)
+    notification = notifications.reserve_send(session, bill)
+    background.add_task(
+        notifications.deliver, engine, mailer, storage, notification.id, today, bill.owner_id
+    )
+    return bills.bill_response(session, bill)
+
+
+@router.post("/bills/{bill_id}/remind", responses=EMAIL)
+def remind_bill(
+    bill_id: UUID,
+    session: OwnerSession,
+    engine: DbEngine,
+    mailer: Mailer,
+    storage: FileStorage,
+    today: Today,
+    background: BackgroundTasks,
+) -> BillResponse:
+    """Reminds the tenant of a bill that still has a balance."""
+    bill = bills.get_bill(session, bill_id)
+    notification = notifications.reserve_reminder(session, bill)
+    background.add_task(
+        notifications.deliver, engine, mailer, storage, notification.id, today, bill.owner_id
+    )
+    return bills.bill_response(session, bill)

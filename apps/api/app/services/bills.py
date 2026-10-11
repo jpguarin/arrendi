@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.errors import AppError, conflict, not_found, storage_unavailable
-from app.models import Bill, BillItem, Lease, Owner, Property, Tenant, Unit
+from app.models import Bill, BillItem, Lease, Notification, Owner, Property, Tenant, Unit
 from app.pdf.bill import BillDocument, BillLine, render_bill
 from app.pdf.format import format_month
 from app.schemas.bill import (
@@ -18,6 +18,7 @@ from app.schemas.bill import (
     BillResponse,
     BillStatusFilter,
     BillSummary,
+    NotificationResponse,
 )
 from app.schemas.document import DocumentUrlResponse
 from app.storage import Storage, StorageError
@@ -262,6 +263,11 @@ def bill_response(session: Session, bill: Bill) -> BillResponse:
     items = session.scalars(
         select(BillItem).where(BillItem.bill_id == bill.id).order_by(BillItem.created_at)
     )
+    notifications = session.scalars(
+        select(Notification)
+        .where(Notification.bill_id == bill.id)
+        .order_by(Notification.created_at.desc(), Notification.id)
+    )
     return BillResponse(
         **summary.model_dump(),
         items=[BillItemResponse(description=i.description, amount=i.amount) for i in items],
@@ -275,6 +281,17 @@ def bill_response(session: Session, bill: Bill) -> BillResponse:
         ),
         created_at=bill.created_at,
         voided_at=bill.voided_at,
+        notifications=[
+            NotificationResponse(
+                id=n.id,
+                type=n.type,
+                recipient=n.recipient,
+                delivery_status=n.delivery_status,
+                created_at=n.created_at,
+                sent_at=n.sent_at,
+            )
+            for n in notifications
+        ],
     )
 
 

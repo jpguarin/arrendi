@@ -115,6 +115,7 @@ def test_monthly_bill_takes_its_terms_from_the_lease(
         },
         "created_at": None,
         "voided_at": None,
+        "notifications": [],
     }
     # The PDF is stored when the bill is issued, under the owner's folder.
     pdf = storage.objects[f"{two_owners[0]}/bills/{bill['id']}.pdf"]

@@ -92,8 +92,8 @@ Objetivo: que las cuentas y los recordatorios salgan solos.
 
 - [x] Migración: `notifications`, con su índice único.
 - [x] API: envío de correo detrás de una interfaz, con el proveedor elegido y un doble para pruebas.
-- [ ] API: plantillas de cuenta, dos recordatorios y recibo, en HTML y texto.
-- [ ] API: enviar, reenviar y recordatorio manual.
+- [x] API: plantillas de cuenta, dos recordatorios y recibo, en HTML y texto.
+- [x] API: enviar, reenviar y recordatorio manual.
 - [x] API: desvío de todos los correos al buzón de pruebas fuera de producción.
 - [ ] API: tarea diaria con sus tres pasos, por lotes, y la ruta `/api/cron/daily` protegida.
 - [ ] API: aviso de rebotes del proveedor.
