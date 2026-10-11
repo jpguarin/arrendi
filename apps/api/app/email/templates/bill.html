@@ -1,0 +1,9 @@
+{% extends "_layout.html" %}
+{% block body %}
+<p style="margin:0">Te envío la cuenta de cobro de {{ concept_lower }}.</p>
+{% endblock %}
+{% block figures %}
+{% include "_figures.html" %}
+Valor: <strong>{{ total | pesos }}</strong><br>
+Vence el {{ due_date | long_date }}
+{% endblock %}

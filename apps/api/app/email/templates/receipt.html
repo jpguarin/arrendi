@@ -1,0 +1,11 @@
+{% extends "_layout.html" %}
+{% block body %}
+<p style="margin:0">Recibí tu pago de la cuenta de cobro de {{ concept_lower }}. Gracias.</p>
+{% endblock %}
+{% block figures %}
+{% include "_figures.html" %}
+Valor recibido: <strong>{{ payment_amount | pesos }}</strong><br>
+Fecha: {{ payment_date | long_date }} · {{ payment_method }}<br>
+{% if balance > 0 %}Saldo restante: <strong>{{ balance | pesos }}</strong>{% else %}La cuenta queda pagada.{% endif %}
+{% endblock %}
+{% block closing %}{% endblock %}

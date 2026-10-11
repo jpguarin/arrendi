@@ -1,0 +1,19 @@
+Hola, {{ tenant_name }}:
+
+Te recuerdo que la cuenta de cobro de {{ concept_lower }} venció el {{ due_date | long_date }} y tiene un saldo pendiente.
+
+Cuenta de cobro {{ number }}
+{{ concept }}
+Saldo pendiente: {{ balance | pesos }}
+{{ due_line }}
+{% if payment_details %}
+Datos de pago:
+{{ payment_details }}
+{% endif %}
+La cuenta de cobro va adjunta en PDF.
+
+Si ya pagaste, responde a este correo con el comprobante.
+
+{{ owner_name }}
+
+Enviado con Arrendi en nombre de {{ owner_name }}.

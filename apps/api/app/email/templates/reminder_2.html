@@ -1,0 +1,9 @@
+{% extends "_layout.html" %}
+{% block body %}
+<p style="margin:0">La cuenta de cobro de {{ concept_lower }} sigue con saldo pendiente y ya tiene {{ days_overdue }} días de atraso.</p>
+{% endblock %}
+{% block figures %}
+{% include "_figures.html" %}
+Saldo pendiente: <strong>{{ balance | pesos }}</strong><br>
+Venció el {{ due_date | long_date }} · {{ days_overdue }} días de atraso
+{% endblock %}

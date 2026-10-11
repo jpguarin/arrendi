@@ -1,0 +1,19 @@
+Hola, {{ tenant_name }}:
+
+Te envío la cuenta de cobro de {{ concept_lower }}.
+
+Cuenta de cobro {{ number }}
+{{ concept }}
+Valor: {{ total | pesos }}
+Vence el {{ due_date | long_date }}
+{% if payment_details %}
+Datos de pago:
+{{ payment_details }}
+{% endif %}
+La cuenta de cobro va adjunta en PDF.
+
+Si tienes alguna duda, responde a este correo.
+
+{{ owner_name }}
+
+Enviado con Arrendi en nombre de {{ owner_name }}.

@@ -1,0 +1,15 @@
+Hola, {{ tenant_name }}:
+
+Recibí tu pago de la cuenta de cobro de {{ concept_lower }}. Gracias.
+
+Cuenta de cobro {{ number }}
+{{ concept }}
+Valor recibido: {{ payment_amount | pesos }}
+Fecha: {{ payment_date | long_date }} · {{ payment_method }}
+{% if balance > 0 %}Saldo restante: {{ balance | pesos }}{% else %}La cuenta queda pagada.{% endif %}
+
+Si tienes alguna duda, responde a este correo.
+
+{{ owner_name }}
+
+Enviado con Arrendi en nombre de {{ owner_name }}.

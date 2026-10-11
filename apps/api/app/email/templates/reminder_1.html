@@ -1,0 +1,9 @@
+{% extends "_layout.html" %}
+{% block body %}
+<p style="margin:0">Te recuerdo que la cuenta de cobro de {{ concept_lower }} venció el {{ due_date | long_date }} y tiene un saldo pendiente.</p>
+{% endblock %}
+{% block figures %}
+{% include "_figures.html" %}
+Saldo pendiente: <strong>{{ balance | pesos }}</strong><br>
+{{ due_line }}
+{% endblock %}
