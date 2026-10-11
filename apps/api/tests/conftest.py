@@ -278,8 +278,8 @@ class FakeStorage:
     def __init__(self) -> None:
         self.objects: dict[str, bytes] = {}
 
-    def upload(self, path: str, content: bytes) -> None:
-        """What the browser does with the signed upload link."""
+    def upload(self, path: str, content: bytes, content_type: str = "") -> None:
+        """What the browser does with the signed upload link, and the API with its own files."""
         self.objects[path] = content
 
     def create_upload_url(self, path: str) -> str:

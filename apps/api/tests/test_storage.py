@@ -133,3 +133,22 @@ def test_no_answer_from_storage_is_a_storage_error() -> None:
 
     with pytest.raises(StorageError):
         storage.size(PATH)
+
+
+def test_upload_sends_the_file_and_replaces_the_one_there() -> None:
+    storage, requests = make_storage(lambda request: httpx2.Response(200, json={"Key": PATH}))
+
+    storage.upload(PATH, b"%PDF-1.4 file", "application/pdf")
+
+    assert requests[0].method == "POST"
+    assert str(requests[0].url) == f"{BASE}/object/arrendi/{PATH}"
+    assert requests[0].headers["content-type"] == "application/pdf"
+    assert requests[0].headers["x-upsert"] == "true"
+    assert requests[0].content == b"%PDF-1.4 file"
+
+
+def test_upload_that_storage_refuses_is_an_error() -> None:
+    storage, _ = make_storage(lambda request: httpx2.Response(413, json={"error": "too large"}))
+
+    with pytest.raises(StorageError):
+        storage.upload(PATH, b"x", "application/pdf")

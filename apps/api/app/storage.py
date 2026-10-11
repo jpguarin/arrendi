@@ -20,6 +20,9 @@ class Storage(Protocol):
     def create_upload_url(self, path: str) -> str:
         """A link the browser can send one file to, for that path only."""
 
+    def upload(self, path: str, content: bytes, content_type: str) -> None:
+        """Stores a file the API itself made, replacing the one at that path if any."""
+
     def size(self, path: str) -> int | None:
         """Size in bytes of the stored file, or None if there is none."""
 
@@ -66,6 +69,13 @@ class SupabaseStorage:
     def create_upload_url(self, path: str) -> str:
         response = self._check(self._request("POST", self._url("object/upload/sign", path)))
         return self.base_url + response.json()["url"]
+
+    def upload(self, path: str, content: bytes, content_type: str) -> None:
+        # Without `x-upsert`, storage refuses a path that already has a file.
+        headers = {"Content-Type": content_type, "x-upsert": "true"}
+        self._check(
+            self._request("POST", self._url("object", path), content=content, headers=headers)
+        )
 
     def size(self, path: str) -> int | None:
         response = self._request("GET", self._url("object/info", path))

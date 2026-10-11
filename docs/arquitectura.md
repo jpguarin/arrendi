@@ -222,7 +222,7 @@ Supabase retira las claves antiguas `anon` y `service_role` a finales de 2026; p
 
 ## PDF
 
-- Una sola plantilla, construida con ReportLab. Siempre en claro: el PDF no depende del tema de la aplicación.
+- Una sola plantilla, construida con ReportLab (`apps/api/app/pdf/bill.py`), en tamaño carta y con Helvetica, que todo lector de PDF trae. Siempre en claro: el PDF no depende del tema de la aplicación.
 - Contiene: consecutivo, fecha de emisión, datos del propietario y del arrendatario, conceptos, total, vencimiento y datos de pago.
 - Se genera al emitir la cuenta y se guarda en el almacenamiento.
 - Al anular, se genera una segunda versión con la marca "ANULADA" y reemplaza al archivo.

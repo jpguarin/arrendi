@@ -61,7 +61,7 @@ En los pasos 2, 5 y 7 la prueba va primero.
 - `app/schemas/settings.py`, `app/services/owners.py` y `app/routes/settings.py`: `GET` y `PATCH /api/settings` con `name`, `document_number` y `payment_details`.
 - **Se comprueba:** solo cambian los campos enviados; aislamiento.
 
-### [ ] Paso 4. PDF y subida al almacenamiento
+### [x] Paso 4. PDF y subida al almacenamiento
 
 - `app/pdf/bill.py`: función pura que devuelve los bytes del PDF, con consecutivo, emisión, propietario, arrendatario, concepto, total, vencimiento, datos de pago, pie "Arrendi" y marca "ANULADA" opcional. Fechas largas y pesos en `app/pdf/format.py`.
 - `app/storage.py`: método `upload`, que reemplaza el archivo si existe.
