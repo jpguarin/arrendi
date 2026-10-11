@@ -63,6 +63,20 @@ Consultado en la documentación de Supabase el 10 de octubre de 2026:
 - `apps/web/proxy.ts` refresca la sesión en cada petición con `getClaims()` y manda a `/login` a quien no la tiene. En Next.js 16 este archivo reemplaza a `middleware.ts`.
 - Hay dos rutas de Next que solo completan el acceso, sin reglas de negocio: `/auth/callback` (regreso de Google) y `/auth/confirm` (enlace del correo de confirmación o de recuperación).
 - El registro con correo pide el nombre y lo guarda en los metadatos del usuario de Supabase, para que el token lo traiga igual que con Google.
+- El cliente de la API (`apps/web/lib/api/client.ts`) agrega el token a cada llamada. Si la API responde 401, cierra la sesión y vuelve a `/login`.
+
+### Configuración de Supabase Auth
+
+Se hace a mano en el panel, en cada proyecto de Supabase:
+
+1. **Claves de firma asimétricas:** activarlas en la configuración de JWT.
+2. **URL del sitio y direcciones de retorno:** la URL del sitio es la de la aplicación en ese entorno. En las direcciones de retorno permitidas van `http://localhost:3000/**`, el dominio de producción y el patrón de las vistas previas de Vercel.
+3. **Plantillas de correo:** cambiar el enlace de dos plantillas para que apunten a `/auth/confirm` con el código de un solo uso. Así el enlace funciona aunque se abra en otro navegador, que es lo normal al abrir el correo en el celular.
+   - Confirmar registro: `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email`
+   - Recuperar contraseña: `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=recovery`
+
+   Con las plantillas por defecto el enlace solo funciona en el mismo navegador donde se pidió.
+4. **Confirmación del correo:** activada, para que el registro con correo exija confirmar.
 
 ### Acceso con Google
 

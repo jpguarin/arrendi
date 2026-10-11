@@ -115,6 +115,7 @@ Los íconos son de Lucide, que es la librería que usa shadcn/ui: de trazo, de 2
 | Ruta | Pantalla | Mockup |
 | --- | --- | --- |
 | `/login`, `/signup`, `/reset-password` | Acceso | Sin diseñar |
+| `/update-password` | Contraseña nueva, al llegar desde el correo de recuperación | Sin diseñar |
 | `/onboarding/property` | Alta 1 | `Alta1.dc.html` |
 | `/onboarding/units` | Alta 2 | `Alta2.dc.html` |
 | `/onboarding/lease` | Alta 3 | `Alta3.dc.html` |
