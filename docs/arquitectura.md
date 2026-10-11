@@ -77,6 +77,11 @@ Se hace a mano en el panel, en cada proyecto de Supabase:
 
    Con las plantillas por defecto el enlace solo funciona en el mismo navegador donde se pidió.
 4. **Confirmación del correo:** activada, para que el registro con correo exija confirmar.
+5. **Google como proveedor:**
+   - En Google Cloud, crear la pantalla de consentimiento (solo correo, perfil y `openid`) y un cliente OAuth de tipo "aplicación web".
+   - En ese cliente, la URI de redirección autorizada es la de Supabase: `https://<ref>.supabase.co/auth/v1/callback`. No es la de Arrendi.
+   - En Supabase, activar el proveedor Google y pegar el id y el secreto del cliente. El secreto vive en Supabase, no en este repositorio.
+   - La web vuelve de Google por `/auth/callback`, que ya está cubierta por las direcciones de retorno del punto 2.
 
 ### Acceso con Google
 
