@@ -101,7 +101,7 @@ Se hace a mano en el panel, en cada proyecto de Supabase:
 - El modo transacción no admite sentencias preparadas: el driver (`psycopg`) se configura con ellas desactivadas.
 - Un rol propio se conecta por el agrupador con el usuario `arrendi_api.<ref-del-proyecto>`. El servidor del agrupador se copia del panel de Supabase.
 - `app.owner_id` se fija con alcance de transacción. Es obligatorio con un agrupador: ver `docs/modelo-de-datos.md`.
-- Las migraciones se ejecutan con la conexión directa, desde el computador del desarrollador. La conexión directa es solo IPv6; si la red no lo tiene, se usa el agrupador en modo sesión (puerto 5432).
+- Las migraciones se ejecutan desde el computador del desarrollador. La conexión directa es solo IPv6; si la red no lo tiene (es el caso del fundador), se usa el agrupador en modo sesión (puerto 5432), con el usuario `postgres.<ref-del-proyecto>`.
 - La API usa SQLAlchemy de forma síncrona.
 
 ## Despliegue en Vercel

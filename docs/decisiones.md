@@ -58,7 +58,6 @@ Hay que resolverlas antes de la etapa indicada.
 No son decisiones de producto, sino datos técnicos que cambian y que este repositorio no fija:
 
 - Requisitos de Google para publicar la pantalla de consentimiento a usuarios externos.
-- Que el usuario administrador de Supabase puede crear un rol con `bypassrls` (se comprueba al crear `arrendi_tasks`).
 - Duración máxima y tamaño máximo de cuerpo de una función de Vercel.
 - Cómo protege Vercel las llamadas de un Cron Job.
 - Si la protección de despliegues de Vercel bloquea la redirección de la web hacia la API de vista previa.
@@ -69,6 +68,7 @@ El detalle está en `docs/arquitectura.md` y `docs/modelo-de-datos.md`.
 
 - Supabase valida sus tokens con claves asimétricas publicadas por JWKS.
 - Supabase vincula sola la identidad de Google a una cuenta con el mismo correo verificado.
+- El usuario `postgres` de Supabase puede crear un rol con `bypassrls` (`arrendi_tasks`).
 - El agrupador de Supabase se usa en modo transacción, sin sentencias preparadas.
 - Supabase retira las claves `anon` y `service_role` a finales de 2026.
 - Vercel detecta la instancia `app` de FastAPI en `app/main.py` y enlaza las vistas previas con "Related Projects".

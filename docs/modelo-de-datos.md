@@ -225,7 +225,7 @@ Si la variable no está fijada, `current_setting(..., true)` devuelve nulo y la 
 - **La API de datos de Supabase no llega a estas tablas.** Cada migración revoca todos los permisos de los roles `anon`, `authenticated` y `service_role` sobre las tablas que crea, de modo que ni la clave publicable ni la secreta sirven para leerlas por esa vía. Solo FastAPI accede a los datos.
 - Por el agrupador de Supabase, un rol propio se conecta con el usuario `arrendi_api.<ref-del-proyecto>`.
 
-Por comprobar al crear los roles en `arrendi-dev`: que el usuario administrador de Supabase puede crear un rol con `bypassrls`. La página de roles de Supabase no lo documenta para roles propios.
+Comprobado el 10 de octubre de 2026 en `arrendi-dev`: el usuario administrador de Supabase (`postgres`) sí puede crear un rol con `bypassrls`, y la migración `0001` se aplicó sin cambios.
 
 ## Base de datos de las pruebas
 
