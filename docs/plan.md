@@ -21,8 +21,8 @@ Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando,
 - [x] Web: Next.js con TypeScript y Tailwind, tema de colores y tipografía de `docs/diseno.md`.
 - [x] Web: shadcn/ui inicializado, con sus variables de tema asignadas a los colores de Arrendi y los componentes base de acceso (`Button`, `Input`, `Label`, `Card`) ajustados a las medidas del diseño.
 - [x] Web: tema claro y oscuro con `next-themes`, siguiendo al sistema por defecto, con las dos paletas de `docs/diseno.md`.
-- [ ] Web: acceso con Google mediante Supabase Auth.
-- [ ] Web: registro, inicio de sesión, recuperación de contraseña y cierre de sesión con correo y contraseña.
+- [x] Web: acceso con Google mediante Supabase Auth.
+- [x] Web: registro, inicio de sesión, recuperación de contraseña y cierre de sesión con correo y contraseña.
 - [x] Web: redirección de `/api` hacia la API y cliente con tipos generados (`pnpm gen:api`).
 - [x] Web: PWA instalable, con manifiesto, service worker y pantalla sin conexión.
 - [x] Prueba de aislamiento, contra un PostgreSQL local: con dos propietarios, ninguno ve la fila del otro.
