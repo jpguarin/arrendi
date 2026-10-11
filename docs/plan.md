@@ -2,7 +2,7 @@
 
 Seis etapas, en orden. Cada una termina con sus criterios de aceptación cumplidos y sus casillas marcadas. No se empieza una etapa sin cerrar la anterior.
 
-**Etapa en curso: 4**
+**Etapa en curso: 5**
 
 ---
 
@@ -98,9 +98,9 @@ Objetivo: que las cuentas y los recordatorios salgan solos.
 - [x] API: tarea diaria con sus tres pasos, por lotes, y la ruta `/api/cron/daily` protegida.
 - [x] API: aviso de rebotes del proveedor.
 - [x] Cron Job en `apps/api/vercel.json`.
-- [ ] Web: actividad en el detalle de cuenta; botones de reenviar y recordar.
+- [x] Web: actividad en el detalle de cuenta; botones de reenviar y recordar.
 - [x] API: día de envío, recordatorios y copia en `/api/settings`.
-- [ ] Web: configuración de día de envío, recordatorios, copia y selector de tema (claro, oscuro, sistema).
+- [x] Web: configuración de día de envío, recordatorios, copia y selector de tema (claro, oscuro, sistema).
 - [x] Pruebas: la tarea ejecutada dos veces el mismo día no duplica cuentas ni correos; se recupera de un día perdido; las fechas se calculan en hora de Colombia.
 
 **Criterios de aceptación**

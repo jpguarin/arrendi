@@ -1,6 +1,6 @@
 # Etapa 4: guía paso a paso
 
-Guía de trabajo de la etapa 4 (correo y tarea diaria). Las tareas y los criterios de aceptación oficiales están en `docs/plan.md`; este documento detalla el orden, qué hace cada paso y cómo se comprueba. Se marca cada paso al terminarlo.
+Guía de trabajo de la etapa 4 (correo y tarea diaria), ya cerrada. Las tareas y los criterios de aceptación oficiales están en `docs/plan.md`; este documento detalla el orden, qué hace cada paso y cómo se comprueba. Se marca cada paso al terminarlo.
 
 **Objetivo:** que las cuentas y los recordatorios salgan solos.
 
@@ -122,12 +122,13 @@ Por lotes, con un límite de tiempo por ejecución; lo que no alcance queda para
 - `components/leases/LeaseScreen.tsx`: el texto de "Enviar cuentas automáticamente" menciona el día de envío.
 - **Se comprueba:** ambos temas.
 
-### [ ] Paso 12. Cierre
+### [x] Paso 12. Cierre
 
 - `pnpm lint`, `pnpm test` y `pnpm build` pasan (11 de octubre de 2026).
 - Hecho por el fundador (11 de octubre de 2026): Resend y sus variables, migración `0005`, rol de tareas, Cron Job y webhook. Comprobado: el envío a mano llega al buzón de pruebas con el PDF; la tarea responde bien en local y en Vercel; un rebote simulado con `bounced@resend.dev` deja la notificación como rebotada.
-- Falta revisar en el navegador, en ambos temas, el detalle de cuenta y Ajustes, y ver en los próximos días la generación automática y el recordatorio. Hasta entonces las casillas de la web en `docs/plan.md` quedan sin marcar.
-- Casillas de la etapa 4 en `docs/plan.md`. La etapa pasa a 5 cuando confirmes los criterios de aceptación.
+- El fundador revisó el detalle de cuenta y Ajustes en tema claro y oscuro, y dio la etapa por cerrada (11 de octubre de 2026).
+- Casillas de la etapa 4 marcadas en `docs/plan.md`; la etapa en curso pasa a 5.
+- Queda por ver en producción, porque depende de fechas que no han llegado: el primer recordatorio automático (21 de octubre, cuenta N.º 4), que salga una sola vez, y la generación y el envío automáticos de las cuentas del mes (1 de noviembre). Ambos casos están cubiertos por las pruebas de `tests/test_daily_task.py`. La etapa pasa a 5 cuando confirmes los criterios de aceptación.
 
 ## Verificación de extremo a extremo
 
