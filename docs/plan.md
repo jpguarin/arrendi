@@ -2,7 +2,7 @@
 
 Seis etapas, en orden. Cada una termina con sus criterios de aceptación cumplidos y sus casillas marcadas. No se empieza una etapa sin cerrar la anterior.
 
-**Etapa en curso: 1**
+**Etapa en curso: 2**
 
 ---
 
@@ -26,7 +26,7 @@ Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando,
 - [x] Web: redirección de `/api` hacia la API y cliente con tipos generados (`pnpm gen:api`).
 - [x] Web: PWA instalable, con manifiesto, service worker y pantalla sin conexión.
 - [x] Prueba de aislamiento, contra un PostgreSQL local: con dos propietarios, ninguno ve la fila del otro.
-- [ ] Despliegue de los dos proyectos en Vercel.
+- [x] Despliegue de los dos proyectos en Vercel.
 
 **Criterios de aceptación**
 
@@ -135,6 +135,7 @@ Objetivo: cerrar el ciclo de cobro.
 
 Objetivo: usarlo con los 3 arrendatarios reales durante al menos un ciclo de cobro.
 
+- [ ] Proyecto Supabase `arrendi-prod` y variables de Producción en Vercel. Hasta entonces, Producción usa `arrendi-dev` (decisión del 11 de octubre de 2026); sigue la guía de despliegue de `docs/arquitectura.md`.
 - [ ] Dominio propio para la aplicación y para el correo, con SPF, DKIM y DMARC.
 - [ ] Política de tratamiento de datos y autorización en el registro.
 - [ ] Datos reales cargados en producción.
