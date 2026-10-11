@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     environment: Literal["local", "preview", "production"] = "local"
+    database_url: str = ""
+    database_url_migrations: str = ""
 
 
 @lru_cache
