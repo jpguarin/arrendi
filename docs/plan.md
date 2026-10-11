@@ -20,7 +20,7 @@ Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando,
 - [x] API: `GET /api/me`, que crea la fila del propietario en la primera llamada.
 - [x] Web: Next.js con TypeScript y Tailwind, tema de colores y tipografía de `docs/diseno.md`.
 - [x] Web: shadcn/ui inicializado, con sus variables de tema asignadas a los colores de Arrendi y los componentes base de acceso (`Button`, `Input`, `Label`, `Card`) ajustados a las medidas del diseño.
-- [ ] Web: tema claro y oscuro con `next-themes`, siguiendo al sistema por defecto, con las dos paletas de `docs/diseno.md`.
+- [x] Web: tema claro y oscuro con `next-themes`, siguiendo al sistema por defecto, con las dos paletas de `docs/diseno.md`.
 - [ ] Web: acceso con Google mediante Supabase Auth.
 - [ ] Web: registro, inicio de sesión, recuperación de contraseña y cierre de sesión con correo y contraseña.
 - [ ] Web: redirección de `/api` hacia la API y cliente con tipos generados (`pnpm gen:api`).

@@ -1,3 +1,4 @@
+import { ThemeSelector } from "@/components/ThemeSelector";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,11 @@ export default function HomePage() {
           </div>
         </CardContent>
       </Card>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-section font-semibold">Apariencia</h2>
+        <ThemeSelector />
+      </section>
     </main>
   );
 }
