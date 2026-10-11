@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.auth import AuthUser
 from app.errors import AppError
 from app.models import Owner
+from app.schemas.settings import SettingsResponse, SettingsUpdate
 
 
 def get_or_create_owner(session: Session, user: AuthUser) -> Owner:
@@ -28,3 +29,19 @@ def get_or_create_owner(session: Session, user: AuthUser) -> Owner:
         .on_conflict_do_nothing(index_elements=[Owner.id])
     )
     return session.get_one(Owner, user.owner_id)
+
+
+def settings_response(owner: Owner) -> SettingsResponse:
+    return SettingsResponse(
+        name=owner.name,
+        email=owner.email,
+        document_number=owner.document_number,
+        payment_details=owner.payment_details,
+    )
+
+
+def update_settings(session: Session, owner: Owner, data: SettingsUpdate) -> SettingsResponse:
+    for field, value in data.changes().items():
+        setattr(owner, field, value)
+    session.flush()
+    return settings_response(owner)

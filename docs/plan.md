@@ -70,7 +70,7 @@ Objetivo: generar cuentas con consecutivo y PDF, a mano, sin correo todavía.
 - [ ] API: generación del PDF con ReportLab y guardado en el almacenamiento.
 - [ ] API: rutas de cuentas de `docs/api.md`, salvo enviar y recordar.
 - [ ] API: anulación.
-- [ ] API: `GET` y `PATCH /api/settings` con nombre, documento y datos de pago, que el PDF necesita.
+- [x] API: `GET` y `PATCH /api/settings` con nombre, documento y datos de pago, que el PDF necesita.
 - [ ] Web: listado de cuentas con filtros.
 - [ ] Web: detalle de cuenta con vista del documento y descarga del PDF.
 - [ ] Web: crear cuenta manual.

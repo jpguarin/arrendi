@@ -56,7 +56,7 @@ En los pasos 2, 5 y 7 la prueba va primero.
 - `app/models/bill.py` y `bill_item.py`; `OWNED_TABLES` de `tests/conftest.py`.
 - **Se comprueba:** `tests/test_bill_tables.py`: restricciones, política, permisos, y que una cuenta no puede apuntar al contrato de otro propietario.
 
-### [ ] Paso 3. Ajustes mínimo en la API
+### [x] Paso 3. Ajustes mínimo en la API
 
 - `app/schemas/settings.py`, `app/services/owners.py` y `app/routes/settings.py`: `GET` y `PATCH /api/settings` con `name`, `document_number` y `payment_details`.
 - **Se comprueba:** solo cambian los campos enviados; aislamiento.

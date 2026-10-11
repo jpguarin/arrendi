@@ -1,0 +1,91 @@
+from uuid import UUID
+
+from fastapi.testclient import TestClient
+
+from tests.conftest import MakeToken, bearer
+
+
+def test_settings_start_with_what_the_token_says(
+    api: TestClient, make_token: MakeToken, new_user_ids: tuple[UUID, UUID]
+) -> None:
+    ana, _ = new_user_ids
+
+    response = api.get("/api/settings", headers=bearer(make_token(ana)))
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "name": "Ana Gómez",
+        "email": "ana@example.com",
+        "document_number": None,
+        "payment_details": None,
+    }
+
+
+def test_update_changes_only_the_fields_sent(
+    api: TestClient, make_token: MakeToken, two_owners: tuple[UUID, UUID]
+) -> None:
+    ana, _ = two_owners
+    headers = bearer(make_token(ana))
+    details = "Bancolombia, ahorros 123-456789-00\nNequi 300 123 4567"
+
+    first = api.patch(
+        "/api/settings",
+        headers=headers,
+        json={"document_number": " 52.123.456 ", "payment_details": details},
+    )
+    second = api.patch("/api/settings", headers=headers, json={"name": "Ana María Gómez"})
+
+    assert first.status_code == 200
+    assert second.json() == {
+        "name": "Ana María Gómez",
+        "email": "ana@example.com",
+        "document_number": "52.123.456",
+        "payment_details": details,
+    }
+    assert api.get("/api/settings", headers=headers).json() == second.json()
+    assert api.get("/api/me", headers=headers).json()["name"] == "Ana María Gómez"
+
+
+def test_optional_fields_are_cleared_with_null_or_blank(
+    api: TestClient, make_token: MakeToken, two_owners: tuple[UUID, UUID]
+) -> None:
+    ana, _ = two_owners
+    headers = bearer(make_token(ana))
+    api.patch(
+        "/api/settings", headers=headers, json={"document_number": "1", "payment_details": "x"}
+    )
+
+    response = api.patch(
+        "/api/settings", headers=headers, json={"document_number": None, "payment_details": "  "}
+    )
+
+    assert response.json()["document_number"] is None
+    assert response.json()["payment_details"] is None
+
+
+def test_name_cannot_be_cleared(
+    api: TestClient, make_token: MakeToken, two_owners: tuple[UUID, UUID]
+) -> None:
+    ana, _ = two_owners
+    headers = bearer(make_token(ana))
+
+    for body in ({"name": None}, {"name": "  "}, {"payment_details": "x" * 501}):
+        response = api.patch("/api/settings", headers=headers, json=body)
+        assert response.status_code == 422
+        assert response.json()["code"] == "validation_error"
+
+
+def test_settings_need_a_session(api: TestClient) -> None:
+    assert api.get("/api/settings").status_code == 401
+    assert api.patch("/api/settings", json={"name": "X"}).status_code == 401
+
+
+def test_an_owner_changes_only_their_own_settings(
+    api: TestClient, make_token: MakeToken, two_owners: tuple[UUID, UUID]
+) -> None:
+    ana, beto = two_owners
+
+    api.patch("/api/settings", headers=bearer(make_token(ana)), json={"payment_details": "de Ana"})
+
+    as_beto = api.get("/api/settings", headers=bearer(make_token(beto))).json()
+    assert (as_beto["name"], as_beto["payment_details"]) == ("Beto", None)

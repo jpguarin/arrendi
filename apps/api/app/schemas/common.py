@@ -17,7 +17,7 @@ Pesos = Annotated[int, Field(strict=True, ge=0, le=10**12)]
 PositivePesos = Annotated[int, Field(strict=True, gt=0, le=10**12)]
 
 
-def _blank_to_none(value: Any) -> Any:
+def blank_to_none(value: Any) -> Any:
     if isinstance(value, str) and not value.strip():
         return None
     return value
@@ -26,7 +26,7 @@ def _blank_to_none(value: Any) -> Any:
 # A text the owner may leave empty; an empty field is stored as null.
 OptionalText = Annotated[
     Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)] | None,
-    BeforeValidator(_blank_to_none),
+    BeforeValidator(blank_to_none),
 ]
 
 
