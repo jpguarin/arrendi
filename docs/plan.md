@@ -16,7 +16,7 @@ Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando,
 - [x] API: FastAPI con `GET /api/health`, configuración por variables de entorno, `ruff` y `pytest`.
 - [x] API: conexión a PostgreSQL con SQLAlchemy, sin reserva de conexiones.
 - [x] API: Alembic configurado y primera migración con la tabla `owners`, su política de seguridad por fila y los roles de base de datos.
-- [ ] API: dependencia que valida el token de Supabase, abre la transacción y fija `app.owner_id`.
+- [x] API: dependencia que valida el token de Supabase, abre la transacción y fija `app.owner_id`.
 - [ ] API: `GET /api/me`, que crea la fila del propietario en la primera llamada.
 - [ ] Web: Next.js con TypeScript y Tailwind, tema de colores y tipografía de `docs/diseno.md`.
 - [ ] Web: shadcn/ui inicializado, con sus variables de tema asignadas a los colores de Arrendi y los componentes base de acceso (`Button`, `Input`, `Label`, `Card`) ajustados a las medidas del diseño.

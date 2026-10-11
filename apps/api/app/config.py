@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     environment: Literal["local", "preview", "production"] = "local"
     database_url: str = ""
     database_url_migrations: str = ""
+    supabase_url: str = ""
 
 
 @lru_cache

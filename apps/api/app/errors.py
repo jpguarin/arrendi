@@ -27,6 +27,19 @@ HTTP_ERRORS = {
 DEFAULT_HTTP_ERROR = ("No pudimos completar la solicitud.", "http_error")
 
 
+def unauthorized() -> AppError:
+    detail, code = HTTP_ERRORS[401]
+    return AppError(401, detail, code)
+
+
+def auth_unavailable() -> AppError:
+    return AppError(
+        503,
+        "No pudimos verificar tu sesión. Inténtalo de nuevo en un momento.",
+        "auth_unavailable",
+    )
+
+
 def _response(status_code: int, detail: str, code: str) -> JSONResponse:
     body = ErrorResponse(detail=detail, code=code)
     return JSONResponse(status_code=status_code, content=body.model_dump())

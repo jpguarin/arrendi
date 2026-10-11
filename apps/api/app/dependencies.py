@@ -1,0 +1,61 @@
+from collections.abc import Iterator
+from functools import lru_cache
+from typing import Annotated
+
+from fastapi import Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import Engine
+from sqlalchemy.orm import Session
+
+from app.auth import AuthUnavailableError, AuthUser, InvalidTokenError, TokenVerifier
+from app.config import get_settings
+from app.db import get_engine, set_owner_id
+from app.errors import auth_unavailable, unauthorized
+
+bearer_scheme = HTTPBearer(auto_error=False)
+
+
+@lru_cache
+def get_token_verifier() -> TokenVerifier:
+    supabase_url = get_settings().supabase_url
+    if not supabase_url:
+        raise RuntimeError("SUPABASE_URL is not set")
+    return TokenVerifier.for_supabase(supabase_url)
+
+
+def get_db_engine() -> Engine:
+    return get_engine()
+
+
+def get_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+    verifier: Annotated[TokenVerifier, Depends(get_token_verifier)],
+) -> AuthUser:
+    if credentials is None:
+        raise unauthorized()
+    try:
+        return verifier.verify(credentials.credentials)
+    except InvalidTokenError as error:
+        raise unauthorized() from error
+    except AuthUnavailableError as error:
+        raise auth_unavailable() from error
+
+
+CurrentUser = Annotated[AuthUser, Depends(get_current_user)]
+
+
+def get_owner_session(
+    user: CurrentUser, engine: Annotated[Engine, Depends(get_db_engine)]
+) -> Iterator[Session]:
+    """One transaction per request, scoped to the owner in the token.
+
+    It commits when the route returns and rolls back if it raises.
+    """
+    with Session(engine) as session, session.begin():
+        set_owner_id(session, user.owner_id)
+        yield session
+
+
+# `scope="function"` commits before the response is sent, so a failed commit is an error
+# response and anything done after the request (like sending email) sees committed data.
+OwnerSession = Annotated[Session, Depends(get_owner_session, scope="function")]

@@ -1,15 +1,25 @@
 from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
+from typing import Protocol
 from uuid import UUID, uuid4
 
+import jwt
 import pytest
 from alembic import command
 from alembic.config import Config
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.ec import (
+    EllipticCurvePrivateKey,
+    EllipticCurvePublicKey,
+)
 from fastapi.testclient import TestClient
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import Connection, Engine, text
 from sqlalchemy.engine import make_url
 
+from app.auth import TokenVerifier
 from app.db import create_db_engine
 from app.main import app
 
@@ -122,3 +132,58 @@ def two_owners(admin_engine: Engine) -> Iterator[tuple[UUID, UUID]]:
     yield ana, beto
     with admin_engine.begin() as connection:
         connection.execute(text("delete from owners where id in (:ana, :beto)"), locals())
+
+
+ISSUER = "https://test-project.supabase.co/auth/v1"
+
+
+class FakeJwksClient:
+    """Stands in for Supabase's JWKS endpoint: always answers with one public key."""
+
+    def __init__(self, public_key: EllipticCurvePublicKey) -> None:
+        self.public_key = public_key
+
+    def get_signing_key_from_jwt(self, token: str) -> SimpleNamespace:
+        return SimpleNamespace(key=self.public_key)
+
+
+@pytest.fixture(scope="session")
+def signing_key() -> EllipticCurvePrivateKey:
+    return ec.generate_private_key(ec.SECP256R1())
+
+
+@pytest.fixture(scope="session")
+def token_verifier(signing_key: EllipticCurvePrivateKey) -> TokenVerifier:
+    return TokenVerifier(issuer=ISSUER, jwks_client=FakeJwksClient(signing_key.public_key()))
+
+
+class MakeToken(Protocol):
+    def __call__(
+        self, owner_id: UUID | str, key: object = ..., algorithm: str = ..., **claims: object
+    ) -> str: ...
+
+
+@pytest.fixture
+def make_token(signing_key: EllipticCurvePrivateKey) -> MakeToken:
+    """Signs an access token like the ones Supabase Auth issues."""
+
+    def make(
+        owner_id: UUID | str,
+        key: object = signing_key,
+        algorithm: str = "ES256",
+        **claims: object,
+    ) -> str:
+        now = datetime.now(UTC)
+        payload = {
+            "sub": str(owner_id),
+            "iss": ISSUER,
+            "aud": "authenticated",
+            "exp": now + timedelta(hours=1),
+            "iat": now,
+            "email": "ana@example.com",
+            "user_metadata": {"full_name": "Ana Gómez"},
+            "is_anonymous": False,
+        } | claims
+        return jwt.encode(payload, key, algorithm=algorithm)
+
+    return make
