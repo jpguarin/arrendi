@@ -17,7 +17,7 @@ Lee el documento que corresponda antes de tocar esa parte del sistema. Si el có
 | `docs/arquitectura.md` | Stack, autenticación, despliegue en Vercel, variables de entorno |
 | `docs/diseno.md` | Colores, tipografía, componentes y mapa de pantallas |
 | `docs/plan.md` | Etapas, tareas y criterios de aceptación |
-| `docs/etapa-2.md` | Guía paso a paso de la etapa en curso (inmuebles y contratos) |
+| `docs/etapa-2.md` | Guía paso a paso de la etapa 2 (inmuebles y contratos), ya cerrada. Sirve de registro de lo decidido |
 | `docs/decisiones.md` | Decisiones tomadas, provisionales y pendientes |
 | `docs/mockups/` | Marcado de las 10 pantallas diseñadas, como referencia visual |
 

@@ -112,7 +112,7 @@ Antes de empezar: bucket creado y `SUPABASE_SECRET_KEY` puesta (ver "Lo que hace
 - Política "mostrar y refrescar". Solo en memoria; se vacía al cambiar de sesión. El detalle está en `docs/arquitectura.md`.
 - **Se comprueba:** cada pantalla hace una sola petición al abrir; volver a una pantalla ya visitada no muestra el esqueleto de carga; tras editar o terminar un contrato, la lista ya trae el cambio; después de cerrar sesión, otra cuenta no ve datos de la anterior.
 
-### [ ] Paso 10. Cierre
+### [x] Paso 10. Cierre
 
 - `pnpm lint`, `pnpm test` y `pnpm build`.
 - Casillas de la etapa 2 en `docs/plan.md`. La etapa pasa a 3 solo cuando confirmes los criterios de aceptación.
