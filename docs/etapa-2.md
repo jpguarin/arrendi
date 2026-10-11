@@ -68,7 +68,7 @@ Pruebas primero.
 - 409 `unit_has_active_lease` con mensaje en español. Terminar un contrato ya terminado es 400.
 - **Se comprueba:** una unidad no admite dos contratos activos, ni siquiera con dos peticiones simultáneas (lo decide el índice único, no el código); tras terminar, se puede crear otro; aislamiento.
 
-### [ ] Paso 5. Alta guiada en la API
+### [x] Paso 5. Alta guiada en la API
 
 - `POST /api/onboarding` en `app/routes/onboarding.py` y `app/services/onboarding.py`: inmueble, unidades (mínimo una) y, opcionalmente, arrendatario y contrato, en una transacción.
 - **Se comprueba:** todo o nada (si el contrato falla, no queda nada creado), sin unidades es 422, aislamiento.

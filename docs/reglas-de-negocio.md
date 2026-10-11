@@ -106,4 +106,5 @@ Condiciones:
 
 - Crea el inmueble, sus unidades y, si se completó el paso 3, el arrendatario y el contrato, en una sola transacción.
 - Exige al menos una unidad.
+- Se hace una sola vez. Si el propietario ya tiene un inmueble, el alta se rechaza: los demás inmuebles se crean desde la pantalla de inmuebles. Así un doble toque en el botón no crea el inmueble dos veces.
 - El alta se considera completa cuando el propietario tiene al menos un inmueble. Hasta entonces, la aplicación lo lleva al alta.

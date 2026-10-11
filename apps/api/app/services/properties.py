@@ -68,6 +68,10 @@ def _property_responses(session: Session, properties: list[Property]) -> list[Pr
     ]
 
 
+def property_response(session: Session, found: Property) -> PropertyResponse:
+    return _property_responses(session, [found])[0]
+
+
 def list_properties(session: Session) -> list[PropertyResponse]:
     properties = session.scalars(select(Property).order_by(Property.created_at, Property.id))
     return _property_responses(session, list(properties))
@@ -77,7 +81,7 @@ def create_property(session: Session, owner_id: UUID, data: PropertyCreate) -> P
     new = Property(owner_id=owner_id, **data.model_dump())
     session.add(new)
     session.flush()
-    return _property_responses(session, [new])[0]
+    return property_response(session, new)
 
 
 def _get_property(session: Session, property_id: UUID) -> Property:
@@ -92,7 +96,7 @@ def update_property(session: Session, property_id: UUID, data: PropertyUpdate) -
     for field, value in data.changes().items():
         setattr(found, field, value)
     session.flush()
-    return _property_responses(session, [found])[0]
+    return property_response(session, found)
 
 
 def add_unit(session: Session, property_id: UUID, data: UnitCreate) -> UnitResponse:

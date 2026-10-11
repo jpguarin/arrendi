@@ -159,6 +159,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Onboard */
+        post: operations["onboard_api_onboarding_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -304,6 +321,42 @@ export interface components {
             email: string;
             /** Onboarding Complete */
             onboarding_complete: boolean;
+        };
+        /** OnboardingLease */
+        OnboardingLease: {
+            /** Rent */
+            rent: number;
+            /** Due Day */
+            due_day: number;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** End Date */
+            end_date?: string | null;
+            /** Deposit */
+            deposit?: number | null;
+            /**
+             * Auto Send
+             * @default true
+             */
+            auto_send: boolean;
+            /** Unit Index */
+            unit_index: number;
+            tenant: components["schemas"]["TenantCreate"];
+        };
+        /** OnboardingRequest */
+        OnboardingRequest: {
+            property: components["schemas"]["PropertyCreate"];
+            /** Units */
+            units: components["schemas"]["UnitCreate"][];
+            lease?: components["schemas"]["OnboardingLease"] | null;
+        };
+        /** OnboardingResponse */
+        OnboardingResponse: {
+            property: components["schemas"]["PropertyResponse"];
+            lease: components["schemas"]["LeaseResponse"] | null;
         };
         /** PropertyCreate */
         PropertyCreate: {
@@ -949,6 +1002,57 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    onboard_api_onboarding_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OnboardingRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
