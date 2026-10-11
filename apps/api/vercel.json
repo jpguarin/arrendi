@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "uv pip install --python .vercel/python/.venv/bin/python -r requirements.txt",
   "functions": {
     "app/main.py": {
       "excludeFiles": "{tests/**,migrations/**,alembic.ini,openapi.json}"
