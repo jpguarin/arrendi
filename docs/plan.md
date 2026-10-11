@@ -18,7 +18,7 @@ Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando,
 - [x] API: Alembic configurado y primera migración con la tabla `owners`, su política de seguridad por fila y los roles de base de datos.
 - [x] API: dependencia que valida el token de Supabase, abre la transacción y fija `app.owner_id`.
 - [x] API: `GET /api/me`, que crea la fila del propietario en la primera llamada.
-- [ ] Web: Next.js con TypeScript y Tailwind, tema de colores y tipografía de `docs/diseno.md`.
+- [x] Web: Next.js con TypeScript y Tailwind, tema de colores y tipografía de `docs/diseno.md`.
 - [ ] Web: shadcn/ui inicializado, con sus variables de tema asignadas a los colores de Arrendi y los componentes base de acceso (`Button`, `Input`, `Label`, `Card`) ajustados a las medidas del diseño.
 - [ ] Web: tema claro y oscuro con `next-themes`, siguiendo al sistema por defecto, con las dos paletas de `docs/diseno.md`.
 - [ ] Web: acceso con Google mediante Supabase Auth.

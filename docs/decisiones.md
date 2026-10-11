@@ -21,6 +21,7 @@
 | Componentes | shadcn/ui sobre Radix, inicializado dentro de `apps/web` (sin `packages/ui`) |
 | Rutas en Next.js | Solo las que no tienen reglas de negocio: service worker, regreso de Google y confirmación de correo |
 | Playwright | Se agrega en la etapa 5, no en la 1 |
+| Next.js | Versión 16.4, con Turbopack. Sin `cacheComponents` ni `partialPrefetching`, que la plantilla trae activos: todas las pantallas son privadas y por propietario, y esas opciones obligan a aislar cada lectura de la sesión |
 | Suscripción y límites por plan | Fuera del MVP |
 | Documento del contrato | Se puede subir; un archivo por contrato |
 
@@ -61,7 +62,6 @@ No son decisiones de producto, sino datos técnicos que cambian y que este repos
 - Duración máxima y tamaño máximo de cuerpo de una función de Vercel.
 - Cómo protege Vercel las llamadas de un Cron Job.
 - Si la protección de despliegues de Vercel bloquea la redirección de la web hacia la API de vista previa.
-- La versión de Next.js que queda instalada, y con ella los pasos exactos de Serwist y de shadcn/ui.
 
 ### Verificado el 10 de octubre de 2026
 

@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Colors from docs/diseno.md. Components use the Tailwind names below, never these values. */
+:root {
+  --background: #f3f5f4;
+  --surface: #ffffff;
+  --foreground: #14201c;
+  --muted-foreground: #55635e;
+  --foreground-soft: #3a4743;
+  --border: #e1e6e3;
+  --input: #c9d1cd;
+  --border-dashed: #8e9a95;
+  --primary: #0f6b4f;
+  --primary-foreground: #ffffff;
+  --primary-strong: #0a4e3a;
+  --primary-tint: #d9efe6;
+  --alert: #8a3d06;
+  --alert-tint: #fbe6d4;
+  --info: #1d4e89;
+  --info-tint: #dce9f8;
+  /* The summary card looks the same in both themes. */
+  --summary: #0f6b4f;
+  --summary-inner: #0a4e3a;
+  --summary-foreground: #ffffff;
+  --summary-foreground-soft: #d6ede4;
+}
+
+.dark {
+  --background: #0f1513;
+  --surface: #18201d;
+  --foreground: #e8eeeb;
+  --muted-foreground: #a3b0ab;
+  --foreground-soft: #c5cfcb;
+  --border: #26302c;
+  --input: #6b7a73;
+  --border-dashed: #8e9a95;
+  --primary: #3fb58e;
+  --primary-foreground: #06231a;
+  --primary-strong: #9fe0c8;
+  --primary-tint: #143b2e;
+  --alert: #f2a66b;
+  --alert-tint: #40240f;
+  --info: #8db8ec;
+  --info-tint: #15294a;
+}
+
+@theme inline {
+  --font-sans: var(--font-figtree);
+
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-foreground-soft: var(--foreground-soft);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-border-dashed: var(--border-dashed);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-tint: var(--primary-tint);
+  --color-alert: var(--alert);
+  --color-alert-tint: var(--alert-tint);
+  --color-info: var(--info);
+  --color-info-tint: var(--info-tint);
+  --color-summary: var(--summary);
+  --color-summary-inner: var(--summary-inner);
+  --color-summary-foreground: var(--summary-foreground);
+  --color-summary-foreground-soft: var(--summary-foreground-soft);
+
+  /* Type scale from docs/diseno.md. */
+  --text-figure: 2.125rem; /* 34px: main figure on the home screen */
+  --text-title-onboarding: 1.625rem; /* 26px */
+  --text-title: 1.375rem; /* 22px: screen title */
+  --text-title-back: 1.125rem; /* 18px: title next to a back button */
+  --text-body: 1rem; /* 16px: rows and buttons */
+  --text-section: 0.9375rem; /* 15px: section heading */
+  --text-support: 0.8125rem; /* 13px */
+  --text-badge: 0.75rem; /* 12px: status badge */
+
+  /* On desktop the content stays in one phone-sized column. */
+  --container-app: 30rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-variant-numeric: tabular-nums;
+  }
+}
