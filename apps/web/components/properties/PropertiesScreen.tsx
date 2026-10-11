@@ -2,15 +2,14 @@
 
 import { Pencil, Plus } from "lucide-react";
 import Link from "next/link";
-import { useCallback } from "react";
 
 import { Header } from "@/components/Header";
 import { LoadError, Loading } from "@/components/LoadState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
-import { useLoad } from "@/lib/api/useLoad";
+import { errorMessage } from "@/lib/api/errors";
+import { useProperties } from "@/lib/api/queries";
 import { formatPesos } from "@/lib/format";
 import { UNIT_USE_LABELS } from "@/lib/labels";
 
@@ -107,8 +106,7 @@ function PropertyCard({ property }: { property: Property }) {
 }
 
 export function PropertiesScreen() {
-  const load = useCallback(() => api.GET("/api/properties"), []);
-  const { data: properties, error, reload } = useLoad(load);
+  const { data: properties, error, isPending, refetch } = useProperties();
 
   return (
     <>
@@ -120,8 +118,9 @@ export function PropertiesScreen() {
         </Button>
       </Header>
       <main className="flex flex-1 flex-col gap-4 px-5 pt-2 pb-6">
-        {error && <LoadError message={error} onRetry={reload} />}
-        {!error && !properties && <Loading label="Cargando tus inmuebles" />}
+        {/* With data in memory a failed refresh stays quiet: the list is still useful. */}
+        {!properties && error && <LoadError message={errorMessage(error)} onRetry={refetch} />}
+        {isPending && <Loading label="Cargando tus inmuebles" />}
         {properties?.length === 0 && (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 py-10 text-center">
             <div className="flex flex-col gap-1">

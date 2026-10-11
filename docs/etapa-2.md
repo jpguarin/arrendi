@@ -106,6 +106,12 @@ Antes de empezar: bucket creado y `SUPABASE_SECRET_KEY` puesta (ver "Lo que hace
 - Estados vacío, de carga y de error en cada pantalla. `docs/diseno.md`: se agregan estas rutas al mapa de pantallas.
 - **Se comprueba:** en local y en `arrendi-web.vercel.app`, el alta con 3 unidades y 3 contratos; un archivo de más de 4,5 MB sube bien (prueba la subida directa); en el iPhone, subir un PDF, cerrarlo y volver a abrirlo; con otra cuenta, el documento no abre.
 
+### [x] Paso 9.1. Datos en memoria entre pantallas
+
+- TanStack Query con `openapi-react-query` (dos dependencias nuevas en la web). Los ganchos de lectura y escritura viven en `apps/web/lib/api/queries.ts`; reemplazan a `useLoad` y `useSave`.
+- Política "mostrar y refrescar". Solo en memoria; se vacía al cambiar de sesión. El detalle está en `docs/arquitectura.md`.
+- **Se comprueba:** cada pantalla hace una sola petición al abrir; volver a una pantalla ya visitada no muestra el esqueleto de carga; tras editar o terminar un contrato, la lista ya trae el cambio; después de cerrar sesión, otra cuenta no ve datos de la anterior.
+
 ### [ ] Paso 10. Cierre
 
 - `pnpm lint`, `pnpm test` y `pnpm build`.

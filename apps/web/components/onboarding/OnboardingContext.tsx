@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 import type { LeaseValues } from "@/components/leases/LeaseForm";
 import type { PropertyValues } from "@/components/properties/PropertyForm";
-import { api } from "@/lib/api/client";
+import { useMe } from "@/lib/api/queries";
 import type { UnitUse } from "@/lib/labels";
 
 export type UnitDraft = { name: string; use: UnitUse };
@@ -33,14 +33,13 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   // The onboarding happens once. Someone who already has a property and lands here
   // (an old link, the back button) goes home; the API would reject it anyway.
+  const { data: me } = useMe();
+  // Only before they start: once the last step creates everything, it is that step that
+  // decides when to leave (it may still have something to tell the owner).
+  const done = me?.onboarding_complete === true && !draft.property;
   useEffect(() => {
-    api
-      .GET("/api/me")
-      .then(({ data }) => {
-        if (data?.onboarding_complete) router.replace("/");
-      })
-      .catch(() => {});
-  }, [router]);
+    if (done) router.replace("/");
+  }, [done, router]);
 
   const value = useMemo(
     () => ({ draft, update: (changes: Draft) => setDraft((old) => ({ ...old, ...changes })) }),

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree } from "next/font/google";
 import { PwaProvider } from "@/components/PwaProvider";
+import { QueryProvider } from "@/components/QueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { BACKGROUND_DARK, BACKGROUND_LIGHT } from "@/lib/theme";
 import "./globals.css";
@@ -30,7 +31,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full font-sans">
         <ThemeProvider>
           <PwaProvider>
-            <div className="mx-auto flex min-h-dvh w-full max-w-app flex-col">{children}</div>
+            <QueryProvider>
+              <div className="mx-auto flex min-h-dvh w-full max-w-app flex-col">{children}</div>
+            </QueryProvider>
           </PwaProvider>
         </ThemeProvider>
       </body>

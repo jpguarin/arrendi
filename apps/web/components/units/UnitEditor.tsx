@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -10,9 +9,8 @@ import { FormField } from "@/components/FormField";
 import { FormScreen, FormScreenFallback } from "@/components/FormScreen";
 import { LoadError, Loading } from "@/components/LoadState";
 import { SelectField } from "@/components/SelectField";
-import { api } from "@/lib/api/client";
-import { useLoad } from "@/lib/api/useLoad";
-import { useSave } from "@/lib/api/useSave";
+import { errorMessage } from "@/lib/api/errors";
+import { useAddUnit, useProperties, useUpdateUnit } from "@/lib/api/queries";
 import { UNIT_USE_OPTIONS } from "@/lib/labels";
 import { requiredText } from "@/lib/validation";
 
@@ -70,48 +68,25 @@ function UnitForm({
   );
 }
 
-function useProperties() {
-  // The API has no route for one property or one unit; the list is short.
-  const load = useCallback(() => api.GET("/api/properties"), []);
-  return useLoad(load);
-}
-
-function useDone() {
-  const router = useRouter();
-  return useCallback(() => {
-    router.replace(BACK);
-    router.refresh();
-  }, [router]);
-}
-
 export function NewUnitScreen({ propertyId }: { propertyId: string }) {
-  const done = useDone();
-  const { save, saving, error } = useSave();
-  const { data: properties, error: loadError, reload } = useProperties();
+  const router = useRouter();
+  const add = useAddUnit();
+  // The API has no route for one property; the list is short and usually in memory.
+  const { data: properties, error, refetch } = useProperties();
   const property = properties?.find((candidate) => candidate.id === propertyId);
 
   if (!property) {
     return (
       <FormScreenFallback title="Nueva unidad" backHref={BACK}>
-        {loadError ? (
-          <LoadError message={loadError} onRetry={reload} />
-        ) : properties ? (
-          <LoadError message="No encontramos este inmueble." onRetry={reload} />
+        {properties ? (
+          <LoadError message="No encontramos este inmueble." onRetry={refetch} />
+        ) : error ? (
+          <LoadError message={errorMessage(error)} onRetry={refetch} />
         ) : (
           <Loading label="Cargando el inmueble" />
         )}
       </FormScreenFallback>
     );
-  }
-
-  async function onSubmit(values: Values) {
-    const saved = await save(() =>
-      api.POST("/api/properties/{property_id}/units", {
-        params: { path: { property_id: propertyId } },
-        body: values,
-      }),
-    );
-    if (saved) done();
   }
 
   return (
@@ -121,18 +96,26 @@ export function NewUnitScreen({ propertyId }: { propertyId: string }) {
       backHref={BACK}
       formId={FORM_ID}
       submitLabel="Agregar unidad"
-      saving={saving}
-      error={error}
+      // Still "saving" after it worked: the screen is leaving and must not send it twice.
+      saving={add.isPending || add.isSuccess}
+      error={add.error ? errorMessage(add.error) : undefined}
     >
-      <UnitForm onSubmit={onSubmit} />
+      <UnitForm
+        onSubmit={(values) =>
+          add.mutate(
+            { params: { path: { property_id: propertyId } }, body: values },
+            { onSuccess: () => router.replace(BACK) },
+          )
+        }
+      />
     </FormScreen>
   );
 }
 
 export function EditUnitScreen({ unitId }: { unitId: string }) {
-  const done = useDone();
-  const { save, saving, error } = useSave();
-  const { data: properties, error: loadError, reload } = useProperties();
+  const router = useRouter();
+  const update = useUpdateUnit();
+  const { data: properties, error, refetch } = useProperties();
   const property = properties?.find((candidate) =>
     candidate.units.some((unit) => unit.id === unitId),
   );
@@ -141,22 +124,15 @@ export function EditUnitScreen({ unitId }: { unitId: string }) {
   if (!property || !unit) {
     return (
       <FormScreenFallback title="Editar unidad" backHref={BACK}>
-        {loadError ? (
-          <LoadError message={loadError} onRetry={reload} />
-        ) : properties ? (
-          <LoadError message="No encontramos esta unidad." onRetry={reload} />
+        {properties ? (
+          <LoadError message="No encontramos esta unidad." onRetry={refetch} />
+        ) : error ? (
+          <LoadError message={errorMessage(error)} onRetry={refetch} />
         ) : (
           <Loading label="Cargando la unidad" />
         )}
       </FormScreenFallback>
     );
-  }
-
-  async function onSubmit(values: Values) {
-    const saved = await save(() =>
-      api.PATCH("/api/units/{unit_id}", { params: { path: { unit_id: unitId } }, body: values }),
-    );
-    if (saved) done();
   }
 
   return (
@@ -166,10 +142,18 @@ export function EditUnitScreen({ unitId }: { unitId: string }) {
       backHref={BACK}
       formId={FORM_ID}
       submitLabel="Guardar cambios"
-      saving={saving}
-      error={error}
+      saving={update.isPending || update.isSuccess}
+      error={update.error ? errorMessage(update.error) : undefined}
     >
-      <UnitForm defaultValues={{ name: unit.name, use: unit.use }} onSubmit={onSubmit} />
+      <UnitForm
+        defaultValues={{ name: unit.name, use: unit.use }}
+        onSubmit={(values) =>
+          update.mutate(
+            { params: { path: { unit_id: unitId } }, body: values },
+            { onSuccess: () => router.replace(BACK) },
+          )
+        }
+      />
     </FormScreen>
   );
 }

@@ -1,38 +1,35 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { FormMessage } from "@/components/FormMessage";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { Button } from "@/components/ui/button";
-import { api, type Me } from "@/lib/api/client";
+import { errorMessage } from "@/lib/api/errors";
+import { useMe } from "@/lib/api/queries";
 import { createClient } from "@/lib/supabase/client";
-
-const LOAD_ERROR = "No pudimos cargar tus datos. Revisa tu conexión e inténtalo de nuevo.";
 
 // Provisional home: stage 5 replaces it with the summary of the month.
 export function HomeScreen() {
   const router = useRouter();
-  const [me, setMe] = useState<Me>();
-  const [error, setError] = useState<string>();
+  const queryClient = useQueryClient();
+  const { data, error } = useMe();
   const [signingOut, setSigningOut] = useState(false);
+  // Nothing to show yet: the owner starts by creating their first property.
+  const onboarding = data?.onboarding_complete === false;
+  const me = onboarding ? undefined : data;
 
   useEffect(() => {
-    api
-      .GET("/api/me")
-      .then(({ data, error }) => {
-        if (!data) setError(error?.detail ?? LOAD_ERROR);
-        // Nothing to show yet: the owner starts by creating their first property.
-        else if (!data.onboarding_complete) router.replace("/onboarding/property");
-        else setMe(data);
-      })
-      .catch(() => setError(LOAD_ERROR));
-  }, [router]);
+    if (onboarding) router.replace("/onboarding/property");
+  }, [onboarding, router]);
 
   async function signOut() {
     setSigningOut(true);
     await createClient().auth.signOut();
+    // The next account on this device must not see what this one loaded.
+    queryClient.clear();
     router.replace("/login");
     router.refresh();
   }
@@ -47,7 +44,7 @@ export function HomeScreen() {
         {me && <p className="text-support text-muted-foreground">{me.email}</p>}
       </div>
 
-      {error && <FormMessage tone="error">{error}</FormMessage>}
+      {error && !data && <FormMessage tone="error">{errorMessage(error)}</FormMessage>}
 
       <section className="flex flex-col gap-2">
         <h2 className="text-section font-semibold">Apariencia</h2>

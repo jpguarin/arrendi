@@ -8,9 +8,9 @@ import { DocumentPicker } from "@/components/leases/DocumentPicker";
 import { LeaseForm, leaseTerms, type LeaseValues } from "@/components/leases/LeaseForm";
 import { OnboardingScreen } from "@/components/onboarding/OnboardingScreen";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api/client";
 import { uploadLeaseDocument } from "@/lib/api/documents";
-import { apiErrorMessage, CONNECTION_ERROR } from "@/lib/api/errors";
+import { errorMessage, hasCode } from "@/lib/api/errors";
+import { useMarkOnboarded, useOnboard } from "@/lib/api/queries";
 
 import { useOnboarding } from "./OnboardingContext";
 
@@ -19,6 +19,8 @@ const FORM_ID = "onboarding-lease";
 export function LeaseStep() {
   const router = useRouter();
   const { draft } = useOnboarding();
+  const onboard = useOnboard();
+  const markOnboarded = useMarkOnboarded();
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
@@ -33,8 +35,8 @@ export function LeaseStep() {
   if (!property || !units) return null;
 
   function goHome() {
+    markOnboarded();
     router.replace("/");
-    router.refresh();
   }
 
   /** Creates the property, its units and, if the owner filled it in, the first lease. */
@@ -42,8 +44,9 @@ export function LeaseStep() {
     if (!property || !units) return;
     setSaving(true);
     setError(undefined);
+    let created;
     try {
-      const { data, error, response } = await api.POST("/api/onboarding", {
+      created = await onboard.mutateAsync({
         body: {
           property,
           units,
@@ -55,26 +58,19 @@ export function LeaseStep() {
           },
         },
       });
+    } catch (problem) {
       // A second tap, or another tab, already did it.
-      if (response.status === 409) return goHome();
-      if (!data) {
-        setError(apiErrorMessage(error));
-        setSaving(false);
-        return;
-      }
-      if (data.lease && file) {
-        const problem = await uploadLeaseDocument(data.lease.id, file);
-        if (problem) {
-          setDocumentFailed(true);
-          setSaving(false);
-          return;
-        }
-      }
-      goHome();
-    } catch {
-      setError(CONNECTION_ERROR);
+      if (hasCode(problem, "onboarding_already_complete")) return goHome();
+      setError(errorMessage(problem));
       setSaving(false);
+      return;
     }
+    if (created.lease && file && (await uploadLeaseDocument(created.lease.id, file))) {
+      setDocumentFailed(true);
+      setSaving(false);
+      return;
+    }
+    goHome();
   }
 
   if (documentFailed) {

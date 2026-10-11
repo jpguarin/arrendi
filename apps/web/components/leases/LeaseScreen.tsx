@@ -2,7 +2,7 @@
 
 import { FileText, Upload } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { ActionFooter } from "@/components/ActionFooter";
 import { FormMessage } from "@/components/FormMessage";
@@ -22,11 +22,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { api, type ApiError } from "@/lib/api/client";
+import { api } from "@/lib/api/client";
 import { DOCUMENT_TYPES, uploadLeaseDocument } from "@/lib/api/documents";
-import { apiErrorMessage, CONNECTION_ERROR } from "@/lib/api/errors";
+import { apiErrorMessage, CONNECTION_ERROR, errorMessage, hasCode } from "@/lib/api/errors";
+import { useEndLease, useLease, useRefreshLease, useUpdateLease } from "@/lib/api/queries";
 import type { components } from "@/lib/api/schema";
-import { useLoad } from "@/lib/api/useLoad";
 import { formatDate, formatDateTime, formatPesos, todayInBogota } from "@/lib/format";
 
 type Lease = components["schemas"]["LeaseResponse"];
@@ -161,28 +161,27 @@ export function LeaseScreen({
   /** The lease was just created, but its document did not go up. */
   documentFailed: boolean;
 }) {
-  const load = useCallback(
-    () => api.GET("/api/leases/{lease_id}", { params: { path: { lease_id: leaseId } } }),
-    [leaseId],
-  );
-  const { data: loaded, error: loadError, notFound, reload } = useLoad(load);
-  // What the last change returned; newer than what was loaded.
-  const [changed, setChanged] = useState<Lease>();
-  const [error, setError] = useState<string | undefined>(
+  const { data: lease, error: loadError, refetch } = useLease(leaseId);
+  const refresh = useRefreshLease(leaseId);
+  const update = useUpdateLease();
+  const end = useEndLease();
+  // What went wrong with the document; the changes keep their own errors.
+  const [documentError, setDocumentError] = useState<string | undefined>(
     documentFailed ? DOCUMENT_FAILED : undefined,
   );
-  const [working, setWorking] = useState(false);
-  const lease = changed ?? loaded;
+  const changeError = update.error ?? end.error;
+  const error = documentError ?? (changeError ? errorMessage(changeError) : undefined);
+  const working = update.isPending || end.isPending;
 
   if (!lease) {
     return (
       <>
         <Header title="Contrato" backHref={BACK} />
         <main className="flex flex-1 flex-col gap-4 px-5 pt-2 pb-6">
-          {notFound ? (
+          {hasCode(loadError, "not_found") ? (
             <FormMessage tone="error">No encontramos este contrato.</FormMessage>
           ) : loadError ? (
-            <LoadError message={loadError} onRetry={reload} />
+            <LoadError message={errorMessage(loadError)} onRetry={refetch} />
           ) : (
             <Loading label="Cargando el contrato" />
           )}
@@ -194,20 +193,6 @@ export function LeaseScreen({
   const path = { lease_id: lease.id };
   const active = lease.status === "active";
   const pastEnd = active && lease.end_date !== null && lease.end_date < todayInBogota();
-
-  /** Runs a change and shows the lease the API sends back. */
-  async function change(request: () => Promise<{ data?: Lease; error?: ApiError }>) {
-    setWorking(true);
-    setError(undefined);
-    try {
-      const { data, error } = await request();
-      if (data) setChanged(data);
-      else setError(apiErrorMessage(error));
-    } catch {
-      setError(CONNECTION_ERROR);
-    }
-    setWorking(false);
-  }
 
   return (
     <>
@@ -248,11 +233,8 @@ export function LeaseScreen({
 
         <DocumentSection
           lease={lease}
-          onError={setError}
-          onChange={() => {
-            setChanged(undefined);
-            reload();
-          }}
+          onError={setDocumentError}
+          onChange={refresh}
         />
 
         {active && (
@@ -267,9 +249,7 @@ export function LeaseScreen({
               checked={lease.auto_send}
               disabled={working}
               onCheckedChange={(auto_send) =>
-                change(() =>
-                  api.PATCH("/api/leases/{lease_id}", { params: { path }, body: { auto_send } }),
-                )
+                update.mutate({ params: { path }, body: { auto_send } })
               }
             />
           </label>
@@ -298,9 +278,7 @@ export function LeaseScreen({
                 <AlertDialogFooter>
                   <AlertDialogAction
                     variant="destructive"
-                    onClick={() =>
-                      change(() => api.POST("/api/leases/{lease_id}/end", { params: { path } }))
-                    }
+                    onClick={() => end.mutate({ params: { path } })}
                   >
                     Terminar contrato
                   </AlertDialogAction>

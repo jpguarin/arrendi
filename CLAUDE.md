@@ -24,7 +24,7 @@ Lee el documento que corresponda antes de tocar esa parte del sistema. Si el có
 ## Stack
 
 - **API:** Python 3.12, FastAPI, Pydantic, SQLAlchemy 2, Alembic.
-- **Web:** Next.js (App Router), React, TypeScript, Tailwind CSS, shadcn/ui para los componentes, Serwist para la PWA.
+- **Web:** Next.js (App Router), React, TypeScript, Tailwind CSS, shadcn/ui para los componentes, TanStack Query para los datos de la API, Serwist para la PWA.
 - **Datos:** PostgreSQL en Supabase, con seguridad por fila. Supabase Storage para archivos.
 - **Acceso:** Supabase Auth, con Google y con correo y contraseña.
 - **PDF:** ReportLab. **Correo:** proveedor transaccional (por elegir).
@@ -117,6 +117,7 @@ alembic revision --autogenerate -m "descripcion"
 - **Interfaz:** español de Colombia, trato de "tú". Dinero como `$1.000.000`, fechas como `5 oct 2026`.
 - **Fechas:** las de negocio son `date`. "Hoy" siempre se calcula en `America/Bogota`, nunca en UTC.
 - **Validación:** en la API con Pydantic. La web usa los tipos generados; no se escriben a mano.
+- **Datos en la web:** las pantallas leen y escriben con los ganchos de `apps/web/lib/api/queries.ts` (TanStack Query), no con `fetch` ni `useEffect`. Una escritura nueva decide ahí qué actualiza en memoria.
 - **Errores de la API:** `{"detail": "mensaje legible, en español", "code": "stable_code"}` con el código HTTP correcto.
 - **Componentes:** parte de shadcn/ui (sobre Radix) antes de crear uno desde cero. Se agregan con su CLI, uno por uno y solo cuando hacen falta. Su código queda en `components/ui/` y se adapta al tema de `docs/diseno.md`; no se usan con el aspecto por defecto.
 - **Estilos:** solo Tailwind, con las variables del tema. Sin colores ni medidas sueltas en los componentes, y sin otra librería de estilos.

@@ -22,6 +22,7 @@ Solo la API toca la base de datos y el correo, y solo ella da acceso a los archi
 | Estilos y componentes | Tailwind CSS y shadcn/ui | Componentes accesibles cuyo código queda en el repositorio y se adapta al diseño |
 | PWA | Serwist (`@serwist/turbopack`) y el manifiesto de Next.js | |
 | Cliente de la API | Tipos generados desde OpenAPI (`openapi-typescript`), usados con `openapi-fetch` | La web falla al compilar si la API cambia |
+| Datos en la web | TanStack Query, con `openapi-react-query` | Navegar entre pantallas no vuelve a esperar a la API |
 | Base de datos | PostgreSQL en Supabase | Seguridad por fila para aislar a cada propietario |
 | Autenticación | Supabase Auth, con Google y con correo y contraseña; FastAPI verifica el token | Acceso con Google, registro, confirmación y recuperación ya resueltos |
 | Archivos | Supabase Storage, privado | Enlaces temporales |
@@ -64,6 +65,15 @@ Consultado en la documentación de Supabase el 10 de octubre de 2026:
 - Hay dos rutas de Next que solo completan el acceso, sin reglas de negocio: `/auth/callback` (regreso de Google) y `/auth/confirm` (enlace del correo de confirmación o de recuperación).
 - El registro con correo pide el nombre y lo guarda en los metadatos del usuario de Supabase, para que el token lo traiga igual que con Google.
 - El cliente de la API (`apps/web/lib/api/client.ts`) agrega el token a cada llamada. Si la API responde 401, cierra la sesión y vuelve a `/login`.
+
+### Datos en memoria
+
+- Las pantallas leen y escriben con los ganchos de `apps/web/lib/api/queries.ts`, que usan TanStack Query. Lo que respondió la API queda en memoria mientras el propietario navega.
+- **Mostrar y refrescar:** una pantalla ya visitada aparece al instante con lo guardado y pide la versión nueva por detrás. También se refresca al volver a la aplicación y al recuperar la conexión.
+- **Cada escritura actualiza la memoria** con la respuesta de la API (por ejemplo, terminar un contrato deja su unidad como vacía en la lista), así el cambio propio se ve de inmediato. Qué toca cada escritura se decide en `queries.ts`, no en las pantallas.
+- **Solo en memoria.** No se guarda en el dispositivo; al recargar la página empieza vacío.
+- **Se vacía al cambiar de sesión:** al cerrar sesión y cuando Supabase avisa que el usuario cambió (`components/QueryProvider.tsx`). Una cuenta nunca ve lo que cargó otra en el mismo navegador.
+- Las lecturas iguales que coinciden se envían una sola vez. En desarrollo React monta cada pantalla dos veces, y sin esto cada carga salía duplicada.
 
 ### Configuración de Supabase Auth
 
