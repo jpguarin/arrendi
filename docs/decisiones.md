@@ -28,7 +28,11 @@
 | Clave secreta de Supabase | Solo en el módulo de almacenamiento de la API, además de la tarea diaria, para crear enlaces firmados |
 | Cliente HTTP de la API | `httpx2`, el mismo paquete que ya usaban las pruebas; pasa a `requirements.txt` para hablar con Storage. No se usa el SDK de Supabase en la API |
 | Datos en la web | TanStack Query con `openapi-react-query`, sobre el cliente con tipos generados. Guarda en memoria lo que respondió la API: al volver a una pantalla se muestra al instante y se refresca por detrás. Solo en memoria, nunca en el dispositivo, y se vacía al cambiar de sesión. Se descartó un almacén global (Zustand, Redux): lo que se guarda son datos del servidor, no estado de la interfaz |
-| Barra de navegación | Muestra solo las pantallas que ya existen; Cuentas y Ajustes se suman en su etapa |
+| Barra de navegación | Muestra solo las pantallas que ya existen. Desde la etapa 3 están las cuatro: Inicio, Cuentas, Inmuebles y Ajustes |
+| Cuenta mensual a mano | `POST /api/leases/{id}/bills` genera la del mes en curso, con el mismo servicio que usa la tarea diaria |
+| Ajustes mínimo en la etapa 3 | Nombre, documento y datos de pago se adelantan a la etapa 3, porque el PDF los necesita. El resto de la configuración sigue en la etapa 4 |
+| Cuenta con vencimiento pasado | Nace `overdue`, sin esperar a la tarea diaria |
+| PDF | ReportLab con Helvetica, que ya trae; no se empaqueta Figtree |
 
 ## Provisionales
 

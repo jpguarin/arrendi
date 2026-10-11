@@ -18,6 +18,7 @@ Lee el documento que corresponda antes de tocar esa parte del sistema. Si el có
 | `docs/diseno.md` | Colores, tipografía, componentes y mapa de pantallas |
 | `docs/plan.md` | Etapas, tareas y criterios de aceptación |
 | `docs/etapa-2.md` | Guía paso a paso de la etapa 2 (inmuebles y contratos), ya cerrada. Sirve de registro de lo decidido |
+| `docs/etapa-3.md` | Guía paso a paso de la etapa 3 (cuentas de cobro), en curso |
 | `docs/decisiones.md` | Decisiones tomadas, provisionales y pendientes |
 | `docs/mockups/` | Marcado de las 10 pantallas diseñadas, como referencia visual |
 

@@ -70,9 +70,12 @@ Objetivo: generar cuentas con consecutivo y PDF, a mano, sin correo todavía.
 - [ ] API: generación del PDF con ReportLab y guardado en el almacenamiento.
 - [ ] API: rutas de cuentas de `docs/api.md`, salvo enviar y recordar.
 - [ ] API: anulación.
+- [ ] API: `GET` y `PATCH /api/settings` con nombre, documento y datos de pago, que el PDF necesita.
 - [ ] Web: listado de cuentas con filtros.
 - [ ] Web: detalle de cuenta con vista del documento y descarga del PDF.
 - [ ] Web: crear cuenta manual.
+- [ ] Web: generar la cuenta del mes desde el contrato, y sus últimas cuentas.
+- [ ] Web: configuración con nombre, documento y datos de pago.
 - [ ] Pruebas: consecutivo sin saltos con generación concurrente; una cuenta mensual por contrato y periodo; no se anula una cuenta con pagos.
 
 **Criterios de aceptación**
@@ -96,6 +99,7 @@ Objetivo: que las cuentas y los recordatorios salgan solos.
 - [ ] API: aviso de rebotes del proveedor.
 - [ ] Cron Job en `apps/api/vercel.json`.
 - [ ] Web: actividad en el detalle de cuenta; botones de reenviar y recordar.
+- [ ] API: día de envío, recordatorios y copia en `/api/settings`.
 - [ ] Web: configuración de día de envío, recordatorios, copia y selector de tema (claro, oscuro, sistema).
 - [ ] Pruebas: la tarea ejecutada dos veces el mismo día no duplica cuentas ni correos; se recupera de un día perdido; las fechas se calculan en hora de Colombia.
 

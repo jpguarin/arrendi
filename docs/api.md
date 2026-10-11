@@ -26,7 +26,7 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 | Ruta | Qué hace |
 | --- | --- |
 | `GET /api/me` | Devuelve el propietario y si completó el alta (`onboarding_complete`). Crea su fila si es la primera vez. `onboarding_complete` es verdadero cuando el propietario tiene al menos un inmueble. El nombre y el correo salen del token solo al crear la fila; después manda lo que el propietario guardó. Si el token no trae nombre se usa el correo, y sin correo responde 400 (`email_required`). |
-| `PATCH /api/settings` | Actualiza nombre, documento, datos de pago, día de envío, recordatorios y copia |
+| `PATCH /api/settings` | Actualiza nombre, documento y datos de pago (`name`, `document_number`, `payment_details`). Solo cambian los campos enviados. Desde la etapa 4, también día de envío, recordatorios y copia |
 | `GET /api/settings` | Devuelve la configuración |
 | `POST /api/onboarding` | Crea el primer inmueble (`property`), sus unidades (`units`, de 1 a 50) y, opcionalmente, el arrendatario y el contrato (`lease`, que señala la unidad con `unit_index`), en una transacción. 409 `onboarding_already_complete` si el propietario ya tiene un inmueble |
 
@@ -45,9 +45,10 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 | Ruta | Qué hace |
 | --- | --- |
 | `POST /api/leases` | Crea el contrato de una unidad. Recibe `tenant` (arrendatario nuevo) o `tenant_id` (uno existente), nunca los dos. 409 `unit_has_active_lease` si la unidad ya tiene contrato activo; 422 `invalid_lease_dates` si la fecha de fin no es posterior a la de inicio |
-| `GET /api/leases/{id}` | Devuelve contrato, arrendatario, unidad con su inmueble y el nombre del documento. Desde la etapa 3, también sus últimas cuentas |
+| `GET /api/leases/{id}` | Devuelve contrato, arrendatario, unidad con su inmueble y el nombre del documento. También sus últimas cuentas, en `recent_bills` (hasta 6, de la más nueva a la más vieja, incluidas las anuladas) |
 | `PATCH /api/leases/{id}` | Edita canon, día de pago, fechas, depósito, envío automático y datos del arrendatario (en `tenant`). Solo cambian los campos enviados. También se puede editar un contrato terminado, para corregir el correo del arrendatario si quedó con saldo |
 | `POST /api/leases/{id}/end` | Pasa el contrato a terminado. 400 `lease_already_ended` si ya lo estaba |
+| `POST /api/leases/{id}/bills` | Genera la cuenta mensual del contrato para el mes en curso (hora de Colombia), sin cuerpo. Responde 201. 400 `lease_not_active` si el contrato está terminado; 409 `bill_already_exists` si ya hay una cuenta no anulada de ese mes |
 | `POST /api/leases/{id}/document/upload-url` | Primer paso de la subida. Recibe `filename`, `content_type` y `size`; devuelve el enlace firmado de subida y la ruta del objeto |
 | `POST /api/leases/{id}/document` | Segundo paso. Confirma la subida: valida el archivo guardado, lo asocia al contrato y borra el anterior si lo reemplaza |
 | `GET /api/leases/{id}/document` | Devuelve un enlace temporal al documento (`url`, `name` y `expires_in`, 5 minutos). 404 `document_not_found` si el contrato no tiene |
@@ -57,14 +58,20 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 | Ruta | Qué hace |
 | --- | --- |
 | `GET /api/bills` | Lista cuentas. Filtros: `unit_id`, `status` (`receivable`, `paid`, `voided`), `from`, `to` |
-| `POST /api/bills` | Crea una cuenta manual sobre un contrato: descripción, valor, vencimiento |
-| `GET /api/bills/{id}` | Devuelve la cuenta con conceptos, pagos, saldo y notificaciones |
-| `GET /api/bills/{id}/pdf` | Devuelve un enlace temporal al PDF |
+| `POST /api/bills` | Crea una cuenta manual sobre un contrato activo: `lease_id`, `description`, `amount` y `due_date`. Responde 201. 400 `lease_not_active` si el contrato está terminado |
+| `GET /api/bills/{id}` | Devuelve la cuenta con conceptos, saldo (`balance`), unidad, arrendatario y los datos del propietario que muestra el documento. Los pagos llegan en la etapa 5 y las notificaciones en la 4 |
+| `GET /api/bills/{id}/pdf` | Devuelve un enlace temporal al PDF (`url`, `name` y `expires_in`, 5 minutos) |
 | `POST /api/bills/{id}/send` | Envía o reenvía la cuenta por correo |
 | `POST /api/bills/{id}/remind` | Envía un recordatorio manual. 400 si no tiene saldo |
-| `POST /api/bills/{id}/void` | Anula la cuenta. 400 si tiene pagos |
+| `POST /api/bills/{id}/void` | Anula la cuenta. 400 `bill_has_payments` si tiene pagos; 400 `bill_already_voided` si ya estaba anulada |
 
 El filtro `receivable` reúne `pending`, `partial` y `overdue`. Sin filtro de estado, las anuladas no se incluyen.
+
+El listado va de la más nueva a la más vieja. `from` y `to` (fechas, inclusive) filtran por el mes al que pertenece la cuenta: el `period` de la mensual y el vencimiento de la manual.
+
+La cuenta mensual y la manual se crean con el PDF ya guardado. Si el almacenamiento falla, responden 503 `storage_unavailable` y no se crea nada: el consecutivo no se gasta.
+
+Hasta la etapa 5 no hay tabla de pagos: una cuenta "tiene pagos" cuando su estado es `partial` o `paid`.
 
 ## Pagos
 

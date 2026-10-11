@@ -99,7 +99,7 @@ Los componentes se construyen sobre shadcn/ui (con Radix como librería base), a
 | Confirmaciones | `AlertDialog` | Anular cuenta, terminar contrato, eliminar pago |
 | Avisos | `Sonner` | "Pago guardado", "Cuenta enviada", errores |
 | Carga | `Skeleton` | Mientras llegan los datos |
-| `BottomNav` | propio | Cuatro pestañas: Inicio, Cuentas, Inmuebles, Ajustes. Solo muestra las pantallas que ya existen: Inicio e Inmuebles en la etapa 2 |
+| `BottomNav` | propio | Cuatro pestañas: Inicio, Cuentas, Inmuebles, Ajustes. Solo muestra las pantallas que ya existen: las cuatro desde la etapa 3 |
 | `Header` | propio | Título, con botón de volver o acción a la derecha |
 | `ActionFooter` | propio | Franja blanca inferior con la acción principal |
 | `FormScreen` | propio | Marco de una pantalla que edita una cosa: volver, el formulario y "guardar" en el pie |
@@ -147,7 +147,11 @@ Los íconos son de Lucide, que es la librería que usa shadcn/ui: de trazo, de 2
 - En el escritorio, el contenido se centra en una columna de 480 px como máximo. No hay diseño de escritorio propio en el MVP.
 - Los mockups solo muestran el tema claro.
 - El selector de tema en configuración no aparece en el mockup; va como una sección más, "Apariencia".
-- En el contrato, la sección "Cuentas de cobro" del mockup llega en la etapa 3, y "Próximo incremento" no se construye: el incremento anual está fuera del MVP.
+- En el contrato, "Próximo incremento" no se construye: el incremento anual está fuera del MVP.
 - En inmuebles, cada fila de unidad tiene además un botón de lápiz para editarla, que el mockup no trae. Una unidad vacía dice "Crear contrato" y lleva a crearlo.
 - En el contrato, el texto bajo "Enviar cuentas automáticamente" no menciona el día de envío hasta que exista la configuración (etapa 4).
+- En el listado de cuentas, el encabezado de cada mes muestra solo el total hasta que existan los pagos (etapa 5), y las pastillas de estado no llevan contador. Hay una pastilla más, "Anuladas".
+- En el detalle de cuenta, "Registrar pago" llega en la etapa 5 y "Reenviar" en la 4. La actividad muestra solo cuándo se generó y cuándo se anuló hasta que existan las notificaciones.
+- En el contrato, la sección "Cuentas de cobro" tiene además el botón "Generar cuenta del mes".
+- En configuración, la etapa 3 trae solo "Tus datos" y "Datos de pago"; el resto llega en la etapa 4.
 - La marca visible es el nombre "Arrendi" en texto, en el acceso y en el pie del PDF. No hay logo todavía. El ícono de la aplicación instalada es provisional: una "A" blanca sobre el verde primario.

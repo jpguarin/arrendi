@@ -25,6 +25,8 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 
 | Desde | Hacia | Qué la provoca |
 | --- | --- | --- |
+| (nueva) | `pending` | Se emite con vencimiento hoy o después |
+| (nueva) | `overdue` | Se emite con el vencimiento ya pasado |
 | `pending` | `partial` | Un pago menor al saldo |
 | `pending` | `paid` | Un pago igual al total |
 | `partial` | `paid` | Un pago que completa el saldo |
@@ -44,8 +46,10 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 - **Anulación:** solo si la cuenta no tiene pagos. La cuenta anulada conserva su consecutivo y su PDF.
 - **Consecutivo:** uno por propietario, creciente y sin saltos. Se asigna en la misma transacción que crea la cuenta, bloqueando la fila del propietario (`select ... for update`).
 - **Una por periodo:** no puede haber dos cuentas mensuales no anuladas del mismo contrato y periodo. Si se anula la del mes, se puede generar otra.
+- **Mensual a mano:** además de la tarea diaria, el propietario puede generar la cuenta del mes en curso de un contrato activo. Es la misma cuenta, con las mismas reglas.
+- **Nace vencida:** si al emitir la cuenta su vencimiento es anterior a hoy (en `America/Bogota`), nace `overdue` en lugar de `pending`. Es lo mismo que haría la tarea diaria a la mañana siguiente.
 - **Cuenta manual:** el propietario puede crear una cuenta extra sobre un contrato activo, con descripción, valor y vencimiento propios. No tiene periodo.
-- **PDF:** se genera al emitir y se guarda. Reenviar o descargar usa ese mismo archivo.
+- **PDF:** se genera al emitir y se guarda, dentro de la misma transacción: si no se puede guardar, la cuenta no se crea. Reenviar o descargar usa ese mismo archivo. Al anular, se reemplaza por una versión marcada "ANULADA" después de confirmar la transacción.
 
 ## Pagos
 
