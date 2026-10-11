@@ -150,9 +150,8 @@ Los íconos son de Lucide, que es la librería que usa shadcn/ui: de trazo, de 2
 - El selector de tema en configuración no aparece en el mockup; va como una sección más, "Apariencia".
 - En el contrato, "Próximo incremento" no se construye: el incremento anual está fuera del MVP.
 - En inmuebles, cada fila de unidad tiene además un botón de lápiz para editarla, que el mockup no trae. Una unidad vacía dice "Crear contrato" y lleva a crearlo.
-- En el contrato, el texto bajo "Enviar cuentas automáticamente" no menciona el día de envío hasta que exista la configuración (etapa 4).
 - En el listado de cuentas, el encabezado de cada mes muestra solo el total hasta que existan los pagos (etapa 5), y las pastillas de estado no llevan contador. Hay una pastilla más, "Anuladas".
-- En el detalle de cuenta, "Registrar pago" llega en la etapa 5 y "Reenviar" en la 4. La actividad muestra solo cuándo se generó y cuándo se anuló hasta que existan las notificaciones.
+- En el detalle de cuenta, "Registrar pago" llega en la etapa 5. Mientras la cuenta no se haya enviado, la acción principal es "Enviar al arrendatario"; después aparecen "Enviar recordatorio" y "Reenviar". La actividad lista cada correo y dice si falló o rebotó.
 - En el contrato, la sección "Cuentas de cobro" tiene además el botón "Generar cuenta del mes".
-- En configuración, la etapa 3 trae solo "Tus datos" y "Datos de pago"; el resto llega en la etapa 4.
+- En configuración, "Tus datos" y "Datos de pago" se editan en la misma pantalla, sin botón "Editar", y hay un selector de tipo de documento (cédula o NIT).
 - La marca visible es el nombre "Arrendi" en texto, en el acceso y en el pie del PDF. No hay logo todavía. El ícono de la aplicación instalada es provisional: una "A" blanca sobre el verde primario.

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { FormMessage } from "@/components/FormMessage";
-import { ThemeSelector } from "@/components/ThemeSelector";
 import { Button } from "@/components/ui/button";
 import { errorMessage } from "@/lib/api/errors";
 import { useMe } from "@/lib/api/queries";
@@ -45,11 +44,6 @@ export function HomeScreen() {
       </div>
 
       {error && !data && <FormMessage tone="error">{errorMessage(error)}</FormMessage>}
-
-      <section className="flex flex-col gap-2">
-        <h2 className="text-section font-semibold">Apariencia</h2>
-        <ThemeSelector />
-      </section>
 
       <Button variant="outline" size="md" onClick={signOut} disabled={signingOut}>
         {signingOut ? "Cerrando sesión…" : "Cerrar sesión"}

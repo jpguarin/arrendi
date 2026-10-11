@@ -111,12 +111,12 @@ Por lotes, con un límite de tiempo por ejecución; lo que no alcance queda para
 - `pnpm gen:api`.
 - **Se comprueba:** validación y aislamiento.
 
-### [ ] Paso 10. Web: actividad y envíos en la cuenta
+### [x] Paso 10. Web: actividad y envíos en la cuenta
 
 - `components/bills/BillScreen.tsx`: la actividad lista las notificaciones (enviada, recordatorio, rebotó, falló); botón principal "Enviar al arrendatario" si no se ha enviado, y "Reenviar" y "Recordar" después. Aviso si la cuenta sigue sin enviar.
 - `lib/api/queries.ts`: `useSendBill` y `useRemindBill`.
 
-### [ ] Paso 11. Web: configuración
+### [x] Paso 11. Web: configuración
 
 - `components/settings/SettingsScreen.tsx`: sección "Envíos por correo" (día de envío, dos recordatorios, copia) y "Apariencia", con el selector de tema que hoy está en el inicio provisional.
 - `components/leases/LeaseScreen.tsx`: el texto de "Enviar cuentas automáticamente" menciona el día de envío.
@@ -124,7 +124,9 @@ Por lotes, con un límite de tiempo por ejecución; lo que no alcance queda para
 
 ### [ ] Paso 12. Cierre
 
-- `pnpm lint`, `pnpm test` y `pnpm build`; casillas de la etapa 4 en `docs/plan.md`. La etapa pasa a 5 cuando confirmes los criterios de aceptación.
+- `pnpm lint`, `pnpm test` y `pnpm build` pasan (11 de octubre de 2026).
+- Falta lo de "Lo que haces tú" (Resend, variables, migración `0005`, rol de tareas, webhook) y revisar en el navegador, en ambos temas, el detalle de cuenta y Ajustes. Hasta entonces las casillas de la web en `docs/plan.md` quedan sin marcar.
+- Casillas de la etapa 4 en `docs/plan.md`. La etapa pasa a 5 cuando confirmes los criterios de aceptación.
 
 ## Verificación de extremo a extremo
 

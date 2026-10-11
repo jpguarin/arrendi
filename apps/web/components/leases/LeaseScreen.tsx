@@ -337,6 +337,7 @@ export function LeaseScreen({
             <span className="flex flex-col gap-0.5">
               <span className="text-body font-semibold">Enviar cuentas automáticamente</span>
               <span className="text-support text-muted-foreground">
+                {settings && `Salen solas el día ${settings.send_day} de cada mes. `}
                 Si lo apagas, cada cuenta espera a que tú la envíes.
               </span>
             </span>
