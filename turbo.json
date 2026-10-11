@@ -1,0 +1,21 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "agentGuidance": false,
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {},
+    "test": {
+      "cache": false
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "gen:api": {
+      "cache": false
+    }
+  }
+}

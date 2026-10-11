@@ -1,0 +1,18 @@
+{
+  "name": "arrendi",
+  "private": true,
+  "packageManager": "pnpm@10.4.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "build": "turbo run build",
+    "gen:api": "turbo run gen:api"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.7"
+  }
+}

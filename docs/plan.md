@@ -10,7 +10,7 @@ Seis etapas, en orden. Cada una termina con sus criterios de aceptación cumplid
 
 Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando, sin funcionalidad de negocio todavía.
 
-- [ ] Documentos al día: código en inglés y hallazgos de la documentación vigente.
+- [x] Documentos al día: código en inglés y hallazgos de la documentación vigente.
 - [ ] Monorepo con Turborepo y pnpm según `CLAUDE.md`: `pnpm-workspace.yaml`, `turbo.json` y los scripts `dev`, `lint`, `test`, `build` y `gen:api` en la raíz.
 - [ ] `apps/api/package.json` con scripts que ejecutan la API, las pruebas y el lint desde su entorno de Python.
 - [ ] API: FastAPI con `GET /api/health`, configuración por variables de entorno, `ruff` y `pytest`.
