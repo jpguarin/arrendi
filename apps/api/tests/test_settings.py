@@ -19,6 +19,10 @@ def test_settings_start_with_what_the_token_says(
         "document_type": "cc",
         "document_number": None,
         "payment_details": None,
+        "send_day": 1,
+        "reminder_1": True,
+        "reminder_2": True,
+        "email_copy": False,
     }
 
 
@@ -47,6 +51,10 @@ def test_update_changes_only_the_fields_sent(
         "document_type": "nit",
         "document_number": "900.123.456-7",
         "payment_details": details,
+        "send_day": 1,
+        "reminder_1": True,
+        "reminder_2": True,
+        "email_copy": False,
     }
     assert api.get("/api/settings", headers=headers).json() == second.json()
     assert api.get("/api/me", headers=headers).json()["name"] == "Ana María Gómez"
@@ -85,6 +93,46 @@ def test_name_and_document_type_cannot_be_cleared(
         response = api.patch("/api/settings", headers=headers, json=body)
         assert response.status_code == 422
         assert response.json()["code"] == "validation_error"
+
+
+def test_sending_settings_are_saved(
+    api: TestClient, make_token: MakeToken, two_owners: tuple[UUID, UUID]
+) -> None:
+    ana, _ = two_owners
+    headers = bearer(make_token(ana))
+
+    response = api.patch(
+        "/api/settings",
+        headers=headers,
+        json={"send_day": 28, "reminder_1": False, "email_copy": True},
+    )
+
+    assert response.status_code == 200
+    saved = api.get("/api/settings", headers=headers).json()
+    assert (saved["send_day"], saved["reminder_1"], saved["reminder_2"], saved["email_copy"]) == (
+        28,
+        False,
+        True,
+        True,
+    )
+
+
+def test_sending_settings_are_validated(
+    api: TestClient, make_token: MakeToken, two_owners: tuple[UUID, UUID]
+) -> None:
+    ana, _ = two_owners
+    headers = bearer(make_token(ana))
+
+    for body in (
+        {"send_day": 0},
+        {"send_day": 29},
+        {"send_day": "5"},
+        {"send_day": None},
+        {"reminder_1": None},
+        {"email_copy": None},
+    ):
+        response = api.patch("/api/settings", headers=headers, json=body)
+        assert response.status_code == 422, body
 
 
 def test_settings_need_a_session(api: TestClient) -> None:

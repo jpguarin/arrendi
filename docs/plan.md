@@ -95,13 +95,13 @@ Objetivo: que las cuentas y los recordatorios salgan solos.
 - [x] API: plantillas de cuenta, dos recordatorios y recibo, en HTML y texto.
 - [x] API: enviar, reenviar y recordatorio manual.
 - [x] API: desvío de todos los correos al buzón de pruebas fuera de producción.
-- [ ] API: tarea diaria con sus tres pasos, por lotes, y la ruta `/api/cron/daily` protegida.
-- [ ] API: aviso de rebotes del proveedor.
-- [ ] Cron Job en `apps/api/vercel.json`.
+- [x] API: tarea diaria con sus tres pasos, por lotes, y la ruta `/api/cron/daily` protegida.
+- [x] API: aviso de rebotes del proveedor.
+- [x] Cron Job en `apps/api/vercel.json`.
 - [ ] Web: actividad en el detalle de cuenta; botones de reenviar y recordar.
-- [ ] API: día de envío, recordatorios y copia en `/api/settings`.
+- [x] API: día de envío, recordatorios y copia en `/api/settings`.
 - [ ] Web: configuración de día de envío, recordatorios, copia y selector de tema (claro, oscuro, sistema).
-- [ ] Pruebas: la tarea ejecutada dos veces el mismo día no duplica cuentas ni correos; se recupera de un día perdido; las fechas se calculan en hora de Colombia.
+- [x] Pruebas: la tarea ejecutada dos veces el mismo día no duplica cuentas ni correos; se recupera de un día perdido; las fechas se calculan en hora de Colombia.
 
 **Criterios de aceptación**
 

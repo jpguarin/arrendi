@@ -82,7 +82,7 @@ En los pasos 2, 5 y 6 la prueba va primero.
 - `GET /api/bills/{id}`: campo `notifications`.
 - **Se comprueba:** el correo sale después de confirmar y nunca si la transacción falla; el adjunto es el PDF guardado; un fallo del proveedor deja la notificación `failed`; aislamiento en las dos rutas.
 
-### [ ] Paso 6. Tarea diaria
+### [x] Paso 6. Tarea diaria
 
 `app/tasks/daily.py`, con la conexión de `arrendi_tasks` y "hoy" en `America/Bogota` (`app/dates.py`):
 
@@ -94,18 +94,18 @@ Por lotes, con un límite de tiempo por ejecución; lo que no alcance queda para
 
 - **Se comprueba:** ejecutada dos veces el mismo día no duplica cuentas ni correos; tras un día perdido procesa lo pendiente; a las 03:00 UTC todavía es "ayer" en Colombia; un contrato que falla no detiene a los demás; contratos terminados y `send_day` futuro no generan; los consecutivos siguen sin saltos.
 
-### [ ] Paso 7. Ruta y Cron Job
+### [x] Paso 7. Ruta y Cron Job
 
 - `GET /api/cron/daily` en `app/routes/system.py`: exige `Authorization: Bearer <CRON_SECRET>` (así la llama Vercel, verificado el 11 de octubre de 2026) y responde 401 sin él o si el secreto no está configurado.
-- `apps/api/vercel.json`: `crons` con `0 11 * * *` (6:00 a. m. en Colombia; en el plan Hobby arranca en cualquier momento de esa hora) y la duración máxima de la función, según la documentación vigente.
+- `apps/api/vercel.json`: `crons` con `0 11 * * *` (6:00 a. m. en Colombia; en el plan Hobby arranca en cualquier momento de esa hora) No se fija la duración máxima de la función: la tarea se corta sola a los 50 segundos, por debajo del límite más corto de Vercel, y deja el resto para la siguiente ejecución.
 - **Se comprueba:** la ruta sin secreto o con uno errado no ejecuta nada. En Vercel, lanzar el Cron Job a mano desde el panel y ver su registro.
 
-### [ ] Paso 8. Aviso de rebotes
+### [x] Paso 8. Aviso de rebotes
 
 - `POST /api/webhooks/email`: valida la firma de Resend con `EMAIL_WEBHOOK_SECRET` (formato exacto según su documentación vigente), busca la notificación por `provider_id` y la deja `bounced`. Usa el rol de tareas, porque no hay propietario en la petición.
 - **Se comprueba:** firma inválida o vencida responde 401 y no cambia nada; un aviso repetido no rompe nada; un `provider_id` desconocido responde bien sin hacer nada.
 
-### [ ] Paso 9. Configuración completa en la API
+### [x] Paso 9. Configuración completa en la API
 
 - `PATCH /api/settings`: `send_day` (1 a 28), `reminder_1`, `reminder_2` y `email_copy`.
 - `pnpm gen:api`.

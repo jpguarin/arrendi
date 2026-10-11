@@ -358,6 +358,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cron/daily": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Daily
+         * @description The daily task. Safe to call more than once a day.
+         */
+        get: operations["daily_api_cron_daily_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/webhooks/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Email Webhook
+         * @description A bounce leaves its notification as `bounced`. Everything else is ignored.
+         */
+        post: operations["email_webhook_api_webhooks_email_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -533,6 +573,19 @@ export interface components {
             unit_name: string;
             /** Tenant Name */
             tenant_name: string;
+        };
+        /** DailyResponse */
+        DailyResponse: {
+            /** Bills Generated */
+            bills_generated: number;
+            /** Bills Marked Overdue */
+            bills_marked_overdue: number;
+            /** Emails Sent */
+            emails_sent: number;
+            /** Errors */
+            errors: number;
+            /** Finished */
+            finished: boolean;
         };
         /** DocumentConfirm */
         DocumentConfirm: {
@@ -804,6 +857,14 @@ export interface components {
             document_number: string | null;
             /** Payment Details */
             payment_details: string | null;
+            /** Send Day */
+            send_day: number;
+            /** Reminder 1 */
+            reminder_1: boolean;
+            /** Reminder 2 */
+            reminder_2: boolean;
+            /** Email Copy */
+            email_copy: boolean;
         };
         /** SettingsUpdate */
         SettingsUpdate: {
@@ -815,6 +876,14 @@ export interface components {
             document_number?: string | null;
             /** Payment Details */
             payment_details?: string | null;
+            /** Send Day */
+            send_day?: number | null;
+            /** Reminder 1 */
+            reminder_1?: boolean | null;
+            /** Reminder 2 */
+            reminder_2?: boolean | null;
+            /** Email Copy */
+            email_copy?: boolean | null;
         };
         /** TenantCreate */
         TenantCreate: {
@@ -912,6 +981,11 @@ export interface components {
             upload_url: string;
             /** Path */
             path: string;
+        };
+        /** WebhookResponse */
+        WebhookResponse: {
+            /** Ok */
+            ok: boolean;
         };
     };
     responses: never;
@@ -2203,6 +2277,88 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    daily_api_cron_daily_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DailyResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    email_webhook_api_webhooks_email_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "svix-id"?: string | null;
+                "svix-timestamp"?: string | null;
+                "svix-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

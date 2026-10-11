@@ -108,7 +108,7 @@ Condiciones:
 
 - **Idempotente:** las restricciones únicas de `bills` y `notifications` impiden duplicados aunque se ejecute dos veces.
 - **Se recupera sola:** las condiciones son "ya llegó" y "hace N días o más", no "es exactamente hoy". Si la tarea falla un día, la siguiente ejecución procesa lo pendiente.
-- **Por lotes:** procesa los contratos en bloques para no exceder el tiempo máximo de la función.
+- **Con límite de tiempo:** procesa los contratos uno a uno, cada cual en su transacción, y se detiene antes de exceder el tiempo máximo de la función. Lo que no alcance queda para la siguiente ejecución.
 - **Un fallo no detiene el resto:** un error con un contrato se registra y la tarea sigue con los demás.
 - **Registro:** cada ejecución deja cuántas cuentas generó, cuántos correos envió y cuántos errores hubo.
 
