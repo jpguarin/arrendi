@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import Engine, text
 
 from app.dates import today_in_bogota
+from app.dependencies import get_storage
 from app.main import app
 from app.storage import StorageError
 from tests.conftest import FakeStorage, MakeToken, Tree, bearer, create_tree
@@ -297,8 +298,6 @@ def test_failed_issue_leaves_no_gap(
     admin_engine: Engine,
     storage: FakeStorage,
 ) -> None:
-    from app.dependencies import get_storage
-
     anas, _ = trees
     app.dependency_overrides[get_storage] = lambda: FailingStorage()
 
@@ -485,6 +484,129 @@ def test_pdf_link_is_temporary(
         "name": "cuenta-de-cobro-0001.pdf",
         "expires_in": 300,
     }
+
+
+# Voiding
+
+
+def set_status(admin_engine: Engine, bill_id: str, status: str) -> None:
+    with admin_engine.begin() as connection:
+        connection.execute(
+            text("update bills set status = :status where id = :id"),
+            {"status": status, "id": bill_id},
+        )
+
+
+def test_voided_bill_keeps_its_number_and_its_pdf_gets_marked(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], storage: FakeStorage
+) -> None:
+    anas, _ = trees
+    bill = monthly(api, ana, anas.lease_id).json()
+    assert b"ANULADA" not in next(iter(storage.objects.values()))
+
+    response = api.post(f"/api/bills/{bill['id']}/void", headers=ana)
+
+    assert response.status_code == 200
+    voided = response.json()
+    assert (voided["status"], voided["number"]) == ("voided", 1)
+    assert voided["voided_at"] is not None
+    # Same file, replaced.
+    (pdf,) = storage.objects.values()
+    assert b"ANULADA" in pdf and b"0001" in pdf
+
+
+def test_after_voiding_the_same_month_gets_a_new_number(
+    api: TestClient,
+    ana: dict[str, str],
+    two_owners: tuple[UUID, UUID],
+    trees: tuple[Tree, Tree],
+    admin_engine: Engine,
+) -> None:
+    anas, _ = trees
+    first = monthly(api, ana, anas.lease_id).json()
+    api.post(f"/api/bills/{first['id']}/void", headers=ana)
+
+    second = monthly(api, ana, anas.lease_id)
+
+    assert second.status_code == 201
+    assert (second.json()["number"], second.json()["period"]) == (2, "2026-10-01")
+    assert numbers(admin_engine, two_owners[0]) == [1, 2]
+
+
+def test_overdue_bill_can_be_voided(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+    set_today(AFTER_DUE)
+    bill = monthly(api, ana, anas.lease_id).json()
+
+    assert api.post(f"/api/bills/{bill['id']}/void", headers=ana).json()["status"] == "voided"
+
+
+@pytest.mark.parametrize("status", ["partial", "paid"])
+def test_bill_with_payments_cannot_be_voided(
+    api: TestClient,
+    ana: dict[str, str],
+    trees: tuple[Tree, Tree],
+    admin_engine: Engine,
+    storage: FakeStorage,
+    status: str,
+) -> None:
+    anas, _ = trees
+    bill = monthly(api, ana, anas.lease_id).json()
+    # There is no payments table until stage 5: the status is what says it has payments.
+    set_status(admin_engine, bill["id"], status)
+
+    response = api.post(f"/api/bills/{bill['id']}/void", headers=ana)
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "bill_has_payments"
+    assert api.get(f"/api/bills/{bill['id']}", headers=ana).json()["status"] == status
+    assert b"ANULADA" not in next(iter(storage.objects.values()))
+
+
+def test_bill_cannot_be_voided_twice(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+    bill = monthly(api, ana, anas.lease_id).json()
+    api.post(f"/api/bills/{bill['id']}/void", headers=ana)
+
+    again = api.post(f"/api/bills/{bill['id']}/void", headers=ana)
+
+    assert again.status_code == 400
+    assert again.json()["code"] == "bill_already_voided"
+
+
+def test_voiding_survives_a_storage_failure(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], storage: FakeStorage
+) -> None:
+    anas, _ = trees
+    bill = monthly(api, ana, anas.lease_id).json()
+    app.dependency_overrides[get_storage] = lambda: FailingStorage()
+
+    response = api.post(f"/api/bills/{bill['id']}/void", headers=ana)
+
+    assert response.status_code == 200
+    assert api.get(f"/api/bills/{bill['id']}", headers=ana).json()["status"] == "voided"
+
+
+def test_owner_cannot_void_another_owners_bill(
+    api: TestClient,
+    ana: dict[str, str],
+    beto: dict[str, str],
+    trees: tuple[Tree, Tree],
+    storage: FakeStorage,
+) -> None:
+    _, betos = trees
+    bill = monthly(api, beto, betos.lease_id).json()
+
+    response = api.post(f"/api/bills/{bill['id']}/void", headers=ana)
+
+    assert response.status_code == 404
+    assert api.get(f"/api/bills/{bill['id']}", headers=beto).json()["status"] == "pending"
+    assert b"ANULADA" not in next(iter(storage.objects.values()))
+    assert api.post(f"/api/bills/{bill['id']}/void").status_code == 401
 
 
 # Isolation

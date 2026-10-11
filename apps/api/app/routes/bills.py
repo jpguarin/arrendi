@@ -2,7 +2,7 @@ from datetime import date
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, BackgroundTasks, Query
 
 from app.dependencies import FileStorage, OwnerSession, Today
 from app.errors import ErrorResponse
@@ -56,3 +56,10 @@ def get_bill(bill_id: UUID, session: OwnerSession) -> BillResponse:
 @router.get("/bills/{bill_id}/pdf", responses=NOT_FOUND | {503: {"model": ErrorResponse}})
 def get_pdf_url(bill_id: UUID, session: OwnerSession, storage: FileStorage) -> DocumentUrlResponse:
     return bills.get_pdf_url(session, storage, bill_id)
+
+
+@router.post("/bills/{bill_id}/void", responses=NOT_FOUND | {400: {"model": ErrorResponse}})
+def void_bill(
+    bill_id: UUID, session: OwnerSession, storage: FileStorage, background: BackgroundTasks
+) -> BillResponse:
+    return bills.void_bill(session, storage, background, bill_id)

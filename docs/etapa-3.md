@@ -86,7 +86,7 @@ La mensual: contrato activo, periodo del mes en curso, vencimiento en `due_day`,
 - `GET /api/leases/{id}`: campo `recent_bills`.
 - **Se comprueba:** cada ruta, y aislamiento en todas (404 con cuentas y contratos ajenos).
 
-### [ ] Paso 7. Anulación
+### [x] Paso 7. Anulación
 
 - `POST /api/bills/{id}/void`: pasa a `voided` con `voided_at` y conserva el consecutivo. El PDF marcado "ANULADA" reemplaza al anterior después de confirmar la transacción.
 - **Se comprueba:** no se anula con pagos, ni dos veces; aislamiento; el PDF queda marcado.

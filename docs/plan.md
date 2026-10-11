@@ -69,14 +69,14 @@ Objetivo: generar cuentas con consecutivo y PDF, a mano, sin correo todavía.
 - [x] API: servicio que genera la cuenta mensual de un contrato, con consecutivo transaccional.
 - [x] API: generación del PDF con ReportLab y guardado en el almacenamiento.
 - [x] API: rutas de cuentas de `docs/api.md`, salvo enviar y recordar.
-- [ ] API: anulación.
+- [x] API: anulación.
 - [x] API: `GET` y `PATCH /api/settings` con nombre, documento y datos de pago, que el PDF necesita.
 - [ ] Web: listado de cuentas con filtros.
 - [ ] Web: detalle de cuenta con vista del documento y descarga del PDF.
 - [ ] Web: crear cuenta manual.
 - [ ] Web: generar la cuenta del mes desde el contrato, y sus últimas cuentas.
 - [ ] Web: configuración con nombre, documento y datos de pago.
-- [ ] Pruebas: consecutivo sin saltos con generación concurrente; una cuenta mensual por contrato y periodo; no se anula una cuenta con pagos.
+- [x] Pruebas: consecutivo sin saltos con generación concurrente; una cuenta mensual por contrato y periodo; no se anula una cuenta con pagos.
 
 **Criterios de aceptación**
 

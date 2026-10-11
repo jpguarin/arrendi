@@ -1,6 +1,8 @@
+import logging
 from datetime import date
 from uuid import UUID, uuid4
 
+from fastapi import BackgroundTasks
 from sqlalchemy import Select, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -19,6 +21,8 @@ from app.schemas.bill import (
 )
 from app.schemas.document import DocumentUrlResponse
 from app.storage import Storage, StorageError
+
+logger = logging.getLogger(__name__)
 
 # Every query here runs inside the owner's transaction: row security already limits it to
 # their rows, so another owner's id simply finds nothing.
@@ -283,3 +287,41 @@ def get_pdf_url(session: Session, storage: Storage, bill_id: UUID) -> DocumentUr
         name=f"cuenta-de-cobro-{bill.number:04d}.pdf",
         expires_in=DOWNLOAD_LINK_SECONDS,
     )
+
+
+# Voiding
+
+
+def _replace_pdf(storage: Storage, path: str, pdf: bytes) -> None:
+    try:
+        storage.upload(path, pdf, "application/pdf")
+    except StorageError:
+        # The bill is voided all the same; its PDF just lacks the mark.
+        logger.exception("could not mark the PDF of a voided bill: %s", path)
+
+
+def void_bill(
+    session: Session, storage: Storage, background: BackgroundTasks, bill_id: UUID
+) -> BillResponse:
+    """Voids a bill nobody has paid. It keeps its number, and its PDF gets marked."""
+    bill = get_bill(session, bill_id)
+    if bill.status == "voided":
+        raise AppError(400, "Esta cuenta ya está anulada.", "bill_already_voided")
+    # Until payments have their own table (stage 5), these two statuses are what says
+    # that a bill has them.
+    if bill.status in ("partial", "paid"):
+        raise AppError(
+            400,
+            "Esta cuenta tiene pagos y no se puede anular.",
+            "bill_has_payments",
+        )
+    bill.status = "voided"
+    bill.voided_at = func.now()
+    session.flush()
+    session.refresh(bill)
+
+    # After the response, which is after the commit: if saving fails, the bill is still
+    # owed and its PDF must not say otherwise.
+    pdf = render_bill(_document(session, bill, voided=True))
+    background.add_task(_replace_pdf, storage, bill.pdf_path, pdf)
+    return bill_response(session, bill)
