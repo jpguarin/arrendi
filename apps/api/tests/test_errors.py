@@ -28,11 +28,15 @@ def sample_client() -> TestClient:
     def raise_app_error() -> None:
         raise AppError(400, "El valor supera el saldo.", "payment_exceeds_balance")
 
+    @sample.get("/crash")
+    def crash() -> None:
+        raise RuntimeError("secret internal detail")
+
     @sample.get("/validated")
     def validated(amount: int) -> int:
         return amount
 
-    return TestClient(sample)
+    return TestClient(sample, raise_server_exceptions=False)
 
 
 def test_app_error_keeps_its_detail_and_code(sample_client: TestClient) -> None:
@@ -52,4 +56,14 @@ def test_validation_error_uses_error_format(sample_client: TestClient) -> None:
     assert response.json() == {
         "detail": "Revisa los datos e inténtalo de nuevo.",
         "code": "validation_error",
+    }
+
+
+def test_unexpected_error_uses_error_format_and_hides_the_cause(sample_client: TestClient) -> None:
+    response = sample_client.get("/crash")
+
+    assert response.status_code == 500
+    assert response.json() == {
+        "detail": "Algo salió mal. Inténtalo de nuevo.",
+        "code": "internal_error",
     }

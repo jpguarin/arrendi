@@ -40,6 +40,9 @@ venv/
 .coverage
 htmlcov/
 
+# OpenAPI exportado: paso intermedio de `pnpm gen:api`
+apps/api/openapi.json
+
 # ============================
 # Supabase CLI (local)
 # ============================

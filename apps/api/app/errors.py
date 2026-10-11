@@ -55,6 +55,10 @@ def register_error_handlers(app: FastAPI) -> None:
         detail, code = HTTP_ERRORS.get(exc.status_code, DEFAULT_HTTP_ERROR)
         return _response(exc.status_code, detail, code)
 
+    @app.exception_handler(Exception)
+    async def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
+        return _response(500, "Algo salió mal. Inténtalo de nuevo.", "internal_error")
+
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(
         request: Request, exc: RequestValidationError

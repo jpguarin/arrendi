@@ -11,11 +11,25 @@
       "cache": false
     },
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
+      ],
+      "env": [
+        "API_URL"
+      ]
     },
     "gen:api": {
       "cache": false
+    },
+    "web#gen:api": {
+      "cache": false,
+      "dependsOn": [
+        "api#gen:api"
+      ]
     }
   }
 }

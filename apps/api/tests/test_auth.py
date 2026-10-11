@@ -227,3 +227,16 @@ def test_session_rolls_back_when_the_request_fails(
 
     assert response.status_code == 400
     assert name_of(admin_engine, ana) == "Ana"
+
+
+def test_missing_token_is_rejected_even_if_supabase_is_not_configured(
+    sample_app: FastAPI,
+) -> None:
+    def not_configured() -> TokenVerifier:
+        raise RuntimeError("SUPABASE_URL is not set")
+
+    sample_app.dependency_overrides[get_token_verifier] = not_configured
+
+    response = TestClient(sample_app).get("/user")
+
+    assert response.status_code == 401

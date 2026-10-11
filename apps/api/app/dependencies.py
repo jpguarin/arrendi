@@ -27,14 +27,21 @@ def get_db_engine() -> Engine:
     return get_engine()
 
 
-def get_current_user(
+def get_bearer_token(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
-    verifier: Annotated[TokenVerifier, Depends(get_token_verifier)],
-) -> AuthUser:
+) -> str:
     if credentials is None:
         raise unauthorized()
+    return credentials.credentials
+
+
+def get_current_user(
+    # Order matters: a request without a token is rejected before anything else is set up.
+    token: Annotated[str, Depends(get_bearer_token)],
+    verifier: Annotated[TokenVerifier, Depends(get_token_verifier)],
+) -> AuthUser:
     try:
-        return verifier.verify(credentials.credentials)
+        return verifier.verify(token)
     except InvalidTokenError as error:
         raise unauthorized() from error
     except AuthUnavailableError as error:

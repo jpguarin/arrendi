@@ -1,3 +1,4 @@
+import { ApiStatus } from "@/components/ApiStatus";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ export default function HomePage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-title font-bold">Arrendi</h1>
         <p className="text-support text-muted-foreground">Estamos construyendo la aplicación.</p>
+        <ApiStatus />
       </div>
 
       <Card>
