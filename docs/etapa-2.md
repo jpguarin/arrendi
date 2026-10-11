@@ -92,7 +92,7 @@ Antes de empezar: bucket creado y `SUPABASE_SECRET_KEY` puesta (ver "Lo que hace
 - `components/BottomNav.tsx` (Inicio e Inmuebles), un `Header` y el diseño de la aplicación con la barra.
 - **Se comprueba:** `pnpm lint` y `pnpm build`; los componentes en tema claro y oscuro.
 
-### [ ] Paso 8. Alta guiada en la web
+### [x] Paso 8. Alta guiada en la web
 
 - `/onboarding/property`, `/onboarding/units` y `/onboarding/lease` (mockups `Alta1`, `Alta2` y `Alta3`), con `OnboardingSteps` y `ActionFooter`. React Hook Form y Zod solo para la forma.
 - El estado de los tres pasos vive en el diseño de `/onboarding` y se envía al final con `POST /api/onboarding`. "Agregar los contratos después" lo envía sin contrato. Si hay contrato y archivo, el archivo se sube después de crear (paso 9).

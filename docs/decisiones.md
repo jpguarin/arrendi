@@ -67,6 +67,7 @@ No son decisiones de producto, sino datos técnicos que cambian y que este repos
 
 ### Verificado el 11 de octubre de 2026
 
+- Supabase Storage acepta desde el navegador el `PUT` de subida con `Content-Type` (CORS: cualquier origen), comprobado con la petición previa contra `arrendi-dev`.
 - Supabase Storage, probado contra `arrendi-dev`: el enlace firmado de subida acepta un `PUT` con el archivo como cuerpo y sin claves; no sirve para sobrescribir un archivo que ya existe; el contenedor rechaza tipos no permitidos y más de 10 MB; un archivo de 7 MB sube bien; sin enlace no hay acceso.
 - Una función de Vercel admite un cuerpo de petición de hasta 4,5 MB (error 413 si lo supera) y, con Fluid compute, hasta 300 s de duración en el plan Hobby.
 

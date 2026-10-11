@@ -22,11 +22,13 @@ export function HomeScreen() {
     api
       .GET("/api/me")
       .then(({ data, error }) => {
-        if (data) setMe(data);
-        else setError(error?.detail ?? LOAD_ERROR);
+        if (!data) setError(error?.detail ?? LOAD_ERROR);
+        // Nothing to show yet: the owner starts by creating their first property.
+        else if (!data.onboarding_complete) router.replace("/onboarding/property");
+        else setMe(data);
       })
       .catch(() => setError(LOAD_ERROR));
-  }, []);
+  }, [router]);
 
   async function signOut() {
     setSigningOut(true);
