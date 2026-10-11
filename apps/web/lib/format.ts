@@ -36,3 +36,8 @@ export function formatDateTime(isoInstant: string): string {
   );
   return formatDate(day);
 }
+
+/** Today's business date (`2026-10-05`). "Today" is always the day in Colombia. */
+export function todayInBogota(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" }).format(now);
+}

@@ -99,7 +99,7 @@ Antes de empezar: bucket creado y `SUPABASE_SECRET_KEY` puesta (ver "Lo que hace
 - El inicio lleva al alta mientras `onboarding_complete` sea falso.
 - **Se comprueba:** el alta completa en local, en tema claro y oscuro, con una mano en el celular (controles de 44 px o más).
 
-### [ ] Paso 9. Inmuebles y contratos en la web
+### [x] Paso 9. Inmuebles y contratos en la web
 
 - `/properties` (mockup `Inmuebles`), con estado vacío y la tarjeta por inmueble: unidades ocupadas y canon total. Además `/properties/new`, `/properties/[id]/edit`, `/properties/[id]/units/new` y `/units/[id]/edit`.
 - `/leases/new?unit=...` y `/leases/[id]` (mockup `Contrato`): editar, terminar con `AlertDialog`, aviso si pasó la fecha de fin, y el documento (subir o reemplazar por enlace firmado, y ver con enlace temporal).

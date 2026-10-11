@@ -48,10 +48,10 @@ Objetivo: cargar la casa, sus unidades, los arrendatarios y los contratos.
 - [x] API: rutas de inmuebles, unidades y contratos de `docs/api.md`, incluida `POST /api/onboarding`.
 - [x] API: subida y consulta del documento del contrato, con validación de tipo y tamaño.
 - [x] Web: alta guiada en tres pasos.
-- [ ] Web: pantalla de inmuebles y unidades, con estado vacío.
-- [ ] Web: pantalla de contrato, y crear, editar y terminar contrato.
-- [ ] Web: barra de navegación inferior.
-- [ ] Pruebas: una unidad no admite dos contratos activos; aislamiento en todas las rutas nuevas.
+- [x] Web: pantalla de inmuebles y unidades, con estado vacío.
+- [x] Web: pantalla de contrato, y crear, editar y terminar contrato.
+- [x] Web: barra de navegación inferior.
+- [x] Pruebas: una unidad no admite dos contratos activos; aislamiento en todas las rutas nuevas.
 
 **Criterios de aceptación**
 

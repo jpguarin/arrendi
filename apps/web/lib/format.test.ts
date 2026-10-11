@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { formatDate, formatDateTime, formatPesos, parsePesos } from "./format.ts";
+import { formatDate, formatDateTime, formatPesos, parsePesos, todayInBogota } from "./format.ts";
 
 test("pesos have a dot every three digits and no decimals", () => {
   assert.equal(formatPesos(0), "$0");
@@ -53,4 +53,10 @@ test("an instant is shown as its date in Colombia", () => {
   assert.equal(formatDateTime("2026-10-05T03:00:00Z"), "4 oct 2026");
   assert.equal(formatDateTime("2026-10-05T05:00:00+00:00"), "5 oct 2026");
   assert.equal(formatDateTime("2026-10-05T15:30:00.123456Z"), "5 oct 2026");
+});
+
+test("today is the day in Colombia, not in UTC", () => {
+  // 2:00 UTC on the 1st is still the 31st at 21:00 in Bogotá.
+  assert.equal(todayInBogota(new Date("2026-11-01T02:00:00Z")), "2026-10-31");
+  assert.equal(todayInBogota(new Date("2026-11-01T05:00:00Z")), "2026-11-01");
 });

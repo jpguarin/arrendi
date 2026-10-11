@@ -102,6 +102,8 @@ Los componentes se construyen sobre shadcn/ui (con Radix como librería base), a
 | `BottomNav` | propio | Cuatro pestañas: Inicio, Cuentas, Inmuebles, Ajustes. Solo muestra las pantallas que ya existen: Inicio e Inmuebles en la etapa 2 |
 | `Header` | propio | Título, con botón de volver o acción a la derecha |
 | `ActionFooter` | propio | Franja blanca inferior con la acción principal |
+| `FormScreen` | propio | Marco de una pantalla que edita una cosa: volver, el formulario y "guardar" en el pie |
+| `FormMessage` | propio | Mensaje sobre toda la pantalla, con tres tonos: `error`, `success` e `info` |
 | `OnboardingSteps` | propio | "Paso N de 3" y barra de tres segmentos |
 
 - Los nombres de los componentes de shadcn/ui cambian entre versiones. Antes de agregar uno, confirma en su documentación vigente que existe con ese nombre y cómo se instala.
@@ -130,8 +132,11 @@ Los íconos son de Lucide, que es la librería que usa shadcn/ui: de trazo, de 2
 | `/bills/[id]` | Detalle de cuenta | `Cuenta.dc.html` |
 | `/bills/[id]/payment` | Registrar pago | `Pago.dc.html` |
 | `/properties` | Inmuebles y unidades | `Inmuebles.dc.html` |
-| `/leases/new` | Crear contrato | Sin diseñar; sigue a Alta 3 |
+| `/properties/new`, `/properties/[id]/edit` | Crear y editar un inmueble | Sin diseñar; sigue a Alta 1 |
+| `/properties/[id]/units/new`, `/units/[id]/edit` | Agregar y editar una unidad | Sin diseñar |
+| `/leases/new?unit=...` | Crear el contrato de una unidad vacía | Sin diseñar; sigue a Alta 3 |
 | `/leases/[id]` | Contrato | `Contrato.dc.html` |
+| `/leases/[id]/edit` | Editar contrato | Sin diseñar; sigue a Alta 3 |
 | `/settings` | Configuración | `Ajustes.dc.html` |
 | `/settings/email` | Texto del correo | Sin diseñar |
 
@@ -142,4 +147,7 @@ Los íconos son de Lucide, que es la librería que usa shadcn/ui: de trazo, de 2
 - En el escritorio, el contenido se centra en una columna de 480 px como máximo. No hay diseño de escritorio propio en el MVP.
 - Los mockups solo muestran el tema claro.
 - El selector de tema en configuración no aparece en el mockup; va como una sección más, "Apariencia".
+- En el contrato, la sección "Cuentas de cobro" del mockup llega en la etapa 3, y "Próximo incremento" no se construye: el incremento anual está fuera del MVP.
+- En inmuebles, cada fila de unidad tiene además un botón de lápiz para editarla, que el mockup no trae. Una unidad vacía dice "Crear contrato" y lleva a crearlo.
+- En el contrato, el texto bajo "Enviar cuentas automáticamente" no menciona el día de envío hasta que exista la configuración (etapa 4).
 - La marca visible es el nombre "Arrendi" en texto, en el acceso y en el pie del PDF. No hay logo todavía. El ícono de la aplicación instalada es provisional: una "A" blanca sobre el verde primario.
