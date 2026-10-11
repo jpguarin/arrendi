@@ -4,6 +4,7 @@ from app.dependencies import CurrentUser, OwnerSession
 from app.errors import ErrorResponse
 from app.schemas.owner import MeResponse
 from app.services.owners import get_or_create_owner
+from app.services.properties import has_properties
 
 router = APIRouter()
 
@@ -15,6 +16,5 @@ def get_me(user: CurrentUser, session: OwnerSession) -> MeResponse:
         id=owner.id,
         name=owner.name,
         email=owner.email,
-        # Stage 1 has no properties yet; this is computed from stage 2 on.
-        onboarding_complete=False,
+        onboarding_complete=has_properties(session),
     )

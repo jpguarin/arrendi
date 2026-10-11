@@ -32,6 +32,12 @@ def unauthorized() -> AppError:
     return AppError(401, detail, code)
 
 
+def not_found() -> AppError:
+    """Also the answer for another owner's resource, so it does not reveal that it exists."""
+    detail, code = HTTP_ERRORS[404]
+    return AppError(404, detail, code)
+
+
 def auth_unavailable() -> AppError:
     return AppError(
         503,

@@ -25,7 +25,7 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 
 | Ruta | Qué hace |
 | --- | --- |
-| `GET /api/me` | Devuelve el propietario y si completó el alta (`onboarding_complete`). Crea su fila si es la primera vez. En la etapa 1 `onboarding_complete` es siempre `false`; se calcula desde la etapa 2. El nombre y el correo salen del token solo al crear la fila; después manda lo que el propietario guardó. Si el token no trae nombre se usa el correo, y sin correo responde 400 (`email_required`). |
+| `GET /api/me` | Devuelve el propietario y si completó el alta (`onboarding_complete`). Crea su fila si es la primera vez. `onboarding_complete` es verdadero cuando el propietario tiene al menos un inmueble. El nombre y el correo salen del token solo al crear la fila; después manda lo que el propietario guardó. Si el token no trae nombre se usa el correo, y sin correo responde 400 (`email_required`). |
 | `PATCH /api/settings` | Actualiza nombre, documento, datos de pago, día de envío, recordatorios y copia |
 | `GET /api/settings` | Devuelve la configuración |
 | `POST /api/onboarding` | Crea inmueble, unidades y, opcionalmente, arrendatario y contrato, en una transacción |
@@ -35,9 +35,9 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 | Ruta | Qué hace |
 | --- | --- |
 | `GET /api/properties` | Lista los inmuebles con sus unidades, y por unidad el contrato activo y su `status`. Hasta la etapa 5 el estado es `vacant` (sin contrato activo) o `up_to_date` (con contrato activo); desde entonces también `overdue` y `partial`, calculados con las cuentas |
-| `POST /api/properties` | Crea un inmueble |
-| `PATCH /api/properties/{id}` | Edita un inmueble |
-| `POST /api/properties/{id}/units` | Agrega una unidad |
+| `POST /api/properties` | Crea un inmueble, sin unidades. Responde 201 |
+| `PATCH /api/properties/{id}` | Edita un inmueble. Solo cambian los campos enviados; `address` y `city` se borran con `null` |
+| `POST /api/properties/{id}/units` | Agrega una unidad. Responde 201 |
 | `PATCH /api/units/{id}` | Edita una unidad |
 
 ## Contratos

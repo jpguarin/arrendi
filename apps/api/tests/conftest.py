@@ -118,6 +118,20 @@ def tasks_engine(admin_engine: Engine, admin_url: str) -> Iterator[Engine]:
     engine.dispose()
 
 
+# Children first: the foreign keys do not cascade.
+OWNED_TABLES = ("leases", "tenants", "units", "properties")
+
+
+def delete_owners(admin_engine: Engine, owner_ids: list[UUID]) -> None:
+    """Removes the owners and everything they have. Only the admin can delete."""
+    with admin_engine.begin() as connection:
+        for table in OWNED_TABLES:
+            connection.execute(
+                text(f"delete from {table} where owner_id = any(:ids)"), {"ids": owner_ids}
+            )
+        connection.execute(text("delete from owners where id = any(:ids)"), {"ids": owner_ids})
+
+
 @pytest.fixture
 def two_owners(admin_engine: Engine) -> Iterator[tuple[UUID, UUID]]:
     """Two owners, each with a row, created by the admin (who bypasses the policies)."""
@@ -131,8 +145,7 @@ def two_owners(admin_engine: Engine) -> Iterator[tuple[UUID, UUID]]:
             ],
         )
     yield ana, beto
-    with admin_engine.begin() as connection:
-        connection.execute(text("delete from owners where id in (:ana, :beto)"), locals())
+    delete_owners(admin_engine, [ana, beto])
 
 
 class Tree(NamedTuple):
@@ -179,17 +192,11 @@ def create_tree(connection: Connection, owner_id: UUID, suffix: str) -> Tree:
 
 
 @pytest.fixture
-def trees(admin_engine: Engine, two_owners: tuple[UUID, UUID]) -> Iterator[tuple[Tree, Tree]]:
+def trees(admin_engine: Engine, two_owners: tuple[UUID, UUID]) -> tuple[Tree, Tree]:
     """A property with a unit, tenant and active lease for each of the two owners."""
     ana, beto = two_owners
     with admin_engine.begin() as connection:
-        created = create_tree(connection, ana, "ana"), create_tree(connection, beto, "beto")
-    yield created
-    with admin_engine.begin() as connection:
-        for table in ("leases", "tenants", "units", "properties"):
-            connection.execute(
-                text(f"delete from {table} where owner_id in (:ana, :beto)"), locals()
-            )
+        return create_tree(connection, ana, "ana"), create_tree(connection, beto, "beto")
 
 
 ISSUER = "https://test-project.supabase.co/auth/v1"
@@ -262,8 +269,7 @@ def new_user_ids(admin_engine: Engine) -> Iterator[tuple[UUID, UUID]]:
     """Ids of two users who have signed up in Supabase but never called the API."""
     ids = (uuid4(), uuid4())
     yield ids
-    with admin_engine.begin() as connection:
-        connection.execute(text("delete from owners where id = any(:ids)"), {"ids": list(ids)})
+    delete_owners(admin_engine, list(ids))
 
 
 def bearer(token: str) -> dict[str, str]:

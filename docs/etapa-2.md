@@ -53,7 +53,7 @@ Pruebas primero.
 - Pruebas en `apps/api/tests/`: `test_properties_tables.py` (restricciones, política, permisos, revocación) y aislamiento con `two_owners`: ni leer, ni modificar, ni apuntar a filas ajenas.
 - **Se comprueba:** `pnpm test` y `pnpm lint`. Luego aplicas la migración a `arrendi-dev` y repito la comprobación de aislamiento como `arrendi_api`, como en la etapa 1.
 
-### [ ] Paso 3. Inmuebles y unidades en la API
+### [x] Paso 3. Inmuebles y unidades en la API
 
 - `app/schemas/{property,unit}.py`, `app/services/properties.py` y `app/routes/properties.py`: `GET` y `POST /api/properties`, `PATCH /api/properties/{id}`, `POST /api/properties/{id}/units` y `PATCH /api/units/{id}`. Se registran en `app/main.py`.
 - `GET /api/me`: `onboarding_complete` es verdadero cuando hay al menos un inmueble.
