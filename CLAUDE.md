@@ -27,7 +27,7 @@ Lee el documento que corresponda antes de tocar esa parte del sistema. Si el có
 - **Datos:** PostgreSQL en Supabase, con seguridad por fila. Supabase Storage para archivos.
 - **Acceso:** Supabase Auth, con Google y con correo y contraseña.
 - **PDF:** ReportLab. **Correo:** proveedor transaccional (por elegir).
-- **Pruebas:** pytest en la API, Playwright de extremo a extremo.
+- **Pruebas:** pytest en la API, contra un PostgreSQL local instalado con Homebrew. Playwright de extremo a extremo, desde la etapa 5.
 - **Monorepo:** Turborepo con pnpm.
 - **Despliegue:** Vercel, dos proyectos (`web` y `api`) desde este repositorio. Sin Docker.
 
@@ -41,15 +41,15 @@ arrendi/
     api/                 FastAPI (proyecto "api" en Vercel)
       app/
         main.py          punto de entrada: la instancia `app`
-        rutas/           una por recurso
-        modelos/         SQLAlchemy
-        esquemas/        Pydantic
-        servicios/       reglas de negocio
-        tareas/          tarea diaria
-        correo/          envío y plantillas
+        routes/          una por recurso
+        models/          SQLAlchemy
+        schemas/         Pydantic
+        services/        reglas de negocio
+        tasks/           tarea diaria
+        email/           envío y plantillas
         pdf/             generación de la cuenta de cobro
-      migraciones/       Alembic
-      pruebas/           pytest
+      migrations/        Alembic
+      tests/             pytest
       package.json       solo scripts, para que Turborepo ejecute la API
       requirements.txt
       vercel.json
@@ -58,7 +58,7 @@ arrendi/
       components/ui/     componentes de shadcn/ui, adaptados al tema
       components/        componentes propios de Arrendi
       lib/api/           cliente y tipos generados desde OpenAPI
-    e2e/                 Playwright
+    e2e/                 Playwright (se crea en la etapa 5)
   docs/
   package.json           scripts de la raíz
   pnpm-workspace.yaml
@@ -81,10 +81,9 @@ pip install -r requirements.txt -r requirements-dev.txt
 # Todo el proyecto, con Turborepo (desde la raíz)
 pnpm dev             # web en :3000 y API en :8000; la web redirige /api a la API
 pnpm lint            # ruff en la API, eslint en la web
-pnpm test            # pytest en la API
+pnpm test            # pytest en la API; necesita el PostgreSQL local encendido
 pnpm build           # compila la web
 pnpm gen:api         # regenera apps/web/lib/api desde el OpenAPI de la API
-pnpm e2e             # Playwright
 
 # Una sola aplicación
 pnpm --filter web dev
@@ -97,8 +96,8 @@ alembic revision --autogenerate -m "descripcion"
 
 ## Reglas que no se rompen
 
-1. **La lógica de negocio vive solo en FastAPI.** En Next.js no se crean rutas de API ni acciones de servidor con reglas de negocio. Next.js dibuja la interfaz y llama a `/api`.
-2. **Aislamiento por propietario.** Toda tabla lleva `propietario_id` y una política de seguridad por fila. Cada transacción de una petición fija `app.propietario_id` antes de consultar. La clave de servicio y el rol que salta las políticas solo se usan en la tarea diaria y en los avisos del correo.
+1. **La lógica de negocio vive solo en FastAPI.** En Next.js no se crean rutas de API ni acciones de servidor con reglas de negocio. Next.js dibuja la interfaz y llama a `/api`. Las únicas rutas de Next son las de infraestructura listadas en `docs/decisiones.md` (service worker y regreso del acceso).
+2. **Aislamiento por propietario.** Toda tabla lleva `owner_id` y una política de seguridad por fila. Cada transacción de una petición fija `app.owner_id` antes de consultar. La clave de servicio y el rol que salta las políticas solo se usan en la tarea diaria y en los avisos del correo.
 3. **Toda funcionalidad nueva incluye la prueba de aislamiento:** un propietario no puede leer ni modificar datos de otro.
 4. **El dinero son pesos enteros** (`bigint` en la base, `int` en Python). Nunca decimales ni `float`.
 5. **Una cuenta emitida no se edita.** Se anula y se genera otra. Una cuenta con pagos no se anula.
@@ -112,13 +111,13 @@ alembic revision --autogenerate -m "descripcion"
 
 ## Convenciones
 
-- **Idioma:** el dominio va en español (tablas, columnas, rutas, esquemas, textos de la interfaz). Los nombres técnicos genéricos pueden ir en inglés.
+- **Idioma:** todo el código va en inglés: archivos, carpetas, identificadores, tablas, columnas, rutas de la API y de la web, campos JSON, códigos de error y variables de entorno. Usa los nombres del vocabulario de `docs/modelo-de-datos.md`. En español van los textos de la interfaz, los correos, el PDF, los documentos y los commits.
 - **Nombres:** `snake_case` en Python y en la base; tablas en plural; componentes de React en `PascalCase`.
 - **Interfaz:** español de Colombia, trato de "tú". Dinero como `$1.000.000`, fechas como `5 oct 2026`.
 - **Fechas:** las de negocio son `date`. "Hoy" siempre se calcula en `America/Bogota`, nunca en UTC.
 - **Validación:** en la API con Pydantic. La web usa los tipos generados; no se escriben a mano.
-- **Errores de la API:** `{"detalle": "mensaje legible", "codigo": "codigo_estable"}` con el código HTTP correcto.
-- **Componentes:** parte de shadcn/ui antes de crear uno desde cero. Se agregan con su CLI, uno por uno y solo cuando hacen falta. Su código queda en `components/ui/` y se adapta al tema de `docs/diseno.md`; no se usan con el aspecto por defecto.
+- **Errores de la API:** `{"detail": "mensaje legible, en español", "code": "stable_code"}` con el código HTTP correcto.
+- **Componentes:** parte de shadcn/ui (sobre Radix) antes de crear uno desde cero. Se agregan con su CLI, uno por uno y solo cuando hacen falta. Su código queda en `components/ui/` y se adapta al tema de `docs/diseno.md`; no se usan con el aspecto por defecto.
 - **Estilos:** solo Tailwind, con las variables del tema. Sin colores ni medidas sueltas en los componentes, y sin otra librería de estilos.
 - **Tema claro y oscuro:** toda pantalla y todo componente debe verse bien en ambos. Usa siempre las variables del tema; un color escrito a mano rompe el tema oscuro. Revisa los dos temas antes de dar una pantalla por terminada.
 - **Accesibilidad:** controles táctiles de 44 px o más, `label` en cada campo, contraste AA.
@@ -129,6 +128,7 @@ alembic revision --autogenerate -m "descripcion"
 - Trabaja **una etapa a la vez**, en el orden de `docs/plan.md`. No adelantes etapas.
 - Antes de escribir código en una etapa, **propón el plan** de archivos y pasos, y espera confirmación.
 - En lo delicado (consecutivo, estados, tarea diaria, aislamiento) **escribe primero la prueba**.
+- Las pruebas nunca se conectan a un proyecto de Supabase: usan `TEST_DATABASE_URL`, que apunta al PostgreSQL local.
 - Una tarea está terminada cuando pasan `pnpm lint`, `pnpm test` y `pnpm build`, y su casilla queda marcada en `docs/plan.md`.
 - Si cambias una ruta o un esquema, **regenera los tipos** (`pnpm gen:api`) en el mismo commit.
 - Si falta una decisión de producto, **pregunta**. No inventes reglas. Las decisiones provisionales están en `docs/decisiones.md`.

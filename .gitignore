@@ -61,12 +61,6 @@ build/
 coverage/
 
 # ============================
-# PWA generado
-# ============================
-apps/web/public/sw.js
-apps/web/public/swe-worker-*.js
-
-# ============================
 # Playwright
 # ============================
 apps/e2e/test-results/

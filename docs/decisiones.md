@@ -16,6 +16,11 @@
 | Repositorio | Monorepo con Turborepo y pnpm: `apps/api/`, `apps/web/` y `apps/e2e/` |
 | Tema | Claro y oscuro; sigue al sistema por defecto |
 | Desarrollo | El fundador, con Claude Code |
+| Idioma del código | Inglés: archivos, carpetas, identificadores, tablas, columnas, rutas de la API y de la web, campos JSON y variables de entorno. En español quedan los textos de la interfaz, los correos, el PDF, el mensaje de error que ve el propietario, los documentos y los commits |
+| Base de las pruebas | PostgreSQL local con Homebrew; nunca un proyecto de Supabase |
+| Componentes | shadcn/ui sobre Radix, inicializado dentro de `apps/web` (sin `packages/ui`) |
+| Rutas en Next.js | Solo las que no tienen reglas de negocio: service worker, regreso de Google y confirmación de correo |
+| Playwright | Se agrega en la etapa 5, no en la 1 |
 | Suscripción y límites por plan | Fuera del MVP |
 | Documento del contrato | Se puede subir; un archivo por contrato |
 
@@ -51,14 +56,22 @@ Hay que resolverlas antes de la etapa indicada.
 
 No son decisiones de producto, sino datos técnicos que cambian y que este repositorio no fija:
 
-- Cómo valida Supabase sus tokens hoy (clave pública o secreto).
-- Cómo se configura Google como proveedor en Supabase Auth y cómo vincula dos identidades con el mismo correo.
 - Requisitos de Google para publicar la pantalla de consentimiento a usuarios externos.
-- Cómo crear roles con y sin salto de políticas en Supabase.
-- Cadena de conexión del agrupador de Supabase y su modo.
+- Que el usuario administrador de Supabase puede crear un rol con `bypassrls` (se comprueba al crear `arrendi_tasks`).
 - Duración máxima y tamaño máximo de cuerpo de una función de Vercel.
 - Cómo protege Vercel las llamadas de un Cron Job.
-- Configuración vigente de Turborepo y cómo desplegar en Vercel dos proyectos de un monorepo, uno de ellos en Python.
-- Configuración actual de Serwist con la versión de Next.js instalada.
-- Instalación de shadcn/ui con la versión de Next.js y de Tailwind instaladas, y los nombres vigentes de sus componentes.
-- Cómo se enlazan dos proyectos de Vercel del mismo repositorio en las vistas previas.
+- Si la protección de despliegues de Vercel bloquea la redirección de la web hacia la API de vista previa.
+- La versión de Next.js que queda instalada, y con ella los pasos exactos de Serwist y de shadcn/ui.
+
+### Verificado el 10 de octubre de 2026
+
+El detalle está en `docs/arquitectura.md` y `docs/modelo-de-datos.md`.
+
+- Supabase valida sus tokens con claves asimétricas publicadas por JWKS.
+- Supabase vincula sola la identidad de Google a una cuenta con el mismo correo verificado.
+- El agrupador de Supabase se usa en modo transacción, sin sentencias preparadas.
+- Supabase retira las claves `anon` y `service_role` a finales de 2026.
+- Vercel detecta la instancia `app` de FastAPI en `app/main.py` y enlaza las vistas previas con "Related Projects".
+- Turborepo usa la clave `tasks` y filtra las variables de entorno por defecto.
+- Serwist con Turbopack sirve el service worker desde una ruta de Next.
+- En Next.js 16, `middleware.ts` se llama `proxy.ts`.

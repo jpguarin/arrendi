@@ -10,13 +10,14 @@ Seis etapas, en orden. Cada una termina con sus criterios de aceptación cumplid
 
 Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando, sin funcionalidad de negocio todavía.
 
+- [ ] Documentos al día: código en inglés y hallazgos de la documentación vigente.
 - [ ] Monorepo con Turborepo y pnpm según `CLAUDE.md`: `pnpm-workspace.yaml`, `turbo.json` y los scripts `dev`, `lint`, `test`, `build` y `gen:api` en la raíz.
 - [ ] `apps/api/package.json` con scripts que ejecutan la API, las pruebas y el lint desde su entorno de Python.
-- [ ] API: FastAPI con `GET /api/salud`, configuración por variables de entorno, `ruff` y `pytest`.
+- [ ] API: FastAPI con `GET /api/health`, configuración por variables de entorno, `ruff` y `pytest`.
 - [ ] API: conexión a PostgreSQL con SQLAlchemy, sin reserva de conexiones.
-- [ ] API: Alembic configurado y primera migración con la tabla `propietarios`, su política de seguridad por fila y los roles de base de datos.
-- [ ] API: dependencia que valida el token de Supabase, abre la transacción y fija `app.propietario_id`.
-- [ ] API: `GET /api/yo`, que crea la fila del propietario en la primera llamada.
+- [ ] API: Alembic configurado y primera migración con la tabla `owners`, su política de seguridad por fila y los roles de base de datos.
+- [ ] API: dependencia que valida el token de Supabase, abre la transacción y fija `app.owner_id`.
+- [ ] API: `GET /api/me`, que crea la fila del propietario en la primera llamada.
 - [ ] Web: Next.js con TypeScript y Tailwind, tema de colores y tipografía de `docs/diseno.md`.
 - [ ] Web: shadcn/ui inicializado, con sus variables de tema asignadas a los colores de Arrendi y los componentes base de acceso (`Button`, `Input`, `Label`, `Card`) ajustados a las medidas del diseño.
 - [ ] Web: tema claro y oscuro con `next-themes`, siguiendo al sistema por defecto, con las dos paletas de `docs/diseno.md`.
@@ -24,12 +25,12 @@ Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando,
 - [ ] Web: registro, inicio de sesión, recuperación de contraseña y cierre de sesión con correo y contraseña.
 - [ ] Web: redirección de `/api` hacia la API y cliente con tipos generados (`pnpm gen:api`).
 - [ ] Web: PWA instalable, con manifiesto, service worker y pantalla sin conexión.
-- [ ] Prueba de aislamiento: con dos propietarios, ninguno ve la fila del otro.
+- [ ] Prueba de aislamiento, contra un PostgreSQL local: con dos propietarios, ninguno ve la fila del otro.
 - [ ] Despliegue de los dos proyectos en Vercel.
 
 **Criterios de aceptación**
 
-- Entro con Google en el despliegue de Vercel y veo mi nombre traído de `GET /api/yo`.
+- Entro con Google en el despliegue de Vercel y veo mi nombre traído de `GET /api/me`.
 - Me registro con correo y contraseña, confirmo el correo, inicio sesión y veo mi nombre.
 - Si entro con Google usando el mismo correo con el que me registré, llego a la misma cuenta.
 - Puedo instalar la aplicación en el celular y entrar con Google desde la aplicación instalada.
@@ -43,8 +44,8 @@ Objetivo: un repositorio que se despliega, con acceso y aislamiento funcionando,
 
 Objetivo: cargar la casa, sus unidades, los arrendatarios y los contratos.
 
-- [ ] Migración: `inmuebles`, `unidades`, `arrendatarios`, `contratos`, con políticas y restricciones.
-- [ ] API: rutas de inmuebles, unidades y contratos de `docs/api.md`, incluida `POST /api/alta`.
+- [ ] Migración: `properties`, `units`, `tenants`, `leases`, con políticas y restricciones.
+- [ ] API: rutas de inmuebles, unidades y contratos de `docs/api.md`, incluida `POST /api/onboarding`.
 - [ ] API: subida y consulta del documento del contrato, con validación de tipo y tamaño.
 - [ ] Web: alta guiada en tres pasos.
 - [ ] Web: pantalla de inmuebles y unidades, con estado vacío.
@@ -64,7 +65,7 @@ Objetivo: cargar la casa, sus unidades, los arrendatarios y los contratos.
 
 Objetivo: generar cuentas con consecutivo y PDF, a mano, sin correo todavía.
 
-- [ ] Migración: `cuentas` y `conceptos`, con sus índices únicos.
+- [ ] Migración: `bills` y `bill_items`, con sus índices únicos.
 - [ ] API: servicio que genera la cuenta mensual de un contrato, con consecutivo transaccional.
 - [ ] API: generación del PDF con ReportLab y guardado en el almacenamiento.
 - [ ] API: rutas de cuentas de `docs/api.md`, salvo enviar y recordar.
@@ -86,12 +87,12 @@ Objetivo: generar cuentas con consecutivo y PDF, a mano, sin correo todavía.
 
 Objetivo: que las cuentas y los recordatorios salgan solos.
 
-- [ ] Migración: `notificaciones`, con su índice único.
+- [ ] Migración: `notifications`, con su índice único.
 - [ ] API: envío de correo detrás de una interfaz, con el proveedor elegido y un doble para pruebas.
 - [ ] API: plantillas de cuenta, dos recordatorios y recibo, en HTML y texto.
 - [ ] API: enviar, reenviar y recordatorio manual.
 - [ ] API: desvío de todos los correos al buzón de pruebas fuera de producción.
-- [ ] API: tarea diaria con sus tres pasos, por lotes, y la ruta `/api/cron/diario` protegida.
+- [ ] API: tarea diaria con sus tres pasos, por lotes, y la ruta `/api/cron/daily` protegida.
 - [ ] API: aviso de rebotes del proveedor.
 - [ ] Cron Job en `apps/api/vercel.json`.
 - [ ] Web: actividad en el detalle de cuenta; botones de reenviar y recordar.
@@ -110,14 +111,15 @@ Objetivo: que las cuentas y los recordatorios salgan solos.
 
 Objetivo: cerrar el ciclo de cobro.
 
-- [ ] Migración: `pagos`.
+- [ ] Migración: `payments`.
 - [ ] API: registrar y eliminar pagos, con recálculo de estado.
 - [ ] API: comprobante del pago.
 - [ ] API: correo de recibo.
-- [ ] API: `GET /api/resumen`.
+- [ ] API: `GET /api/summary`.
 - [ ] Web: pantalla de registrar pago.
 - [ ] Web: pantalla de inicio.
 - [ ] Web: estado de cada unidad en inmuebles.
+- [ ] Playwright en `apps/e2e/` y el script `pnpm e2e`.
 - [ ] Prueba de extremo a extremo: alta, generación de cuenta, pago parcial y pago del saldo.
 - [ ] Pruebas: transiciones de estado de `docs/reglas-de-negocio.md`, una por una.
 

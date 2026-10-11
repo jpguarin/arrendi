@@ -6,8 +6,8 @@ Esto lo haces tú, porque requiere tus cuentas:
 
 1. Crea un repositorio vacío en GitHub llamado `arrendi` y clónalo en tu computador.
 2. Copia dentro el contenido de este paquete y haz el primer commit.
-3. Instala Python 3.12, Node.js en su versión LTS y pnpm.
-4. Crea dos proyectos en Supabase: `arrendi-dev` y `arrendi-prod`.
+3. Instala Python 3.12, Node.js en su versión LTS, pnpm y PostgreSQL con Homebrew (para las pruebas).
+4. Crea dos proyectos en Supabase: `arrendi-dev` y `arrendi-prod`. En ambos, activa las claves de firma asimétricas en la configuración de JWT.
 5. Crea una cuenta en Vercel y conéctala a GitHub. Los proyectos se crean en la etapa 1.
 6. Para el acceso con Google, crea un proyecto en Google Cloud con una pantalla de consentimiento y un cliente OAuth de tipo web, y registra sus credenciales como proveedor Google en Supabase Auth, en los dos proyectos. Claude Code te puede guiar paso a paso en la etapa 1, pero las credenciales las creas tú.
 7. Copia `apps/api/.env.example` a `apps/api/.env` y `apps/web/.env.example` a `apps/web/.env.local`, y llena los valores de `arrendi-dev`.
