@@ -23,6 +23,9 @@ class Storage(Protocol):
     def upload(self, path: str, content: bytes, content_type: str) -> None:
         """Stores a file the API itself made, replacing the one at that path if any."""
 
+    def download(self, path: str) -> bytes:
+        """The whole stored file. Only for files the API made, which are small."""
+
     def size(self, path: str) -> int | None:
         """Size in bytes of the stored file, or None if there is none."""
 
@@ -76,6 +79,9 @@ class SupabaseStorage:
         self._check(
             self._request("POST", self._url("object", path), content=content, headers=headers)
         )
+
+    def download(self, path: str) -> bytes:
+        return self._check(self._request("GET", self._url("object", path))).content
 
     def size(self, path: str) -> int | None:
         response = self._request("GET", self._url("object/info", path))

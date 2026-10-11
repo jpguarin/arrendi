@@ -14,6 +14,15 @@ class Settings(BaseSettings):
     # Only for file storage; see app/storage.py.
     supabase_secret_key: str = ""
     storage_bucket: str = "arrendi"
+    # The daily task and the provider's notices connect as `arrendi_tasks`.
+    database_url_tasks: str = ""
+    # Email; see app/email/sender.py.
+    email_api_key: str = ""
+    email_sender: str = ""
+    # While set, every email goes to this inbox instead of to the tenant.
+    email_test_inbox: str = ""
+    email_webhook_secret: str = ""
+    cron_secret: str = ""
 
 
 @lru_cache

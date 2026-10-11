@@ -12,6 +12,7 @@ from app.auth import AuthUnavailableError, AuthUser, InvalidTokenError, TokenVer
 from app.config import get_settings
 from app.dates import today_in_bogota
 from app.db import get_engine, set_owner_id
+from app.email.sender import EmailSender, build_sender
 from app.errors import auth_unavailable, unauthorized
 from app.storage import Storage, SupabaseStorage
 
@@ -37,6 +38,14 @@ def get_storage() -> Storage:
 
 
 FileStorage = Annotated[Storage, Depends(get_storage)]
+
+
+@lru_cache
+def get_email_sender() -> EmailSender:
+    return build_sender(get_settings())
+
+
+Mailer = Annotated[EmailSender, Depends(get_email_sender)]
 
 
 # The business date of the request. A dependency so the tests can pick the day.

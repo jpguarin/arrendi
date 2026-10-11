@@ -152,3 +152,11 @@ def test_upload_that_storage_refuses_is_an_error() -> None:
 
     with pytest.raises(StorageError):
         storage.upload(PATH, b"x", "application/pdf")
+
+
+def test_download_returns_the_whole_file() -> None:
+    storage, requests = make_storage(lambda request: httpx2.Response(200, content=b"%PDF-1.4"))
+
+    assert storage.download(PATH) == b"%PDF-1.4"
+    assert requests[0].method == "GET"
+    assert str(requests[0].url) == f"{BASE}/object/arrendi/{PATH}"

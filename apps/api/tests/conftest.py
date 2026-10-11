@@ -21,8 +21,15 @@ from sqlalchemy.engine import make_url
 
 from app.auth import TokenVerifier
 from app.db import create_db_engine
-from app.dependencies import get_db_engine, get_storage, get_token_verifier
+from app.dependencies import (
+    get_db_engine,
+    get_email_sender,
+    get_storage,
+    get_token_verifier,
+)
+from app.email.sender import EmailError, EmailMessage
 from app.main import app
+from app.storage import StorageError
 
 API_DIR = Path(__file__).resolve().parent.parent
 LOCAL_HOSTS = {None, "localhost", "127.0.0.1", "::1"}
@@ -285,6 +292,11 @@ class FakeStorage:
     def create_upload_url(self, path: str) -> str:
         return f"https://storage.test/upload/{path}?token=signed"
 
+    def download(self, path: str) -> bytes:
+        if path not in self.objects:
+            raise StorageError("no such file")
+        return self.objects[path]
+
     def size(self, path: str) -> int | None:
         return len(self.objects[path]) if path in self.objects else None
 
@@ -302,6 +314,27 @@ class FakeStorage:
 def storage(api: TestClient) -> FakeStorage:
     fake = FakeStorage()
     app.dependency_overrides[get_storage] = lambda: fake
+    return fake
+
+
+class FakeEmailSender:
+    """Stands in for the email provider: keeps what it was asked to send."""
+
+    def __init__(self) -> None:
+        self.sent: list[EmailMessage] = []
+        self.failing = False
+
+    def send(self, message: EmailMessage) -> str:
+        if self.failing:
+            raise EmailError("the provider is down")
+        self.sent.append(message)
+        return f"email-{len(self.sent)}"
+
+
+@pytest.fixture
+def mailer(api: TestClient) -> FakeEmailSender:
+    fake = FakeEmailSender()
+    app.dependency_overrides[get_email_sender] = lambda: fake
     return fake
 
 

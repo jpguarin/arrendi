@@ -90,11 +90,11 @@ Objetivo: generar cuentas con consecutivo y PDF, a mano, sin correo todavía.
 
 Objetivo: que las cuentas y los recordatorios salgan solos.
 
-- [ ] Migración: `notifications`, con su índice único.
-- [ ] API: envío de correo detrás de una interfaz, con el proveedor elegido y un doble para pruebas.
+- [x] Migración: `notifications`, con su índice único.
+- [x] API: envío de correo detrás de una interfaz, con el proveedor elegido y un doble para pruebas.
 - [ ] API: plantillas de cuenta, dos recordatorios y recibo, en HTML y texto.
 - [ ] API: enviar, reenviar y recordatorio manual.
-- [ ] API: desvío de todos los correos al buzón de pruebas fuera de producción.
+- [x] API: desvío de todos los correos al buzón de pruebas fuera de producción.
 - [ ] API: tarea diaria con sus tres pasos, por lotes, y la ruta `/api/cron/daily` protegida.
 - [ ] API: aviso de rebotes del proveedor.
 - [ ] Cron Job en `apps/api/vercel.json`.

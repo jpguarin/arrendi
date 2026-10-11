@@ -56,14 +56,14 @@ En los pasos 2, 5 y 6 la prueba va primero.
 - `docs/reglas-de-negocio.md`: lo generado a mano no se envía solo; recordatorios solo de cuentas enviadas; reintentos.
 - `docs/modelo-de-datos.md` (estado `pending`), `docs/api.md` (enviar, recordar, `settings` completo, tarea y aviso de rebotes), `docs/arquitectura.md` (entornos y variables de correo) y `CLAUDE.md` (este documento en la tabla).
 
-### [ ] Paso 2. Migración `0005` y modelo
+### [x] Paso 2. Migración `0005` y modelo
 
 - `notifications`, con `0003_bills.py` como molde: clave foránea compuesta a `bills`, `check` de `type`, `channel` y `delivery_status`, índice único parcial `(bill_id, type)` para `bill`, `reminder_1` y `reminder_2`, e índice sobre `provider_id`.
 - Seguridad por fila y revocación a los roles de Supabase. `arrendi_api` y `arrendi_tasks`: select, insert y update.
 - `app/models/notification.py`; `OWNED_TABLES` de `tests/conftest.py`.
 - **Se comprueba:** `tests/test_notification_tables.py`: restricciones, política, permisos y cruce entre propietarios.
 
-### [ ] Paso 3. Envío de correo detrás de una interfaz
+### [x] Paso 3. Envío de correo detrás de una interfaz
 
 - `app/email/sender.py`: el protocolo `send(message) -> provider_id`, la implementación de Resend con `httpx2` y un doble en `tests/conftest.py`, inyectable como `get_storage` en `app/dependencies.py`. Consulto la documentación vigente de Resend (envío, adjuntos, idempotencia).
 - El desvío vive aquí, en un solo lugar: reemplaza el destinatario por el buzón de pruebas, quita la copia y anota el destinatario real en el asunto. Sin buzón y fuera de producción, se niega a enviar.
