@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Upload } from "lucide-react";
+import { FileText, Plus, Upload } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 
@@ -23,11 +23,27 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { api } from "@/lib/api/client";
-import { DOCUMENT_TYPES, uploadLeaseDocument } from "@/lib/api/documents";
-import { apiErrorMessage, CONNECTION_ERROR, errorMessage, hasCode } from "@/lib/api/errors";
-import { useEndLease, useLease, useRefreshLease, useUpdateLease } from "@/lib/api/queries";
+import { DOCUMENT_TYPES, openTemporaryLink, uploadLeaseDocument } from "@/lib/api/documents";
+import { errorMessage, hasCode } from "@/lib/api/errors";
+import {
+  useEndLease,
+  useGenerateMonthlyBill,
+  useLease,
+  useRefreshLease,
+  useSettings,
+  useUpdateLease,
+} from "@/lib/api/queries";
 import type { components } from "@/lib/api/schema";
-import { formatDate, formatDateTime, formatPesos, todayInBogota } from "@/lib/format";
+import {
+  formatBillNumber,
+  formatDate,
+  formatDateTime,
+  formatDayMonth,
+  formatMonth,
+  formatPesos,
+  todayInBogota,
+} from "@/lib/format";
+import { BILL_STATUS } from "@/lib/labels";
 
 type Lease = components["schemas"]["LeaseResponse"];
 
@@ -69,25 +85,13 @@ function DocumentSection({
   }
 
   async function open() {
-    // Opened now, during the tap: a window opened after waiting for the API is blocked
-    // as a pop-up, above all on iPhone.
-    const tab = window.open("", "_blank");
     setBusy("opening");
     onError(undefined);
-    try {
-      const { data, error } = await api.GET("/api/leases/{lease_id}/document", {
-        params: { path: { lease_id: lease.id } },
-      });
-      if (!data) {
-        tab?.close();
-        onError(apiErrorMessage(error));
-      } else if (tab) tab.location.href = data.url;
-      else window.location.assign(data.url);
-    } catch {
-      tab?.close();
-      onError(CONNECTION_ERROR);
-    }
+    const problem = await openTemporaryLink(() =>
+      api.GET("/api/leases/{lease_id}/document", { params: { path: { lease_id: lease.id } } }),
+    );
     setBusy(undefined);
+    if (problem) onError(problem);
   }
 
   const picker = (
@@ -153,6 +157,80 @@ function DocumentSection({
   );
 }
 
+/** The latest bills of the lease, and the way to issue this month's by hand. */
+function BillsSection({
+  lease,
+  generating,
+  onGenerate,
+}: {
+  lease: Lease;
+  generating: boolean;
+  onGenerate: () => void;
+}) {
+  const period = `${todayInBogota().slice(0, 7)}-01`;
+  const hasThisMonth = lease.recent_bills.some(
+    (bill) => bill.period === period && bill.status !== "voided",
+  );
+
+  return (
+    <section aria-labelledby="lease-bills" className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <h2 id="lease-bills" className="text-section font-semibold">
+          Cuentas de cobro
+        </h2>
+        {lease.recent_bills.length > 0 && (
+          <Button asChild variant="link" size="sm" className="-mr-3">
+            <Link href={`/bills?unit=${lease.unit.id}`}>Ver todas</Link>
+          </Button>
+        )}
+      </div>
+      {lease.recent_bills.length > 0 ? (
+        <ul className="flex flex-col rounded-xl border border-border bg-card px-3.5">
+          {lease.recent_bills.map((bill) => {
+            const status = BILL_STATUS[bill.status];
+            return (
+              <li key={bill.id} className="border-t border-border first:border-t-0">
+                <Link
+                  href={`/bills/${bill.id}`}
+                  className="flex min-h-13 items-center justify-between gap-2.5 py-2 outline-none focus-visible:bg-muted"
+                >
+                  <span className="truncate text-section">
+                    {bill.period
+                      ? formatMonth(bill.period, "short")
+                      : `Vence ${formatDayMonth(bill.due_date)}`}{" "}
+                    · {formatBillNumber(bill.number)}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2.5">
+                    <Badge tone={status.tone}>{status.label}</Badge>
+                    <span className="text-section font-semibold">{formatPesos(bill.total)}</span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="text-support text-muted-foreground">
+          Este contrato aún no tiene cuentas de cobro.
+        </p>
+      )}
+      {lease.status === "active" && (
+        <div className="flex flex-col gap-2 pt-1">
+          {!hasThisMonth && (
+            <Button variant="dashed" size="md" disabled={generating} onClick={onGenerate}>
+              <Plus aria-hidden />
+              {generating ? "Generando…" : `Generar cuenta de ${formatMonth(period).toLowerCase()}`}
+            </Button>
+          )}
+          <Button asChild variant="outline" size="md">
+            <Link href={`/bills/new?lease=${lease.id}`}>Cobrar otro concepto</Link>
+          </Button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function LeaseScreen({
   leaseId,
   documentFailed,
@@ -165,11 +243,13 @@ export function LeaseScreen({
   const refresh = useRefreshLease(leaseId);
   const update = useUpdateLease();
   const end = useEndLease();
+  const generate = useGenerateMonthlyBill();
+  const { data: settings } = useSettings();
   // What went wrong with the document; the changes keep their own errors.
   const [documentError, setDocumentError] = useState<string | undefined>(
     documentFailed ? DOCUMENT_FAILED : undefined,
   );
-  const changeError = update.error ?? end.error;
+  const changeError = update.error ?? end.error ?? generate.error;
   const error = documentError ?? (changeError ? errorMessage(changeError) : undefined);
   const working = update.isPending || end.isPending;
 
@@ -235,6 +315,21 @@ export function LeaseScreen({
           lease={lease}
           onError={setDocumentError}
           onChange={refresh}
+        />
+
+        {active && settings && !settings.payment_details && (
+          <FormMessage tone="info">
+            Tus cuentas saldrán sin datos de pago.{" "}
+            <Link href="/settings" className="font-semibold underline">
+              Agrégalos en Ajustes
+            </Link>
+            .
+          </FormMessage>
+        )}
+        <BillsSection
+          lease={lease}
+          generating={generate.isPending}
+          onGenerate={() => generate.mutate({ params: { path } })}
         />
 
         {active && (

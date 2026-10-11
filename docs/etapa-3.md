@@ -91,23 +91,23 @@ La mensual: contrato activo, periodo del mes en curso, vencimiento en `due_day`,
 - `POST /api/bills/{id}/void`: pasa a `voided` con `voided_at` y conserva el consecutivo. El PDF marcado "ANULADA" reemplaza al anterior después de confirmar la transacción.
 - **Se comprueba:** no se anula con pagos, ni dos veces; aislamiento; el PDF queda marcado.
 
-### [ ] Paso 8. Tipos y base de la web
+### [x] Paso 8. Tipos y base de la web
 
 - `pnpm gen:api`.
 - `lib/format.ts` con pruebas: número de cuenta (`N.º 0031`) y mes (`Octubre 2026`). `lib/labels.ts`: estado de cuenta con su tono de `Badge`.
 - `components/bills/BillRow.tsx`; `textarea` de shadcn/ui adaptado al tema; `BottomNav.tsx` con Cuentas y Ajustes.
 - `lib/api/queries.ts`: lecturas y escrituras de cuentas y ajustes, cada escritura con lo que actualiza en memoria.
 
-### [ ] Paso 9. Ajustes en la web
+### [x] Paso 9. Ajustes en la web
 
 - `/settings`: nombre, documento y datos de pago.
 
-### [ ] Paso 10. Listado y cuenta manual
+### [x] Paso 10. Listado y cuenta manual
 
 - `/bills` (mockup `Cuentas`): filtro de unidad, pastillas de estado, grupos por mes, estados vacío, de carga y de error.
 - `/bills/new`: contrato activo, descripción, valor y vencimiento.
 
-### [ ] Paso 11. Detalle y contrato
+### [x] Paso 11. Detalle y contrato
 
 - `/bills/[id]` (mockup `Cuenta`): vista del documento, actividad, "Descargar PDF" y "Anular" con confirmación.
 - Contrato: sección "Cuentas de cobro" con las últimas, "Ver todas" y el botón "Generar cuenta del mes". Aviso con enlace a Ajustes si faltan los datos de pago.
@@ -115,7 +115,9 @@ La mensual: contrato activo, periodo del mes en curso, vencimiento en `due_day`,
 
 ### [ ] Paso 12. Cierre
 
-- `pnpm lint`, `pnpm test` y `pnpm build`; casillas de la etapa 3 en `docs/plan.md`. La etapa pasa a 4 cuando confirmes los criterios de aceptación.
+- `pnpm lint`, `pnpm test` y `pnpm build` pasan (11 de octubre de 2026).
+- Falta: aplicar la migración `0003` en `arrendi-dev` y revisar las pantallas nuevas en el navegador, en tema claro y oscuro. Hasta entonces las casillas de la web en `docs/plan.md` quedan sin marcar.
+- Casillas de la etapa 3 en `docs/plan.md`. La etapa pasa a 4 cuando confirmes los criterios de aceptación.
 
 ## Verificación de extremo a extremo
 
