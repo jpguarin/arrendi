@@ -121,7 +121,7 @@ La mensual: contrato activo, periodo del mes en curso, vencimiento en `due_day`,
 - Migraciones `0003` y `0004` aplicadas en `arrendi-dev`.
 - El fundador recorrió los criterios de aceptación y revisó las pantallas nuevas en tema claro y oscuro, en local (11 de octubre de 2026).
 - Casillas de la etapa 3 marcadas en `docs/plan.md`; la etapa en curso pasa a 4.
-- Queda por comprobar tras el despliegue: abrir un PDF desde el iPhone en `arrendi-web.vercel.app`. La etapa pasa a 4 cuando confirmes los criterios de aceptación.
+- Desplegado en Vercel y comprobado desde el iPhone en `arrendi-web.vercel.app`: generar una cuenta y abrir su PDF funciona (11 de octubre de 2026). La etapa pasa a 4 cuando confirmes los criterios de aceptación.
 
 ## Verificación de extremo a extremo
 
