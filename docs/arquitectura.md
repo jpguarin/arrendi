@@ -130,6 +130,7 @@ Se hace una vez. Los pasos en Vercel y Supabase los hace el fundador en sus cuen
 2. **Proyecto `arrendi-api` en Vercel.** Importar el repositorio con carpeta raíz `apps/api` y el tipo de proyecto FastAPI.
    - Variables de producción, con los valores de `arrendi-prod`: `ENVIRONMENT=production`, `DATABASE_URL` y `SUPABASE_URL`.
    - Variables de vista previa, con los valores de `arrendi-dev`: `ENVIRONMENT=preview`, `DATABASE_URL` y `SUPABASE_URL`.
+   - `apps/api/vercel.json` define `installCommand`: al detectar `turbo.json`, Vercel ejecutaba `pnpm install` y nunca instalaba `requirements.txt` (la función fallaba con `No module named 'fastapi'`). Comprobado el 10 de octubre de 2026.
    - En la protección de despliegues, elegir "ninguna". La web llama a la API de vista previa de servidor a servidor, sin sesión de Vercel, y la protección por defecto la bloquearía. La API ya exige el token de Supabase en todo lo que tiene datos.
 3. **Enlace entre proyectos.** Copiar el id del proyecto `arrendi-api` (empieza por `prj_`) en `apps/web/vercel.json`, en `relatedProjects`. No es un secreto.
 4. **Proyecto `arrendi-web` en Vercel.** Importar el mismo repositorio con carpeta raíz `apps/web` y el tipo Next.js.
