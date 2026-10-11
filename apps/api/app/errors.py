@@ -38,6 +38,10 @@ def not_found() -> AppError:
     return AppError(404, detail, code)
 
 
+def conflict(detail: str, code: str) -> AppError:
+    return AppError(409, detail, code)
+
+
 def auth_unavailable() -> AppError:
     return AppError(
         503,

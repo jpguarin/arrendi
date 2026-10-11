@@ -44,10 +44,10 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 
 | Ruta | Qué hace |
 | --- | --- |
-| `POST /api/leases` | Crea el arrendatario (o usa uno existente) y el contrato. 409 si la unidad ya tiene contrato activo |
-| `GET /api/leases/{id}` | Devuelve contrato, arrendatario, unidad y sus últimas cuentas |
-| `PATCH /api/leases/{id}` | Edita canon, día de pago, fechas, depósito, envío automático y datos del arrendatario |
-| `POST /api/leases/{id}/end` | Pasa el contrato a terminado |
+| `POST /api/leases` | Crea el contrato de una unidad. Recibe `tenant` (arrendatario nuevo) o `tenant_id` (uno existente), nunca los dos. 409 `unit_has_active_lease` si la unidad ya tiene contrato activo; 422 `invalid_lease_dates` si la fecha de fin no es posterior a la de inicio |
+| `GET /api/leases/{id}` | Devuelve contrato, arrendatario, unidad con su inmueble y el nombre del documento. Desde la etapa 3, también sus últimas cuentas |
+| `PATCH /api/leases/{id}` | Edita canon, día de pago, fechas, depósito, envío automático y datos del arrendatario (en `tenant`). Solo cambian los campos enviados. También se puede editar un contrato terminado, para corregir el correo del arrendatario si quedó con saldo |
+| `POST /api/leases/{id}/end` | Pasa el contrato a terminado. 400 `lease_already_ended` si ya lo estaba |
 | `POST /api/leases/{id}/document/upload-url` | Primer paso de la subida. Recibe `filename`, `content_type` y `size`; devuelve el enlace firmado de subida y la ruta del objeto |
 | `POST /api/leases/{id}/document` | Segundo paso. Confirma la subida: valida el archivo guardado, lo asocia al contrato y borra el anterior si lo reemplaza |
 | `GET /api/leases/{id}/document` | Devuelve un enlace temporal al documento |

@@ -60,7 +60,7 @@ Pruebas primero.
 - Reutiliza `OwnerSession`, `AppError` y `ErrorResponse`. Un recurso ajeno responde 404.
 - **Se comprueba:** cada ruta nueva con su prueba de aislamiento (fixtures `api`, `make_token` y `two_owners` de `tests/conftest.py`).
 
-### [ ] Paso 4. Contratos en la API
+### [x] Paso 4. Contratos en la API
 
 Pruebas primero.
 
