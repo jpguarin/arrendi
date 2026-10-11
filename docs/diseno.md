@@ -15,7 +15,9 @@ Lienzo original: <https://claude.ai/artifact/UzWBdHg2VRw3iBEHvmh9nM> (privado de
 
 Defínelos como variables de tema en Tailwind; no escribas los valores sueltos en los componentes.
 
-shadcn/ui trae sus propias variables de tema (`background`, `foreground`, `primary`, `border`, `destructive` y otras). Los colores de la tabla que tienen equivalente llevan el nombre de esa variable, para que los componentes salgan ya con el aspecto de Arrendi. Además, `surface` se asigna también a `card` y `popover`, `alert` a `destructive`, y `primary` a `ring`. Los colores que no tienen equivalente (tintes y estados) se agregan como variables propias, con el nombre de la tabla. Cada variable tiene un valor para el tema claro y otro para el oscuro.
+shadcn/ui trae sus propias variables de tema (`background`, `foreground`, `primary`, `border`, `destructive` y otras). Los colores de la tabla que tienen equivalente llevan el nombre de esa variable, para que los componentes salgan ya con el aspecto de Arrendi. Además, `surface` se asigna también a `card` y `popover`, `alert` a `destructive`, y `primary` a `ring`. Los colores que no tienen equivalente (tintes y estados) se agregan como variables propias, con el nombre de la tabla.
+
+shadcn/ui usa además tres parejas que el diseño no nombra. Se asignan así: `secondary` y `accent` toman `primary-tint` con texto `primary-strong` (selección), y `muted` toma el valor de `border` (fondo al pasar el cursor). Las variables de gráficas y de barra lateral de shadcn/ui no se usan y se quitaron. Cada variable tiene un valor para el tema claro y otro para el oscuro.
 
 | Nombre | Claro | Oscuro | Uso |
 | --- | --- | --- | --- |
@@ -101,6 +103,9 @@ Los componentes se construyen sobre shadcn/ui (con Radix como librería base), a
 
 - Los nombres de los componentes de shadcn/ui cambian entre versiones. Antes de agregar uno, confirma en su documentación vigente que existe con ese nombre y cómo se instala.
 - Los tamaños por defecto de shadcn/ui son más pequeños que los de este diseño. Ajusta las variantes de `Button`, `Input` y `Select` a las alturas de la sección "Medidas", en lugar de sobrescribirlas en cada uso.
+- `Button` tiene los tamaños `default` (52 px, acción principal), `md` (48 px), `sm` (44 px) e `icon` (44 px, redondo), y las variantes `default`, `outline` (secundario), `dashed` (agregar o subir), `ghost`, `destructive` y `link`. No hay tamaños menores a 44 px.
+- Los tamaños de letra de la tabla de tipografía son clases de Tailwind: `text-figure`, `text-title-onboarding`, `text-title`, `text-title-back`, `text-body`, `text-section`, `text-support` y `text-badge`.
+- `cn` se importa siempre de `@/lib/utils`, que conoce esos tamaños de letra. Los componentes de shadcn/ui llegan importándolo del paquete `cn`: cámbialo al agregarlos (el lint lo exige).
 - Los formularios usan React Hook Form con Zod solo para la validación de forma en el navegador (campo vacío, correo mal escrito). Las reglas de negocio se validan en la API.
 
 Los íconos son de Lucide, que es la librería que usa shadcn/ui: de trazo, de 2 px, sin relleno.

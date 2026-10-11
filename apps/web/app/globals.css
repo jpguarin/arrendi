@@ -1,19 +1,38 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
-/* Colors from docs/diseno.md. Components use the Tailwind names below, never these values. */
+/*
+ * Colors from docs/diseno.md. Components use the Tailwind names from the @theme block,
+ * never these values. The first group are the variables shadcn/ui expects, so its
+ * components come out with Arrendi's look; the second group are Arrendi's own.
+ */
 :root {
   --background: #f3f5f4;
-  --surface: #ffffff;
   --foreground: #14201c;
-  --muted-foreground: #55635e;
-  --foreground-soft: #3a4743;
-  --border: #e1e6e3;
-  --input: #c9d1cd;
-  --border-dashed: #8e9a95;
+  --card: #ffffff;
+  --card-foreground: #14201c;
+  --popover: #ffffff;
+  --popover-foreground: #14201c;
   --primary: #0f6b4f;
   --primary-foreground: #ffffff;
+  --secondary: #d9efe6;
+  --secondary-foreground: #0a4e3a;
+  --muted: #e1e6e3;
+  --muted-foreground: #55635e;
+  --accent: #d9efe6;
+  --accent-foreground: #0a4e3a;
+  --destructive: #8a3d06;
+  --border: #e1e6e3;
+  --input: #c9d1cd;
+  --ring: #0f6b4f;
+  --radius: 0.75rem;
+
+  --surface: #ffffff;
+  --foreground-soft: #3a4743;
+  --border-dashed: #8e9a95;
   --primary-strong: #0a4e3a;
   --primary-tint: #d9efe6;
   --alert: #8a3d06;
@@ -29,15 +48,27 @@
 
 .dark {
   --background: #0f1513;
-  --surface: #18201d;
   --foreground: #e8eeeb;
-  --muted-foreground: #a3b0ab;
-  --foreground-soft: #c5cfcb;
-  --border: #26302c;
-  --input: #6b7a73;
-  --border-dashed: #8e9a95;
+  --card: #18201d;
+  --card-foreground: #e8eeeb;
+  --popover: #18201d;
+  --popover-foreground: #e8eeeb;
   --primary: #3fb58e;
   --primary-foreground: #06231a;
+  --secondary: #143b2e;
+  --secondary-foreground: #9fe0c8;
+  --muted: #26302c;
+  --muted-foreground: #a3b0ab;
+  --accent: #143b2e;
+  --accent-foreground: #9fe0c8;
+  --destructive: #f2a66b;
+  --border: #26302c;
+  --input: #6b7a73;
+  --ring: #3fb58e;
+
+  --surface: #18201d;
+  --foreground-soft: #c5cfcb;
+  --border-dashed: #8e9a95;
   --primary-strong: #9fe0c8;
   --primary-tint: #143b2e;
   --alert: #f2a66b;
@@ -48,17 +79,30 @@
 
 @theme inline {
   --font-sans: var(--font-figtree);
+  --font-heading: var(--font-figtree);
 
   --color-background: var(--background);
-  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-foreground-soft: var(--foreground-soft);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-border-dashed: var(--border-dashed);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-surface: var(--surface);
+  --color-foreground-soft: var(--foreground-soft);
+  --color-border-dashed: var(--border-dashed);
   --color-primary-strong: var(--primary-strong);
   --color-primary-tint: var(--primary-tint);
   --color-alert: var(--alert);
@@ -69,6 +113,12 @@
   --color-summary-inner: var(--summary-inner);
   --color-summary-foreground: var(--summary-foreground);
   --color-summary-foreground-soft: var(--summary-foreground-soft);
+
+  /* Radii from docs/diseno.md. */
+  --radius-sm: 0.5rem; /* 8px: badges */
+  --radius-md: 0.625rem;
+  --radius-lg: 0.75rem; /* 12px: buttons and fields */
+  --radius-xl: 1rem; /* 16px: cards */
 
   /* Type scale from docs/diseno.md. */
   --text-figure: 2.125rem; /* 34px: main figure on the home screen */
@@ -86,12 +136,20 @@
 
 @layer base {
   * {
-    border-color: var(--border);
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    @apply bg-background text-foreground;
     font-variant-numeric: tabular-nums;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 }

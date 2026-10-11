@@ -5,6 +5,17 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    // shadcn/ui components arrive importing `cn` from the package. Ours knows
+    // Arrendi's type scale, so every file must use it instead.
+    ignores: ["lib/utils.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        { paths: [{ name: "cn", message: 'Import cn from "@/lib/utils".' }] },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
