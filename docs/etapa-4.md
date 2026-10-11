@@ -125,14 +125,15 @@ Por lotes, con un límite de tiempo por ejecución; lo que no alcance queda para
 ### [ ] Paso 12. Cierre
 
 - `pnpm lint`, `pnpm test` y `pnpm build` pasan (11 de octubre de 2026).
-- Falta lo de "Lo que haces tú" (Resend, variables, migración `0005`, rol de tareas, webhook) y revisar en el navegador, en ambos temas, el detalle de cuenta y Ajustes. Hasta entonces las casillas de la web en `docs/plan.md` quedan sin marcar.
+- Hecho por el fundador (11 de octubre de 2026): Resend y sus variables, migración `0005`, rol de tareas, Cron Job y webhook. Comprobado: el envío a mano llega al buzón de pruebas con el PDF; la tarea responde bien en local y en Vercel; un rebote simulado con `bounced@resend.dev` deja la notificación como rebotada.
+- Falta revisar en el navegador, en ambos temas, el detalle de cuenta y Ajustes, y ver en los próximos días la generación automática y el recordatorio. Hasta entonces las casillas de la web en `docs/plan.md` quedan sin marcar.
 - Casillas de la etapa 4 en `docs/plan.md`. La etapa pasa a 5 cuando confirmes los criterios de aceptación.
 
 ## Verificación de extremo a extremo
 
 - **En local:** enviar una cuenta desde su detalle y verla llegar a tu buzón con el PDF y el destinatario real en el asunto; llamar a `/api/cron/daily` con el secreto dos veces seguidas y comprobar que la segunda no hace nada.
 - **En Vercel:** lanzar el Cron Job desde el panel; al día siguiente del vencimiento de una cuenta enviada, ver llegar un solo recordatorio.
-- **Rebote:** enviar a Resend un aviso de prueba desde su panel y ver la notificación como rebotada.
+- **Rebote:** con `EMAIL_TEST_INBOX=bounced@resend.dev` en local, reenviar una cuenta y verla como rebotada uno o dos minutos después. Devolver la variable a su valor.
 
 ## Riesgos
 

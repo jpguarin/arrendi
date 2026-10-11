@@ -76,6 +76,8 @@ No son decisiones de producto, sino datos técnicos que cambian y que este repos
 ### Verificado el 11 de octubre de 2026
 
 - Vercel llama al Cron Job con `Authorization: Bearer <CRON_SECRET>`, no reintenta si falla y puede, rara vez, llamar dos veces o ninguna: la tarea debe ser idempotente y recuperarse sola.
+- Resend, comprobado de extremo a extremo contra `arrendi-dev`: un correo a `bounced@resend.dev` (su dirección para simular rebotes) genera el aviso `email.bounced`, la API desplegada verifica su firma y la notificación queda `bounced`. El panel de Resend no tiene un botón para enviar un evento de prueba.
+- El Cron Job de Vercel, lanzado a mano desde el panel, responde 200 en `arrendi-api`.
 - Resend: `POST https://api.resend.com/emails` con adjuntos en Base64 y cabecera `Idempotency-Key` (vale 24 horas). Sus avisos llegan firmados con las cabeceras `svix-id`, `svix-timestamp` y `svix-signature`.
 - Supabase Storage acepta desde el navegador el `PUT` de subida con `Content-Type` (CORS: cualquier origen), comprobado con la petición previa contra `arrendi-dev`.
 - Supabase Storage, probado contra `arrendi-dev`: el enlace firmado de subida acepta un `PUT` con el archivo como cuerpo y sin claves; no sirve para sobrescribir un archivo que ya existe; el contenedor rechaza tipos no permitidos y más de 10 MB; un archivo de 7 MB sube bien; sin enlace no hay acceso.
