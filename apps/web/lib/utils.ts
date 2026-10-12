@@ -7,10 +7,12 @@ const FONT_SIZES = [
   "title-onboarding",
   "title",
   "title-back",
+  "kpi",
   "body",
   "section",
   "support",
   "badge",
+  "nav",
 ]
 
 export const cn = createCn({

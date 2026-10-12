@@ -11,5 +11,3 @@ Fecha: {{ payment_date | long_date }} · {{ payment_method }}
 Si tienes alguna duda, responde a este correo.
 
 {{ owner_name }}
-
-Enviado con Arrendi en nombre de {{ owner_name }}.

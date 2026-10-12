@@ -2,11 +2,13 @@
 
 import { Plus } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-import { BillRow } from "@/components/bills/BillRow";
+import { BillGroup, BillRow, BillTable } from "@/components/bills/BillRow";
 import { Header } from "@/components/Header";
 import { LoadError, Loading } from "@/components/LoadState";
+import { ListMain } from "@/components/shell/ListDetail";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -19,6 +21,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { errorMessage } from "@/lib/api/errors";
 import { type BillFilters, useBills, useProperties } from "@/lib/api/queries";
 import type { components } from "@/lib/api/schema";
+import { monthOf } from "@/lib/bills";
 import { formatMonth, formatPesos } from "@/lib/format";
 
 type Bill = components["schemas"]["BillSummary"];
@@ -33,9 +36,6 @@ const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
   { value: "voided", label: "Anuladas" },
 ];
 
-/** The month a bill belongs to (`2026-10`): its period, or when it is due if it is manual. */
-const monthOf = (bill: Bill) => (bill.period ?? bill.due_date).slice(0, 7);
-
 /** The bills by month, in the order the API sends them: newest first. */
 function byMonth(bills: Bill[]): [string, Bill[]][] {
   const months = new Map<string, Bill[]>();
@@ -45,8 +45,19 @@ function byMonth(bills: Bill[]): [string, Bill[]][] {
   return [...months];
 }
 
-export function BillsScreen({ initialUnitId }: { initialUnitId?: string }) {
-  const [unitId, setUnitId] = useState(initialUnitId ?? ALL);
+const sum = (bills: Bill[], amount: (bill: Bill) => number) =>
+  bills.reduce((total, bill) => total + amount(bill), 0);
+
+export function BillsScreen() {
+  // A lease links here with its unit already chosen. The list stays on screen while
+  // bills open and close next to it, so a new link has to move the filter too.
+  const linkedUnit = useSearchParams().get("unit");
+  const [seenLink, setSeenLink] = useState(linkedUnit);
+  const [unitId, setUnitId] = useState(linkedUnit ?? ALL);
+  if (linkedUnit !== seenLink) {
+    setSeenLink(linkedUnit);
+    if (linkedUnit) setUnitId(linkedUnit);
+  }
   const [status, setStatus] = useState<StatusFilter>(ALL);
   const filtered = unitId !== ALL || status !== ALL;
   const {
@@ -63,17 +74,37 @@ export function BillsScreen({ initialUnitId }: { initialUnitId?: string }) {
 
   return (
     <>
-      <Header title="Cuentas de cobro">
-        <Button asChild size="icon">
+      <Header title="Cuentas">
+        <Button asChild size="md">
           <Link href="/bills/new" aria-label="Nueva cuenta de cobro">
             <Plus aria-hidden />
+            Nueva cuenta
           </Link>
         </Button>
       </Header>
-      <main className="flex flex-1 flex-col gap-4 px-5 pt-2 pb-6">
-        <div className="flex flex-col gap-2.5">
+      <ListMain>
+        {/* One row of filters; it scrolls sideways when it does not fit. */}
+        <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 py-0.5 [scrollbar-width:none] md:mx-0 md:px-0.5">
+          <ToggleGroup
+            type="single"
+            aria-label="Filtrar por estado"
+            className="flex shrink-0 gap-0 rounded-xl bg-muted p-1"
+            value={status}
+            // Tapping the selected filter again would clear it; keep it selected.
+            onValueChange={(value) => value && setStatus(value as StatusFilter)}
+          >
+            {STATUS_FILTERS.map((filter) => (
+              <ToggleGroupItem
+                key={filter.value}
+                value={filter.value}
+                className="h-11 rounded-lg border-transparent bg-transparent px-3 text-support text-muted-foreground hover:bg-transparent hover:text-foreground data-[state=on]:border-transparent data-[state=on]:bg-card data-[state=on]:text-foreground data-[state=on]:shadow-xs"
+              >
+                {filter.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
           <Select value={unitId} onValueChange={setUnitId}>
-            <SelectTrigger aria-label="Filtrar por unidad">
+            <SelectTrigger aria-label="Filtrar por unidad" className="h-11 w-auto shrink-0 gap-2 text-support font-semibold">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -85,24 +116,6 @@ export function BillsScreen({ initialUnitId }: { initialUnitId?: string }) {
               ))}
             </SelectContent>
           </Select>
-          <ToggleGroup
-            type="single"
-            aria-label="Filtrar por estado"
-            className="flex flex-wrap"
-            value={status}
-            // Tapping the selected filter again would clear it; keep it selected.
-            onValueChange={(value) => value && setStatus(value as StatusFilter)}
-          >
-            {STATUS_FILTERS.map((filter) => (
-              <ToggleGroupItem
-                key={filter.value}
-                value={filter.value}
-                className="h-11 rounded-full px-3.5 text-section"
-              >
-                {filter.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
         </div>
 
         {/* With data in memory a failed refresh stays quiet: the list is still useful. */}
@@ -117,7 +130,9 @@ export function BillsScreen({ initialUnitId }: { initialUnitId?: string }) {
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-4 py-10 text-center">
               <div className="flex flex-col gap-1">
-                <p className="text-title-back font-bold">Aún no tienes cuentas de cobro</p>
+                <p className="font-heading text-title-back font-extrabold">
+                  Aún no tienes cuentas de cobro
+                </p>
                 <p className="text-section text-muted-foreground">
                   Genera la cuenta del mes desde cada contrato, o crea un cobro aparte.
                 </p>
@@ -128,30 +143,24 @@ export function BillsScreen({ initialUnitId }: { initialUnitId?: string }) {
             </div>
           ))}
 
-        {bills &&
-          byMonth(bills).map(([month, monthBills]) => (
-            <section key={month} aria-labelledby={`month-${month}`} className="flex flex-col gap-2">
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 id={`month-${month}`} className="text-section font-semibold">
-                  {formatMonth(month)}
-                </h2>
-                {/* Collected of expected: the same figures the home screen shows. */}
-                <p className="text-support text-muted-foreground">
-                  {status === "voided"
-                    ? formatPesos(monthBills.reduce((sum, bill) => sum + bill.total, 0))
-                    : `${formatPesos(
-                        monthBills.reduce((sum, bill) => sum + bill.total - bill.balance, 0),
-                      )} de ${formatPesos(monthBills.reduce((sum, bill) => sum + bill.total, 0))}`}
-                </p>
-              </div>
-              <ul className="flex flex-col rounded-xl border border-border bg-card px-3.5">
-                {monthBills.map((bill) => (
-                  <BillRow key={bill.id} bill={bill} />
-                ))}
-              </ul>
-            </section>
-          ))}
-      </main>
+        {bills && bills.length > 0 && (
+          <BillTable>
+            {byMonth(bills).flatMap(([month, monthBills]) => [
+              <BillGroup
+                key={month}
+                title={formatMonth(month)}
+                // Collected of expected: the same figures the summary shows.
+                detail={
+                  status === "voided"
+                    ? formatPesos(sum(monthBills, (bill) => bill.total))
+                    : `${formatPesos(sum(monthBills, (bill) => bill.total - bill.balance))} de ${formatPesos(sum(monthBills, (bill) => bill.total))}`
+                }
+              />,
+              ...monthBills.map((bill) => <BillRow key={bill.id} bill={bill} />),
+            ])}
+          </BillTable>
+        )}
+      </ListMain>
     </>
   );
 }

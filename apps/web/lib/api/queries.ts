@@ -15,8 +15,14 @@ type Property = Schemas["PropertyResponse"];
 type Unit = Schemas["UnitResponse"];
 type Lease = Schemas["LeaseResponse"];
 type Bill = Schemas["BillResponse"];
+type BillSummary = Schemas["BillSummary"];
 type Settings = Schemas["SettingsResponse"];
-export type BillFilters = { unit_id?: string; status?: "receivable" | "paid" | "voided" };
+export type BillFilters = {
+  unit_id?: string;
+  status?: "receivable" | "paid" | "voided";
+  /** Only the bills of this month and later (`2026-05-01`). */
+  from?: string;
+};
 
 const ME = $api.queryOptions("get", "/api/me").queryKey;
 const PROPERTIES = $api.queryOptions("get", "/api/properties").queryKey;
@@ -58,12 +64,12 @@ export const useBill = (billId: string) =>
 // screen shows the change at once.
 
 /**
- * Marks data as old without asking for it right now: the screen that shows it asks
- * when it opens. Asking here too would send the request twice, because the screen that
- * made the change is about to close and its request would be cancelled.
+ * Marks data as old. What is on screen right now is asked for again at once: a list
+ * stays in view next to the detail that made the change. The rest waits until a screen
+ * that shows it opens.
  */
 function markStale(client: QueryClient, queryKey: readonly unknown[]) {
-  client.invalidateQueries({ queryKey, refetchType: "none" });
+  client.invalidateQueries({ queryKey });
 }
 
 function putProperty(client: QueryClient, property: Property) {
@@ -116,6 +122,22 @@ function putLease(client: QueryClient, lease: Lease) {
 
 function putBill(client: QueryClient, bill: Bill) {
   client.setQueryData<Bill>(billKey(bill.id), bill);
+  // Its row in every list changes right away; the lists are then asked for again,
+  // because a filter may no longer include it.
+  client.setQueriesData<BillSummary[]>({ queryKey: BILL_LISTS }, (list) =>
+    list?.map((old) =>
+      old.id !== bill.id
+        ? old
+        : {
+            ...old,
+            status: bill.status,
+            total: bill.total,
+            balance: bill.balance,
+            last_payment_date: bill.last_payment_date,
+            last_payment_method: bill.last_payment_method,
+          },
+    ),
+  );
   markStale(client, BILL_LISTS);
   // A bill or a payment changes the figures of the home screen and how its unit is doing.
   markStale(client, SUMMARIES);

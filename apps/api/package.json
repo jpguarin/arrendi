@@ -5,6 +5,8 @@
     "dev": ".venv/bin/uvicorn app.main:app --reload --port 8000",
     "lint": ".venv/bin/ruff check . && .venv/bin/ruff format --check .",
     "test": ".venv/bin/pytest",
-    "gen:api": ".venv/bin/python -m app.export_openapi openapi.json"
+    "gen:api": ".venv/bin/python -m app.export_openapi openapi.json",
+    "preview:email": ".venv/bin/python -m app.email.preview",
+    "preview:pdf": ".venv/bin/python -m app.pdf.preview"
   }
 }

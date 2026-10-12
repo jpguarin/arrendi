@@ -204,7 +204,7 @@ export function SettingsScreen() {
   return (
     <>
       <Header title="Ajustes" />
-      <main className="flex flex-1 flex-col gap-4 px-5 pt-2 pb-8">
+      <main className="flex flex-1 flex-col gap-4 px-4 pb-8 md:px-6 xl:px-8">
         {settings ? (
           <>
             <SettingsForm settings={settings} />

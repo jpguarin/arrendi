@@ -77,6 +77,23 @@ export function formatDateTime(isoInstant: string): string {
   return formatDate(day);
 }
 
+/** The instant something happened, with its hour in Colombia: `5 oct 2026 · 3:42 p. m.` */
+export function formatDateHour(isoInstant: string): string {
+  const instant = new Date(isoInstant);
+  // Only the digits come from Intl, which are the same in every browser.
+  const [hour, minute] = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "America/Bogota",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  })
+    .format(instant)
+    .split(":")
+    .map(Number);
+  const clock = `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${hour < 12 ? "a. m." : "p. m."}`;
+  return `${formatDateTime(isoInstant)} · ${clock}`;
+}
+
 /** Today's business date (`2026-10-05`). "Today" is always the day in Colombia. */
 export function todayInBogota(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" }).format(now);

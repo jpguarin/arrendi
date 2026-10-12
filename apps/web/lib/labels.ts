@@ -32,13 +32,15 @@ export const DOCUMENT_TYPE_OPTIONS: { value: DocumentType; label: string }[] = [
 export const TENANT_DOCUMENT_TYPE: DocumentType = "nit";
 export const TENANT_DOCUMENT_TYPE_OPTIONS = [...DOCUMENT_TYPE_OPTIONS].reverse();
 
+export type StatusTone = "positive" | "warning" | "info" | "alert" | "neutral";
+
 // The status is always said with text; the tone only supports it (docs/diseno.md).
 export const BILL_STATUS: Record<
   BillStatus,
-  { label: string; tone: "positive" | "alert" | "info" | "neutral" }
+  { label: string; tone: StatusTone }
 > = {
-  pending: { label: "Pendiente", tone: "neutral" },
-  partial: { label: "Parcial", tone: "info" },
+  pending: { label: "Pendiente", tone: "info" },
+  partial: { label: "Parcial", tone: "warning" },
   paid: { label: "Pagada", tone: "positive" },
   overdue: { label: "Vencida", tone: "alert" },
   voided: { label: "Anulada", tone: "neutral" },
@@ -74,6 +76,16 @@ export const DELIVERY_PROBLEMS: Partial<Record<Notification["delivery_status"], 
   pending: "enviando…",
   failed: "no se pudo enviar",
   bounced: "rebotó",
+};
+
+type Unit = Schemas["UnitResponse"];
+
+// How each unit is doing, from what its active lease still owes.
+export const UNIT_STATUS: Record<Unit["status"], { label: string; tone: StatusTone }> = {
+  up_to_date: { label: "Al día", tone: "positive" },
+  overdue: { label: "En mora", tone: "alert" },
+  partial: { label: "Pago parcial", tone: "warning" },
+  vacant: { label: "Vacía", tone: "neutral" },
 };
 
 // The day of the month the bills go out.

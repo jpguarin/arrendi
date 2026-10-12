@@ -3,6 +3,7 @@
 Nothing here reads the database or storage: it turns what it is given into bytes.
 """
 
+import re
 from dataclasses import dataclass
 from datetime import date
 from io import BytesIO
@@ -10,17 +11,19 @@ from io import BytesIO
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import simpleSplit
-from reportlab.pdfgen.canvas import Canvas
+from reportlab.pdfgen.canvas import FILL_NON_ZERO, Canvas
 
 from app.pdf.format import format_long_date, format_number, format_pesos
+from app.pdf.logo import GREEN_PATHS, INK_PATHS, SIZE
 
-# The light palette of docs/diseno.md.
-FOREGROUND = HexColor("#14201C")
-MUTED = HexColor("#55635E")
-SOFT = HexColor("#3A4743")
-BORDER = HexColor("#E1E6E3")
-BACKGROUND = HexColor("#F3F5F4")
-ALERT = HexColor("#8A3D06")
+# The light palette of docs/diseno.md, on the brand of docs/new-brand-design.
+FOREGROUND = HexColor("#14264C")
+MUTED = HexColor("#55607A")
+SOFT = HexColor("#33456E")
+BORDER = HexColor("#DFE3EC")
+BACKGROUND = HexColor("#F5F6F9")
+ALERT = HexColor("#A3321E")
+BRAND_GREEN = HexColor("#28B779")
 
 # Helvetica comes with every PDF reader, so no font file travels with the API.
 REGULAR = "Helvetica"
@@ -71,6 +74,49 @@ def _rule(canvas: Canvas, y: float) -> None:
     canvas.line(MARGIN, y, RIGHT, y)
 
 
+_COMMAND = re.compile(r"([MLHVCZ])([^MLHVCZ]*)")
+
+
+def _trace(canvas: Canvas, data: str):
+    """An SVG path made only of absolute M, L, H, V, C and Z, as a path of the canvas."""
+    path = canvas.beginPath()
+    x = y = 0.0
+    for command, arguments in _COMMAND.findall(data):
+        numbers = [float(number) for number in arguments.replace(",", " ").split()]
+        if command == "M":
+            x, y = numbers
+            path.moveTo(x, y)
+        elif command == "L":
+            x, y = numbers
+            path.lineTo(x, y)
+        elif command == "H":
+            (x,) = numbers
+            path.lineTo(x, y)
+        elif command == "V":
+            (y,) = numbers
+            path.lineTo(x, y)
+        elif command == "C":
+            path.curveTo(*numbers)
+            x, y = numbers[4:]
+        else:
+            path.close()
+    return path
+
+
+def _brand_mark(canvas: Canvas, x: float, y: float, height: float) -> None:
+    """The isotipo of the brand, with its bottom left corner at `x`, `y`."""
+    scale = height / SIZE[1]
+    canvas.saveState()
+    # The isotipo measures from its top left corner, with `y` growing downwards.
+    canvas.translate(x, y + height)
+    canvas.scale(scale, -scale)
+    for color, paths in ((FOREGROUND, INK_PATHS), (BRAND_GREEN, GREEN_PATHS)):
+        canvas.setFillColor(color)
+        for data in paths:
+            canvas.drawPath(_trace(canvas, data), stroke=0, fill=1, fillMode=FILL_NON_ZERO)
+    canvas.restoreState()
+
+
 def _wrapped(text: str, font: str, size: float, width: float) -> list[str]:
     """The text cut into lines that fit, keeping the line breaks it already has."""
     lines: list[str] = []
@@ -85,6 +131,12 @@ def render_bill(bill: BillDocument) -> bytes:
     canvas = Canvas(buffer, pagesize=letter, pageCompression=0)
     canvas.setTitle(f"Cuenta de cobro {format_number(bill.number)}")
     canvas.setAuthor(bill.owner_name)
+    # The name of the brand is drawn, not written: this keeps it in the file as text.
+    canvas.setCreator("Arrendi")
+
+    # A band of the brand color across the top edge.
+    canvas.setFillColor(FOREGROUND)
+    canvas.rect(0, HEIGHT - 8, WIDTH, 8, stroke=0, fill=1)
 
     # Heading: what it is on the left, who issues it on the right.
     y = HEIGHT - MARGIN - 8
@@ -156,9 +208,10 @@ def render_bill(bill: BillDocument) -> bytes:
         canvas.drawString(MARGIN + 14, text_y, note)
         text_y -= 16
 
-    canvas.setFillColor(MUTED)
-    canvas.setFont(REGULAR, 9)
-    canvas.drawCentredString(WIDTH / 2, MARGIN / 2, "Arrendi")
+    # The brand, small at the foot: the bill is the owner's, Arrendi only issues it.
+    mark_height = 16
+    mark_width = SIZE[0] * mark_height / SIZE[1]
+    _brand_mark(canvas, (WIDTH - mark_width) / 2, MARGIN / 2 - 4, mark_height)
 
     if bill.voided:
         # Across the page, so no copy of it passes for a bill still owed.

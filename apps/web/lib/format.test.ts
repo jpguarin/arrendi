@@ -5,6 +5,7 @@ import {
   daysBetween,
   formatBillNumber,
   formatDate,
+  formatDateHour,
   formatDateTime,
   formatDayMonth,
   formatLongDate,
@@ -94,4 +95,12 @@ test("days between two business dates, across months and years", () => {
   assert.equal(daysBetween("2026-10-05", "2026-10-05"), 0);
   assert.equal(daysBetween("2026-10-05", "2026-10-03"), -2);
   assert.equal(daysBetween("2026-12-30", "2027-01-02"), 3);
+});
+
+test("an instant is written with its hour in Colombia", () => {
+  assert.equal(formatDateHour("2026-10-05T20:42:00Z"), "5 oct 2026 · 3:42 p. m.");
+  assert.equal(formatDateHour("2026-10-05T12:00:00Z"), "5 oct 2026 · 7:00 a. m.");
+  // Midnight in Colombia is still the day before in UTC terms, and reads as 12.
+  assert.equal(formatDateHour("2026-10-06T05:05:00Z"), "6 oct 2026 · 12:05 a. m.");
+  assert.equal(formatDateHour("2026-10-05T17:30:00Z"), "5 oct 2026 · 12:30 p. m.");
 });

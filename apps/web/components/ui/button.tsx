@@ -3,7 +3,8 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { Slot } from "radix-ui"
 
-// Sizes follow docs/diseno.md: no button is shorter than the 44px touch target.
+// Sizes follow docs/diseno.md: no button is shorter than the 44px touch target, except
+// `sm` with a mouse.
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-transparent bg-clip-padding text-body font-semibold whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
   {
@@ -17,15 +18,16 @@ const buttonVariants = cva(
         // Add or upload something.
         dashed:
           "border-dashed border-border-dashed bg-transparent text-foreground hover:bg-muted",
-        ghost: "text-primary hover:bg-muted aria-expanded:bg-muted",
-        destructive: "bg-alert-tint text-alert hover:bg-alert-tint/80",
-        link: "text-primary underline-offset-4 hover:underline",
+        ghost: "text-foreground hover:bg-muted aria-expanded:bg-muted",
+        destructive: "bg-alert-tint text-alert-ink hover:bg-alert-tint/80",
+        link: "text-foreground underline underline-offset-4",
       },
       size: {
-        default: "h-13 px-5",
-        md: "h-12 px-4",
-        sm: "h-11 px-3 text-section",
-        icon: "size-11 rounded-full",
+        default: "h-12 px-5",
+        md: "h-11 px-4 text-section",
+        // In a table row: 44px to the touch, 36px where there is a mouse.
+        sm: "h-11 px-3 text-support md:pointer-fine:h-9",
+        icon: "size-11",
       },
     },
     defaultVariants: {

@@ -2,6 +2,7 @@ import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type HeaderProps = {
   title: string;
@@ -16,7 +17,13 @@ type HeaderProps = {
 /** Top of a screen: the title, with a back button or an action on the right. */
 export function Header({ title, subtitle, backHref, children }: HeaderProps) {
   return (
-    <header className="flex min-h-11 items-center gap-2 px-5 pt-6 pb-4">
+    <header
+      className={cn(
+        "flex min-h-11 items-center gap-2",
+        // Next to a back button it heads a detail; alone, a whole section.
+        backHref ? "px-5 pt-4 pb-3" : "flex-wrap px-4 pt-5 pb-4 md:px-6 md:pt-6 xl:px-8",
+      )}
+    >
       {backHref && (
         <Button asChild variant="ghost" size="icon" className="-ml-2.5 text-foreground">
           <Link href={backHref} aria-label="Volver">
@@ -25,7 +32,7 @@ export function Header({ title, subtitle, backHref, children }: HeaderProps) {
         </Button>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <h1 className={backHref ? "truncate text-title-back font-bold" : "text-title font-bold"}>
+        <h1 className={backHref ? "truncate text-title-back font-extrabold" : "text-title font-extrabold"}>
           {title}
         </h1>
         {subtitle && <p className="truncate text-support text-muted-foreground">{subtitle}</p>}

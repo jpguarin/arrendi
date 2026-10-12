@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arrendi · Propuesta A · Ventanas</title>
+<link rel="icon" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ---------- Primitive tokens: brand (docs/new-brand-design/brand-design.md) ---------- */
+:root {
+  --brand-navy: #14264C;
+  --brand-green: #28B779;
+  --brand-yellow: #FFC857;
+  --brand-ivory: #F4F1E8;
+
+  /* Primitive tokens: derived from the brand */
+  --navy-950: #0A1122;
+  --navy-900: #0C1528;
+  --navy-800: #14203B;
+  --navy-700: #1B2A4B;
+  --navy-600: #2A3A60;
+  --navy-400: #55607A;
+  --navy-300: #A9B3CC;
+  --ivory-50: #FBF9F3;
+  --ivory-200: #EDE8DA;
+  --ivory-300: #DDD6C3;
+  --brick: #BC3D28;
+
+  --font-display: "Red Hat Display", Inter, system-ui, sans-serif;
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Semantic tokens: bill status. fill = marks, ink = text, bg = tinted surface */
+  --st-paid: #1FA36C;      --st-paid-ink: #14734B;     --st-paid-bg: #DDF3E8;
+  --st-partial: #D4951A;   --st-partial-ink: #7A5200;  --st-partial-bg: #FFEFC9;
+  --st-pending: #4C6FC4;   --st-pending-ink: #2F4A94;  --st-pending-bg: #E1E8F8;
+  --st-overdue: #D2513A;   --st-overdue-ink: #A3321E;  --st-overdue-bg: #FADFD8;
+  --st-voided: #8A90A0;    --st-voided-ink: #565D70;   --st-voided-bg: #E7E8EC;
+  --focus: #2F4A94;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --st-paid: #25A870;      --st-paid-ink: #6BDDAA;     --st-paid-bg: rgba(37, 168, 112, .18);
+  --st-partial: #C08618;   --st-partial-ink: #FFC857;  --st-partial-bg: rgba(255, 200, 87, .15);
+  --st-pending: #6485DA;   --st-pending-ink: #A9BEF5;  --st-pending-bg: rgba(100, 133, 218, .2);
+  --st-overdue: #E05F47;   --st-overdue-ink: #FF9D88;  --st-overdue-bg: rgba(224, 95, 71, .2);
+  --st-voided: #7C87A3;    --st-voided-ink: #A9B3CC;   --st-voided-bg: rgba(255, 255, 255, .08);
+  --focus: #FFC857;
+  color-scheme: dark;
+}
+.st-paid    { --st: var(--st-paid);    --st-ink: var(--st-paid-ink);    --st-bg: var(--st-paid-bg); }
+.st-partial { --st: var(--st-partial); --st-ink: var(--st-partial-ink); --st-bg: var(--st-partial-bg); }
+.st-pending { --st: var(--st-pending); --st-ink: var(--st-pending-ink); --st-bg: var(--st-pending-bg); }
+.st-overdue { --st: var(--st-overdue); --st-ink: var(--st-overdue-ink); --st-bg: var(--st-overdue-bg); }
+.st-voided  { --st: var(--st-voided);  --st-ink: var(--st-voided-ink);  --st-bg: var(--st-voided-bg); }
+
+/* ---------- Reset ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-family: var(--font-sans); font-size: 16px; line-height: 1.5; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+h1, h2, h3, p, ul, ol, dl, dd, figure { margin: 0; padding: 0; }
+ul, ol { list-style: none; }
+a { color: inherit; text-decoration: none; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a[href], label, select { cursor: pointer; }
+svg { display: block; flex: none; }
+.num { font-variant-numeric: tabular-nums; }
+.display { font-family: var(--font-display); letter-spacing: -.02em; }
+:focus { outline: none; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[hidden] { display: none !important; }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 6px; border-radius: 999px; font-size: 12px; line-height: 18px; font-weight: 600; white-space: nowrap; background: var(--st-bg); color: var(--st-ink); }
+
+#toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translate(-50%, 16px); z-index: 90; max-width: calc(100vw - 32px); padding: 12px 16px; border-radius: 12px; background: var(--toast-bg, var(--brand-navy)); color: var(--toast-ink, var(--brand-ivory)); font-size: 14px; font-weight: 500; box-shadow: 0 8px 24px rgba(10, 17, 34, .28); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
+#toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+
+/* ---------- Proposal A · Ventanas: semantic tokens ---------- */
+:root {
+  --bg: var(--brand-ivory);
+  --surface: var(--ivory-50);
+  --surface-2: var(--ivory-200);
+  --line: var(--ivory-300);
+  --ink: var(--brand-navy);
+  --ink-2: var(--navy-400);
+  --primary: var(--brand-navy);
+  --on-primary: var(--brand-ivory);
+  --danger: var(--st-overdue-ink);
+  /* Component tokens: the house and its windows */
+  --house: var(--brand-navy);
+  --win-ok: var(--brand-green);
+  --win-partial: var(--brand-yellow);
+  --win-late: var(--brick);
+  --win-ink: var(--brand-navy);
+  --win-late-ink: var(--brand-ivory);
+  --meter-track: var(--ivory-300);
+  --meter-fill: var(--brand-green);
+  --scrim: rgba(20, 38, 76, .45);
+}
+:root[data-theme="dark"] {
+  --bg: var(--navy-900);
+  --surface: var(--navy-800);
+  --surface-2: var(--navy-700);
+  --line: var(--navy-600);
+  --ink: var(--brand-ivory);
+  --ink-2: var(--navy-300);
+  --primary: var(--brand-ivory);
+  --on-primary: var(--brand-navy);
+  --house: var(--brand-ivory);
+  --meter-track: var(--navy-600);
+  --scrim: rgba(4, 8, 18, .7);
+  --toast-bg: var(--brand-ivory);
+  --toast-ink: var(--brand-navy);
+}
+
+/* ---------- Shell ---------- */
+.app { min-height: 100dvh; display: flex; flex-direction: column; }
+.mbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 4px; }
+.brand { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 900; font-size: 22px; letter-spacing: -.03em; }
+.icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; color: var(--ink); }
+.icon-btn:hover { background: var(--surface-2); }
+.side { display: none; }
+main { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 12px 16px 104px; }
+.tabs { position: fixed; inset: auto 0 0 0; z-index: 20; display: flex; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+.tabs .tab { flex: 1; min-height: 62px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.tab .pill { display: grid; place-items: center; width: 52px; height: 30px; border-radius: 10px; transition: background .2s ease; }
+.tab[aria-current] { color: var(--ink); }
+.tab[aria-current] .pill { background: var(--primary); color: var(--on-primary); }
+
+@media (min-width: 768px) {
+  .app { display: grid; grid-template-columns: 92px minmax(0, 1fr); }
+  .mbar, .tabs { display: none; }
+  .side { display: flex; flex-direction: column; align-items: center; gap: 20px; position: sticky; top: 0; height: 100dvh; padding: 24px 10px; background: var(--surface-2); }
+  .side .brand span { display: none; }
+  .side nav { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+  .side .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-radius: 14px; font-size: 12px; font-weight: 600; color: var(--ink-2); width: 100%; }
+  .side .tab:hover { color: var(--ink); }
+  .side .new span, .side .gallery span { display: none; }
+  .side .new { width: 52px; padding: 0; }
+  .side .foot { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  main { padding: 32px 28px 56px; }
+}
+@media (min-width: 1100px) {
+  .app { grid-template-columns: 252px minmax(0, 1fr); }
+  .side { align-items: stretch; padding: 28px 18px; }
+  .side .brand { padding: 0 10px; }
+  .side .brand span { display: inline; }
+  .side .tab { flex-direction: row; gap: 10px; padding: 4px 10px 4px 4px; font-size: 15px; min-height: 48px; }
+  .side .tab .pill { width: 40px; height: 40px; border-radius: 12px; }
+  .side .tab[aria-current] { background: var(--surface); }
+  .side .new { width: auto; padding: 0 16px; }
+  .side .new span, .side .gallery span { display: inline; }
+  .side .foot { flex-direction: row; justify-content: space-between; }
+  main { padding: 40px 44px 64px; }
+}
+
+/* ---------- Primitives ---------- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1.5px solid var(--line); font-size: 15px; font-weight: 600; white-space: nowrap; transition: background .15s ease, transform .1s ease; }
+.btn:hover { background: var(--surface-2); }
+.btn:active { transform: scale(.98); }
+.btn.primary { background: var(--primary); color: var(--on-primary); border-color: transparent; }
+.btn.primary:hover { opacity: .9; }
+.btn.quiet { border-color: transparent; }
+.btn.danger { color: var(--danger); border-color: transparent; }
+.btn.block { width: 100%; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; }
+.eyebrow { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: 28px; line-height: 1.15; letter-spacing: -.02em; }
+h2 { font-family: var(--font-display); font-weight: 800; font-size: 20px; line-height: 1.2; letter-spacing: -.01em; }
+.muted { color: var(--ink-2); }
+.small { font-size: 14px; }
+.head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.sec-head a { font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; min-height: 44px; display: inline-flex; align-items: center; }
+.stack { display: flex; flex-direction: column; gap: 32px; }
+.meter { height: 12px; border-radius: 999px; background: var(--meter-track); overflow: hidden; }
+.meter span { display: block; height: 100%; border-radius: 999px; background: var(--meter-fill); }
+.mock-note { margin-top: 40px; font-size: 13px; color: var(--ink-2); }
+.mock-note a { text-decoration: underline; }
+.win-dot { width: 14px; height: 14px; border-radius: 5px; background: var(--st); flex: none; }
+
+/* ---------- Home ---------- */
+.home { display: grid; gap: 32px; }
+@media (min-width: 1100px) { .home { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 48px; align-items: start; } }
+.hero .figure { font-family: var(--font-display); font-weight: 800; font-size: clamp(44px, 12vw, 68px); line-height: 1; letter-spacing: -.035em; margin: 6px 0 8px; }
+.hero .meter { margin: 18px 0 14px; }
+.hero-stats { display: flex; flex-wrap: wrap; gap: 8px 28px; }
+.hero-stats dt { font-size: 13px; color: var(--ink-2); }
+.hero-stats dd { font-weight: 600; }
+
+.houses { display: grid; gap: 28px; }
+.house { --roof-h: 44px; position: relative; padding-top: var(--roof-h); margin: 0 3px; }
+.house .roof { position: absolute; top: 0; left: 0; width: 100%; height: var(--roof-h); overflow: visible; }
+.house .roof polyline { fill: none; stroke: var(--house); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.house .chimney { position: absolute; top: calc(var(--roof-h) * .72 - 27px); right: 15%; width: 14px; height: 17px; border-radius: 4px; background: var(--house); }
+.house-body { position: relative; padding: 0 16px 18px; }
+.house-body::before, .house-body::after { content: ""; position: absolute; top: 0; bottom: 0; width: 6px; border-radius: 0 0 3px 3px; background: var(--house); }
+.house-body::before { left: -3px; }
+.house-body::after { right: -3px; }
+.house-name { text-align: center; margin-top: -14px; }
+.house-name h3 { font-family: var(--font-display); font-weight: 800; font-size: 18px; line-height: 1.2; }
+.house-name p { font-size: 13px; color: var(--ink-2); }
+.windows { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 132px)); justify-content: center; gap: 8px; margin-top: 14px; }
+.win { width: 100%; text-align: left; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; min-height: 96px; aspect-ratio: 1; padding: 10px 12px; border-radius: 16px; background: var(--win-ok); color: var(--win-ink); transition: transform .15s ease, box-shadow .15s ease; }
+a.win:hover, button.win:hover { transform: translateY(-2px); box-shadow: 0 6px 0 -2px color-mix(in srgb, var(--house) 22%, transparent); }
+.win.partial { background: var(--win-partial); }
+.win.overdue { background: var(--win-late); color: var(--win-late-ink); }
+.win.vacant, .win.add { background: transparent; border: 2px dashed var(--line); color: var(--ink-2); }
+.win b { display: block; font-family: var(--font-display); font-weight: 800; font-size: 15px; line-height: 1.2; }
+.win .who { display: block; font-size: 13px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.win .state { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; line-height: 1.2; }
+.win.add { align-items: center; justify-content: center; text-align: center; font-size: 13px; font-weight: 600; width: 100%; }
+.windows.detailed { grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); }
+.houses.street { grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); gap: 40px 36px; margin-top: 28px; }
+.windows.detailed .win { aspect-ratio: auto; min-height: 148px; padding: 14px; }
+.windows.detailed .rent { font-family: var(--font-display); font-weight: 800; font-size: 18px; }
+.windows.detailed .who { white-space: normal; }
+
+.owed { display: grid; gap: 10px; }
+.owed-card { padding: 14px; display: grid; gap: 12px; }
+.owed-main { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; border-radius: 10px; }
+.owed-main .who { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.owed-main .amt { font-family: var(--font-display); font-weight: 800; font-size: 18px; }
+.owed-main .meta { grid-column: 2 / 4; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.owed-actions { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+.rows { overflow: hidden; container-type: inline-size; }
+.row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; padding: 12px 14px; min-height: 60px; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+a.row:hover { background: var(--surface-2); }
+.row .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .s { grid-column: 2; font-size: 14px; color: var(--ink-2); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.row .a { grid-row: 1 / 3; grid-column: 3; text-align: right; font-weight: 600; }
+.row .a small { display: block; font-size: 12px; font-weight: 400; color: var(--ink-2); }
+.row .lead { grid-row: 1 / 3; }
+.ok-ic { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--st-paid-bg); color: var(--st-paid-ink); }
+
+/* ---------- Bills ---------- */
+.filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px; }
+.chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--line); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.chip[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); border-color: transparent; }
+.select { min-height: 44px; padding: 0 36px 0 14px; border-radius: 999px; border: 1.5px solid var(--line); background: transparent; font-size: 14px; font-weight: 600; appearance: none; background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%); background-position: calc(100% - 19px) 19px, calc(100% - 14px) 19px; background-size: 5px 5px; background-repeat: no-repeat; }
+.month { margin-bottom: 28px; }
+.month-head { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: baseline; margin-bottom: 10px; }
+.month-head .meter { grid-column: 1 / 3; height: 6px; }
+.empty { padding: 32px 16px; text-align: center; color: var(--ink-2); }
+@media (min-width: 768px) { .chips { margin: 0; padding: 2px; } }
+@container (min-width: 560px) {
+  .row { grid-template-columns: auto minmax(0, 1.4fr) minmax(0, 1fr) auto; padding: 12px 18px; }
+  .row .s { grid-column: 3; grid-row: 1; }
+  .row .a, .row .lead { grid-row: 1; }
+  .row .a { grid-column: 4; min-width: 120px; }
+}
+
+/* ---------- Bill detail ---------- */
+.back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.detail { display: grid; gap: 20px; }
+@media (min-width: 1000px) { .detail { grid-template-columns: minmax(0, 1.25fr) minmax(300px, 1fr); gap: 32px; align-items: start; } .detail .aside { order: 2; } }
+.aside { display: grid; gap: 20px; }
+.balance { padding: 20px; display: grid; gap: 14px; }
+.balance .figure { font-family: var(--font-display); font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -.03em; }
+.balance .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.paper { padding: 22px 20px; display: grid; gap: 20px; }
+.paper-head { display: flex; align-items: center; gap: 12px; }
+.paper-head .no { font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1.1; }
+.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+.meta-grid dt { font-size: 12px; color: var(--ink-2); }
+.meta-grid dd { font-weight: 500; font-size: 15px; }
+.items { width: 100%; border-collapse: collapse; font-size: 15px; }
+.items td, .items th { padding: 10px 0; border-top: 1px solid var(--line); text-align: left; font-weight: 400; }
+.items td:last-child, .items th:last-child { text-align: right; white-space: nowrap; }
+.items tfoot th { font-family: var(--font-display); font-weight: 800; font-size: 18px; border-top: 2px solid var(--ink); }
+.timeline { padding: 18px 20px; }
+.timeline li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; padding-bottom: 16px; position: relative; }
+.timeline li:last-child { padding-bottom: 0; }
+.timeline li:not(:last-child)::before { content: ""; position: absolute; left: 13px; top: 30px; bottom: 2px; width: 2px; border-radius: 2px; background: var(--line); }
+.timeline .dot { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--st-bg, var(--surface-2)); color: var(--st-ink, var(--ink)); }
+.timeline p { font-weight: 500; font-size: 15px; }
+.timeline small { font-size: 13px; color: var(--ink-2); }
+
+/* ---------- Payment sheet ---------- */
+.scrim { position: fixed; inset: 0; z-index: 40; background: var(--scrim); animation: fade .2s ease; }
+.sheet { position: fixed; z-index: 50; left: 0; right: 0; bottom: 0; max-height: 92dvh; overflow-y: auto; padding: 10px 20px calc(20px + env(safe-area-inset-bottom)); background: var(--surface); border-radius: 26px 26px 0 0; animation: rise .28s cubic-bezier(.2, .8, .2, 1); }
+.sheet::before { content: ""; display: block; width: 44px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 14px; }
+.sheet-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+.form { display: grid; gap: 18px; }
+.field { display: grid; gap: 6px; }
+.field label, .field legend { font-size: 14px; font-weight: 600; padding: 0; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.input { width: 100%; min-height: 48px; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--bg); font-size: 16px; }
+.input.amount { min-height: 64px; font-family: var(--font-display); font-weight: 800; font-size: 30px; letter-spacing: -.02em; }
+.hint { font-size: 13px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+.hint.st-paid, .hint.st-partial { color: var(--st-ink); font-weight: 600; }
+.seg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.seg label { position: relative; display: flex; align-items: center; justify-content: center; min-height: 46px; border-radius: 12px; border: 1.5px solid var(--line); font-size: 14px; font-weight: 600; }
+.seg input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.seg label:has(input:checked) { background: var(--primary); color: var(--on-primary); border-color: transparent; }
+.seg label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.drop { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 14px; border-radius: 12px; border: 2px dashed var(--line); font-size: 14px; font-weight: 500; color: var(--ink-2); width: 100%; }
+.switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; font-size: 15px; font-weight: 500; }
+.switch { position: relative; width: 48px; height: 28px; flex: none; }
+.switch input { position: absolute; inset: 0; opacity: 0; cursor: pointer; margin: 0; }
+.switch span { position: absolute; inset: 0; border-radius: 999px; background: var(--line); transition: background .2s ease; pointer-events: none; }
+.switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--surface); transition: transform .2s ease; }
+.switch input:checked + span { background: var(--st-paid); }
+.switch input:checked + span::after { transform: translateX(20px); }
+.switch input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+.sheet-foot { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
+@keyframes fade { from { opacity: 0; } }
+@keyframes rise { from { transform: translateY(40px); opacity: 0; } }
+@media (min-width: 768px) {
+  .sheet { left: 50%; right: auto; bottom: auto; top: 50%; width: 480px; max-height: 90dvh; transform: translate(-50%, -50%); border-radius: 26px; padding: 26px; animation: pop .22s ease; }
+  .sheet::before { display: none; }
+  .seg { grid-template-columns: repeat(4, 1fr); }
+  @keyframes pop { from { opacity: 0; transform: translate(-50%, -48%); } }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="mbar">
+    <a class="brand" href="#home" aria-label="Arrendi, inicio"><span data-mark></span>Arrendi</a>
+    <button class="icon-btn" data-act="theme"><span data-icon></span></button>
+  </header>
+  <aside class="side">
+    <a class="brand" href="#home" aria-label="Arrendi, inicio"><i data-mark></i><span>Arrendi</span></a>
+    <nav aria-label="Principal" data-nav></nav>
+    <button class="btn primary new" aria-label="Nueva cuenta" data-act="toast" data-msg="Crear una cuenta manual no hace parte de este mock"><i data-plus></i><span>Nueva cuenta</span></button>
+    <div class="foot">
+      <a class="btn quiet gallery small" href="index.html" title="Ver las tres propuestas"><i data-back></i><span>Propuestas</span></a>
+      <button class="icon-btn" data-act="theme"><span data-icon></span></button>
+    </div>
+  </aside>
+  <main id="view" tabindex="-1"></main>
+  <nav class="tabs" aria-label="Principal" data-nav></nav>
+</div>
+<div id="overlay"></div>
+
+<script>
+/* ---------- Sample data: same in the three proposals. Shapes follow the API (SummaryResponse, BillResponse, PropertyResponse). ---------- */
+const TODAY = '2026-10-11';
+const PERIOD = '2026-10';
+const OWNER = { name: 'Carolina Vélez Ruiz', first: 'Carolina', doc: 'C.C. 52.418.907', bank: 'Bancolombia · Ahorros 123-456789-01', nequi: 'Nequi 310 555 0142' };
+const PROPERTIES = [
+  { id: 'p1', name: 'Casa La Soledad', address: 'Cra 24 # 39-18', city: 'Bogotá', type: 'Casa' },
+  { id: 'p2', name: 'Edificio Chapinero', address: 'Cl 57 # 9-40', city: 'Bogotá', type: 'Edificio' },
+];
+const UNITS = [
+  { id: 'u1', p: 'p1', name: 'Apto 101', use: 'Vivienda', tenant: 'Marta Ríos', short: 'Marta', doc: 'C.C. 39.781.220', rent: 1450000, day: 5 },
+  { id: 'u2', p: 'p1', name: 'Apto 201', use: 'Vivienda', tenant: 'Julián Pardo', short: 'Julián', doc: 'C.C. 1.018.442.731', rent: 1300000, day: 15 },
+  { id: 'u3', p: 'p1', name: 'Local 1', use: 'Comercial', tenant: 'Panadería El Trigal SAS', short: 'El Trigal', doc: 'NIT 901.234.567-8', rent: 2100000, day: 5 },
+  { id: 'u4', p: 'p2', name: 'Apto 302', use: 'Vivienda', tenant: 'Laura Gómez', short: 'Laura', doc: 'C.C. 52.990.114', rent: 1800000, day: 5 },
+  { id: 'u5', p: 'p2', name: 'Apto 303', use: 'Vivienda', tenant: null },
+  { id: 'u6', p: 'p2', name: 'Apto 401', use: 'Vivienda', tenant: 'Andrés Molina', short: 'Andrés', doc: 'C.C. 80.214.667', rent: 1650000, day: 20 },
+];
+/* The active lease of each rented unit: what the contract screen shows. */
+const LEASES = {
+  u1: { email: 'marta.rios@correo.co', start: '2025-03-01', end: '2027-02-28', auto: true, doc: 'Contrato Apto 101.pdf' },
+  u2: { email: 'julian.pardo@correo.co', start: '2026-01-15', end: '2027-01-14', auto: true, doc: 'Contrato Apto 201.pdf' },
+  u3: { email: 'pagos@eltrigal.co', start: '2024-08-01', end: '2027-07-31', auto: true, doc: 'Contrato Local 1.pdf' },
+  u4: { email: 'laura.gomez@correo.co', start: '2025-11-01', end: '2026-10-31', auto: true, doc: null },
+  u6: { email: 'andres.molina@correo', start: '2026-06-20', end: '2027-06-19', auto: false, doc: 'Contrato Apto 401.pdf' },
+};
+const METHODS = { transfer: 'Transferencia', nequi: 'Nequi', cash: 'Efectivo', other: 'Otro' };
+const STATUS = {
+  pending: { label: 'Pendiente', icon: 'clock' },
+  partial: { label: 'Parcial', icon: 'half' },
+  paid: { label: 'Pagada', icon: 'check' },
+  overdue: { label: 'Vencida', icon: 'alert' },
+  voided: { label: 'Anulada', icon: 'ban' },
+};
+const UNIT_STATUS = {
+  up_to_date: { label: 'Al día', icon: 'check', st: 'paid' },
+  partial: { label: 'Pago parcial', icon: 'half', st: 'partial' },
+  overdue: { label: 'En mora', icon: 'alert', st: 'overdue' },
+  vacant: { label: 'Disponible', icon: 'key', st: 'voided' },
+};
+
+const pad = (n) => String(n).padStart(2, '0');
+const unitById = (id) => UNITS.find((u) => u.id === id);
+const propById = (id) => PROPERTIES.find((p) => p.id === id);
+const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const pesos = (n) => '$' + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const dayMonth = (d) => `${+d.slice(8)} ${MONTHS[+d.slice(5, 7) - 1].slice(0, 3)}`;
+const fullDate = (d) => `${dayMonth(d)} ${d.slice(0, 4)}`;
+const monthName = (p) => MONTHS[+p.slice(5, 7) - 1];
+const monthTitle = (p) => `${monthName(p)[0].toUpperCase()}${monthName(p).slice(1)} ${p.slice(0, 4)}`;
+const billNo = (n) => 'N.º ' + String(n).padStart(4, '0');
+const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 864e5);
+const addDays = (d, n) => new Date(new Date(d).getTime() + n * 864e5).toISOString().slice(0, 10);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function recompute(b) {
+  const paid = b.payments.reduce((s, p) => s + p.amount, 0);
+  b.balance = b.total - paid;
+  if (b.status === 'voided') return b;
+  b.status = b.balance <= 0 ? 'paid' : b.due < TODAY ? 'overdue' : paid > 0 ? 'partial' : 'pending';
+  return b;
+}
+function makeBill(number, unitId, period, payments, opts = {}) {
+  const u = unitById(unitId);
+  const due = `${period}-${pad(u.day)}`;
+  const items = unitId === 'u3'
+    ? [{ desc: `Canon de arrendamiento · ${monthName(period)} ${period.slice(0, 4)}`, amount: 1950000 }, { desc: 'Administración', amount: 150000 }]
+    : [{ desc: `Canon de arrendamiento · ${monthName(period)} ${period.slice(0, 4)}`, amount: u.rent }];
+  return recompute({ id: number, number, unit: unitId, period, issue: `${period}-01`, due, total: u.rent, items, payments, bounced: !!opts.bounced, status: 'pending' });
+}
+const BILLS = [];
+(() => {
+  const plan = { u1: ['04', 'transfer'], u2: ['14', 'nequi'], u3: ['05', 'transfer'], u4: ['05', 'nequi'], u6: ['19', 'cash'] };
+  let n = 31;
+  for (const period of ['2026-08', '2026-09']) {
+    for (const u of UNITS.filter((x) => x.tenant)) {
+      const [d, method] = plan[u.id];
+      BILLS.push(makeBill(n++, u.id, period, [{ date: `${period}-${d}`, amount: u.rent, method, proof: method !== 'cash' }]));
+    }
+  }
+  BILLS.push(makeBill(41, 'u1', PERIOD, [{ date: '2026-10-03', amount: 1450000, method: 'transfer', proof: true }]));
+  BILLS.push(makeBill(42, 'u2', PERIOD, [{ date: '2026-10-08', amount: 600000, method: 'nequi', proof: true }]));
+  BILLS.push(makeBill(43, 'u3', PERIOD, []));
+  BILLS.push(makeBill(44, 'u4', PERIOD, [{ date: '2026-10-05', amount: 1800000, method: 'nequi', proof: true }]));
+  BILLS.push(makeBill(45, 'u6', PERIOD, [], { bounced: true }));
+})();
+const billById = (id) => BILLS.find((b) => b.id === +id);
+const billUnit = (b) => unitById(b.unit);
+const lastPayment = (b) => b.payments[b.payments.length - 1];
+const PERIODS = () => [...new Set(BILLS.map((b) => b.period))].sort().reverse();
+const isOpen = (b) => ['pending', 'partial', 'overdue'].includes(b.status);
+const URGENCY = { overdue: 0, partial: 1, pending: 2, paid: 3, voided: 4 };
+const byUrgency = (a, b) => URGENCY[a.status] - URGENCY[b.status] || a.due.localeCompare(b.due);
+
+function unitStatus(u) {
+  if (!u.tenant) return 'vacant';
+  const mine = BILLS.filter((b) => b.unit === u.id);
+  if (mine.some((b) => b.status === 'overdue')) return 'overdue';
+  if (mine.some((b) => b.status === 'partial')) return 'partial';
+  return 'up_to_date';
+}
+const currentBill = (u) => BILLS.find((b) => b.unit === u.id && b.period === PERIOD);
+
+/** The month at a glance, like GET /summary. `segments` splits `expected` by what happened to each peso. */
+function summary(period = PERIOD) {
+  const bills = BILLS.filter((b) => b.period === period && b.status !== 'voided');
+  const sum = (list, f) => list.reduce((s, b) => s + f(b), 0);
+  const expected = sum(bills, (b) => b.total);
+  const collected = sum(bills, (b) => b.total - b.balance);
+  const of = (st) => sum(bills.filter((b) => b.status === st), (b) => b.balance);
+  return {
+    period, expected, collected, pending: expected - collected,
+    percent: expected ? Math.round((collected / expected) * 100) : 0,
+    segments: [
+      { key: 'paid', label: 'Recaudado', value: collected },
+      { key: 'partial', label: 'Saldo de abonos', value: of('partial') },
+      { key: 'pending', label: 'Por vencer', value: of('pending') },
+      { key: 'overdue', label: 'Vencido', value: of('overdue') },
+    ],
+    unitsTotal: UNITS.length,
+    unitsOverdue: UNITS.filter((u) => unitStatus(u) === 'overdue').length,
+    receivable: bills.filter(isOpen).sort(byUrgency),
+    paid: bills.filter((b) => b.status === 'paid'),
+    bounced: bills.filter((b) => b.bounced && isOpen(b)),
+  };
+}
+function owedDetail(b) {
+  if (b.status === 'overdue') { const d = daysBetween(b.due, TODAY); return d === 1 ? 'hace 1 día' : `hace ${d} días`; }
+  if (b.status === 'partial') return `abonó ${pesos(b.total - b.balance)}`;
+  return `vence el ${dayMonth(b.due)}`;
+}
+/* Hours as 'HH:MM' in America/Bogota. The daily task sends at 7:00; a payment carries the hour it was registered. */
+const SEND_TIME = '07:00';
+const sampleTime = (amount) => `${pad(8 + (Math.floor(amount / 50000) % 10))}:${pad(Math.floor(amount / 1000) % 60)}`;
+const clock = (t) => { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${pad(m)} ${h < 12 ? 'a. m.' : 'p. m.'}`; };
+const nowTime = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit' });
+/** Sends and payments of a bill, oldest first. */
+function timeline(b) {
+  const u = billUnit(b);
+  const ev = [{ date: b.issue, time: SEND_TIME, icon: b.bounced ? 'alert' : 'mail', text: b.bounced ? 'El correo de la cuenta rebotó' : 'Cuenta enviada por correo', tone: b.bounced ? 'overdue' : '' }];
+  const lateBy = daysBetween(b.due, TODAY);
+  const paidOn = b.balance <= 0 ? lastPayment(b).date : null;
+  if (lateBy >= 1 && (!paidOn || paidOn > b.due)) ev.push({ date: addDays(b.due, 1), time: SEND_TIME, icon: 'bell', text: 'Primer recordatorio enviado', tone: '' });
+  if (lateBy >= 7 && (!paidOn || paidOn > addDays(b.due, 6))) ev.push({ date: addDays(b.due, 7), time: SEND_TIME, icon: 'bell', text: 'Segundo recordatorio enviado', tone: '' });
+  for (const p of b.payments) ev.push({ date: p.date, time: p.time || sampleTime(p.amount), icon: 'check', text: `Pago de ${pesos(p.amount)} · ${METHODS[p.method].toLowerCase()}`, sub: `Recibo enviado a ${u.short}`, tone: 'paid' });
+  return ev.sort((a, c) => (a.date + a.time).localeCompare(c.date + c.time));
+}
+function registerPayment(id, amount, method, date = TODAY) {
+  const b = billById(id);
+  b.payments.push({ date, time: nowTime(), amount: Math.min(amount, b.balance), method, proof: false });
+  return recompute(b);
+}
+const parsePesos = (s) => +String(s).replace(/\D/g, '') || 0;
+
+/* ---------- Icons (Lucide) and brand mark ---------- */
+const ICONS = {
+  home: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  bills: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+  building: '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/>',
+  settings: '<path d="M21 4h-7"/><path d="M10 4H3"/><path d="M21 12h-9"/><path d="M8 12H3"/><path d="M21 20h-5"/><path d="M12 20H3"/><path d="M14 2v4"/><path d="M8 10v4"/><path d="M16 18v4"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  ban: '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
+  half: '<circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor" stroke="none"/>',
+  key: '<path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/>',
+  send: '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+  upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  back: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  chevron: '<path d="m9 18 6-6-6-6"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+  moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  mail: '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  bell: '<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>',
+  cash: '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+  erase: '<path d="M10 5a2 2 0 0 0-1.344.519l-6.328 5.74a1 1 0 0 0 0 1.481l6.328 5.741A2 2 0 0 0 10 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="m12 9 6 6"/><path d="m18 9-6 6"/>',
+  pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+  clip: '<path d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551"/>',
+};
+const ic = (name, size = 20, sw = 2) => `<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
+/** The isotipo, from arrendi-logo.svg. The house takes `currentColor`; the windows stay brand green. */
+const mark = (size = 32) => `<svg aria-hidden="true" width="${size}" height="${Math.round(size * 0.83)}" viewBox="18 6 172 142"><g fill="currentColor"><rect x="137" y="12" width="28" height="50" rx="6"/><path d="M159.5 130.5V81.72L103.56 39.46 48.5 81.66V130.5a13.5 13.5 0 0 1-27 0V75a13.5 13.5 0 0 1 5.29-10.71l68.5-52.5.46-.34a13.5 13.5 0 0 1 15.89.28l69.5 52.5A13.5 13.5 0 0 1 186.5 75v55.5a13.5 13.5 0 0 1-27 0Z"/></g><g fill="#28B779"><rect x="77" y="85" width="25" height="25" rx="5.5"/><rect x="106" y="85" width="25" height="25" rx="5.5"/><rect x="77" y="114" width="25" height="25" rx="5.5"/><rect x="106" y="114" width="25" height="25" rx="5.5"/></g></svg>`;
+const badge = (status) => `<span class="badge st-${status}">${ic(STATUS[status].icon, 13, 2.5)}${STATUS[status].label}</span>`;
+
+/* ---------- Theme, toast, routing ---------- */
+const QUERY = new URLSearchParams(location.search);
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem('arrendi-mock-theme', theme); } catch (e) { /* private mode */ }
+  document.querySelectorAll('[data-act="theme"]').forEach((b) => {
+    b.setAttribute('aria-label', theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro');
+    const slot = b.querySelector('[data-icon]');
+    if (slot) slot.innerHTML = ic(theme === 'dark' ? 'sun' : 'moon', 20);
+  });
+}
+function initTheme() {
+  let stored = null;
+  try { stored = localStorage.getItem('arrendi-mock-theme'); } catch (e) { /* private mode */ }
+  setTheme(QUERY.get('theme') || stored || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+}
+let toastTimer;
+function toast(message) {
+  let el = document.getElementById('toast');
+  if (!el) { el = document.createElement('div'); el.id = 'toast'; el.setAttribute('role', 'status'); document.body.append(el); }
+  el.textContent = message;
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), 2800);
+}
+const parseHash = (h) => { const [name, arg] = (h.replace(/^#/, '') || 'home').split('/'); return { name, arg, hash: `${name}${arg ? '/' + arg : ''}` }; };
+let ROUTE = parseHash(location.hash);
+let PREV = null;
+/** Each proposal defines `render()` and may define `onAct(action, element)`. */
+function start() {
+  initTheme();
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-act]');
+    if (!t) return;
+    const act = t.dataset.act;
+    if (act === 'theme') { setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); return; }
+    if (act === 'toast') { toast(t.dataset.msg); return; }
+    if (act === 'remind') { toast(`Recordatorio enviado a ${billUnit(billById(t.dataset.id)).short}`); return; }
+    if (typeof onAct === 'function') onAct(act, t, e);
+  });
+  window.addEventListener('hashchange', () => {
+    PREV = ROUTE; ROUTE = parseHash(location.hash);
+    render();
+    setTheme(document.documentElement.dataset.theme);
+  });
+  render();
+  setTheme(document.documentElement.dataset.theme);
+}
+
+
+/* ---------- Proposal A · Ventanas ---------- */
+const NAV = [['home', 'Inicio', 'home'], ['bills', 'Cuentas', 'bills'], ['properties', 'Inmuebles', 'building'], ['settings', 'Ajustes', 'settings']];
+const SECTION = { home: 'home', bills: 'bills', bill: 'bills', properties: 'properties' };
+const FILTER = { status: 'all', unit: 'all' };
+const STATUS_FILTERS = [['all', 'Todas', () => true], ['open', 'Por cobrar', isOpen], ['overdue', 'Vencidas', (b) => b.status === 'overdue'], ['paid', 'Pagadas', (b) => b.status === 'paid']];
+let UNDER = null;
+
+function navHTML(current) {
+  return NAV.map(([key, label, icon]) => key === 'settings'
+    ? `<button class="tab" data-act="toast" data-msg="Ajustes no hace parte de este mock"><span class="pill">${ic(icon, 22)}</span>${label}</button>`
+    : `<a class="tab" href="#${key}" ${current === key ? 'aria-current="page"' : ''}><span class="pill">${ic(icon, 22)}</span>${label}</a>`).join('');
+}
+
+/** A property drawn as the house of the logo: every unit is a window lit by its status. */
+function house(p, detailed) {
+  const units = UNITS.filter((u) => u.p === p.id);
+  const windows = units.map((u) => {
+    const key = unitStatus(u);
+    const s = UNIT_STATUS[key];
+    const bill = currentBill(u);
+    const cls = key === 'up_to_date' ? '' : key;
+    if (!u.tenant) {
+      return `<li><button class="win vacant" data-act="toast" data-msg="Crear contrato no hace parte de este mock"><span><b>${u.name}</b><span class="who">${detailed ? u.use + ' · sin contrato' : 'Sin contrato'}</span></span><span class="state">${ic(s.icon, 14, 2.5)}${s.label}</span></button></li>`;
+    }
+    const state = bill && bill.status === 'overdue' ? `${daysBetween(bill.due, TODAY)} días en mora` : bill && bill.status === 'partial' ? `Debe ${pesos(bill.balance)}` : s.label;
+    const body = detailed
+      ? `<span><b>${u.name}</b><span class="who">${u.tenant}</span></span><span><span class="rent num">${pesos(u.rent)}</span><span class="who">${u.use} · paga el día ${u.day}</span></span>`
+      : `<span><b>${u.name}</b><span class="who">${u.short}</span></span>`;
+    return `<li><a class="win ${cls}" href="#bill/${bill.id}" aria-label="${u.name}, ${u.tenant}, ${state}">${body}<span class="state">${ic(s.icon, 14, 2.5)}${state}</span></a></li>`;
+  }).join('');
+  const add = detailed ? `<li><button class="win add" data-act="toast" data-msg="Agregar unidad no hace parte de este mock">${ic('plus', 22)}Agregar unidad</button></li>` : '';
+  return `<article class="house" aria-label="${p.name}">
+    <svg class="roof" viewBox="0 0 100 44" preserveAspectRatio="none" aria-hidden="true"><polyline points="0,44 50,3 100,44"/></svg><span class="chimney"></span>
+    <div class="house-body">
+      <div class="house-name"><h3>${p.name}</h3><p>${p.address} · ${p.city}</p></div>
+      <ul class="windows ${detailed ? 'detailed' : ''}">${windows}${add}</ul>
+    </div>
+  </article>`;
+}
+
+const owedCard = (b) => {
+  const u = billUnit(b);
+  return `<li class="card owed-card st-${b.status}">
+    <a class="owed-main" href="#bill/${b.id}">
+      <span class="win-dot"></span><span class="who">${u.name} · ${u.tenant}</span><span class="amt num">${pesos(b.balance)}</span>
+      <span class="meta">${badge(b.status)}<span>${owedDetail(b)}</span></span>
+    </a>
+    <div class="owed-actions">
+      ${b.status === 'overdue' ? `<button class="btn" data-act="remind" data-id="${b.id}">${ic('bell', 18)}Recordar</button>` : ''}
+      <a class="btn primary" href="#pay/${b.id}">Registrar pago</a>
+    </div>
+  </li>`;
+};
+const billRow = (b) => {
+  const u = billUnit(b);
+  const owes = isOpen(b) && b.balance < b.total;
+  return `<a class="row st-${b.status}" href="#bill/${b.id}">
+    <span class="win-dot lead"></span>
+    <span class="t">${u.name} · ${u.tenant}</span>
+    <span class="s">${badge(b.status)}<span class="num">${billNo(b.number)} · vence ${dayMonth(b.due)}</span></span>
+    <span class="a num">${pesos(isOpen(b) ? b.balance : b.total)}${owes ? '<small>saldo</small>' : ''}</span>
+  </a>`;
+};
+
+const SCREENS = {
+  home() {
+    const s = summary();
+    return `<div class="home">
+      <div class="stack">
+        <section class="hero" aria-label="Resumen del mes">
+          <p class="muted small">Hola, ${OWNER.first} · domingo 11 de octubre</p>
+          <h1 class="sr-only">Inicio</h1>
+          <p class="eyebrow" style="margin-top:18px">Recaudado en ${monthName(s.period)}</p>
+          <p class="figure num">${pesos(s.collected)}</p>
+          <p class="muted">de <span class="num">${pesos(s.expected)}</span> esperados</p>
+          <div class="meter" role="img" aria-label="${s.percent} % recaudado"><span style="width:${s.percent}%"></span></div>
+          <dl class="hero-stats">
+            <div><dt>Recaudo</dt><dd class="num">${s.percent} %</dd></div>
+            <div><dt>Pendiente</dt><dd class="num">${pesos(s.pending)}</dd></div>
+            <div><dt>En mora</dt><dd>${s.unitsOverdue} de ${s.unitsTotal} unidades</dd></div>
+          </dl>
+        </section>
+        <section aria-labelledby="h-houses">
+          <div class="sec-head"><h2 id="h-houses">Tus inmuebles</h2><a href="#properties">Ver todo</a></div>
+          <div class="houses">${PROPERTIES.map((p) => house(p, false)).join('')}</div>
+        </section>
+      </div>
+      <div class="stack">
+        <section aria-labelledby="h-owed">
+          <div class="sec-head"><h2 id="h-owed">Por cobrar</h2><span class="muted small num">${s.receivable.length} ${s.receivable.length === 1 ? 'cuenta' : 'cuentas'}</span></div>
+          ${s.receivable.length ? `<ul class="owed">${s.receivable.map(owedCard).join('')}</ul>` : `<p class="card empty">Todo cobrado. No hay cuentas pendientes este mes.</p>`}
+        </section>
+        <section aria-labelledby="h-paid">
+          <div class="sec-head"><h2 id="h-paid">Pagadas este mes</h2><a href="#bills">Todas las cuentas</a></div>
+          <div class="card rows">${s.paid.map((b) => { const u = billUnit(b), p = lastPayment(b); return `<a class="row" href="#bill/${b.id}"><span class="ok-ic lead">${ic('check', 16, 2.5)}</span><span class="t">${u.name} · ${u.tenant}</span><span class="s">${dayMonth(p.date)} · ${METHODS[p.method].toLowerCase()}</span><span class="a num">${pesos(b.total)}</span></a>`; }).join('')}</div>
+        </section>
+      </div>
+    </div>`;
+  },
+
+  bills() {
+    const match = STATUS_FILTERS.find((f) => f[0] === FILTER.status)[2];
+    const months = PERIODS().map((period) => {
+      const list = BILLS.filter((b) => b.period === period && match(b) && (FILTER.unit === 'all' || b.unit === FILTER.unit)).sort(byUrgency);
+      if (!list.length) return '';
+      const s = summary(period);
+      return `<section class="month" aria-label="${monthTitle(period)}">
+        <div class="month-head"><h2>${monthTitle(period)}</h2><span class="small muted num">${pesos(s.collected)} de ${pesos(s.expected)}</span>
+          <div class="meter" role="img" aria-label="${s.percent} % recaudado"><span style="width:${s.percent}%"></span></div></div>
+        <div class="card rows">${list.map(billRow).join('')}</div>
+      </section>`;
+    }).join('');
+    return `<div class="head"><h1>Cuentas</h1><button class="btn primary" data-act="toast" data-msg="Crear una cuenta manual no hace parte de este mock">${ic('plus', 18)}Nueva cuenta</button></div>
+      <div class="filters">
+        <div class="chips" role="group" aria-label="Filtrar por estado">${STATUS_FILTERS.map(([k, l]) => `<button class="chip" data-act="filter" data-status="${k}" aria-pressed="${FILTER.status === k}">${l}</button>`).join('')}</div>
+        <label class="sr-only" for="f-unit">Filtrar por unidad</label>
+        <select class="select" id="f-unit" data-filter-unit><option value="all">Todas las unidades</option>${UNITS.filter((u) => u.tenant).map((u) => `<option value="${u.id}" ${FILTER.unit === u.id ? 'selected' : ''}>${u.name}</option>`).join('')}</select>
+      </div>
+      ${months || `<p class="card empty">No hay cuentas con ese filtro.</p>`}`;
+  },
+
+  bill(id) {
+    const b = billById(id) || billById(43);
+    const u = billUnit(b), p = propById(u.p);
+    const open = isOpen(b);
+    const line = b.status === 'paid' ? `Pagada el ${dayMonth(lastPayment(b).date)}` : b.status === 'overdue' ? `Venció el ${dayMonth(b.due)} · ${owedDetail(b)}` : `Vence el ${dayMonth(b.due)}`;
+    return `<a class="back" href="#bills">${ic('back', 18)}Cuentas</a>
+      <div class="head"><div><h1>Cuenta ${billNo(b.number)}</h1><p class="muted">${u.name} · ${u.tenant}</p></div>${badge(b.status)}</div>
+      <div class="detail">
+        <div class="aside">
+          <section class="card balance st-${b.status}" aria-label="Saldo">
+            <div><p class="eyebrow">${open ? 'Saldo por cobrar' : 'Total pagado'}</p><p class="figure num">${pesos(open ? b.balance : b.total)}</p></div>
+            <p class="small muted">${line}${open && b.balance < b.total ? ` · abonó ${pesos(b.total - b.balance)}` : ''}</p>
+            ${open ? `<a class="btn primary block" href="#pay/${b.id}">Registrar pago</a>` : ''}
+            <div class="two">
+              <button class="btn" data-act="toast" data-msg="Cuenta reenviada a ${u.short}">${ic('send', 18)}Reenviar</button>
+              <button class="btn" data-act="toast" data-msg="Descargando ${billNo(b.number)}.pdf">${ic('download', 18)}PDF</button>
+            </div>
+            ${open ? (b.payments.length ? `<p class="hint">${ic('ban', 14)}No se puede anular: ya tiene pagos.</p>` : `<button class="btn danger" data-act="toast" data-msg="Anular pide confirmación; no hace parte de este mock">Anular cuenta</button>`) : ''}
+          </section>
+          <section aria-labelledby="h-tl">
+            <div class="sec-head"><h2 id="h-tl">Historial</h2></div>
+            <ol class="card timeline">${timeline(b).map((e) => `<li class="${e.tone ? 'st-' + e.tone : ''}"><span class="dot">${ic(e.icon, 15, 2.5)}</span><div><p>${e.text}</p><small>${fullDate(e.date)}${e.sub ? ' · ' + e.sub : ''}</small></div></li>`).join('')}</ol>
+          </section>
+        </div>
+        <article class="card paper" aria-label="Documento">
+          <div class="paper-head">${mark(44)}<div><p class="eyebrow">Cuenta de cobro</p><p class="no num">${billNo(b.number)}</p></div></div>
+          <dl class="meta-grid">
+            <div><dt>Arrendador</dt><dd>${OWNER.name}</dd><dd class="small muted">${OWNER.doc}</dd></div>
+            <div><dt>Arrendatario</dt><dd>${u.tenant}</dd><dd class="small muted">${u.doc}</dd></div>
+            <div><dt>Inmueble</dt><dd>${p.name} · ${u.name}</dd></div>
+            <div><dt>Periodo</dt><dd>${monthTitle(b.period)}</dd></div>
+            <div><dt>Emisión</dt><dd class="num">${fullDate(b.issue)}</dd></div>
+            <div><dt>Vencimiento</dt><dd class="num">${fullDate(b.due)}</dd></div>
+          </dl>
+          <table class="items">
+            <tbody>${b.items.map((i) => `<tr><td>${i.desc}</td><td class="num">${pesos(i.amount)}</td></tr>`).join('')}</tbody>
+            <tfoot><tr><th scope="row">Total</th><th class="num">${pesos(b.total)}</th></tr></tfoot>
+          </table>
+          <p class="small muted">Pagar a ${OWNER.bank} · ${OWNER.nequi}</p>
+        </article>
+      </div>`;
+  },
+
+  properties() {
+    return `<div class="head"><div><h1>Inmuebles</h1><p class="muted">${PROPERTIES.length} inmuebles · ${UNITS.length} unidades · ${UNITS.filter((u) => !u.tenant).length} disponible</p></div>
+      <button class="btn primary" data-act="toast" data-msg="Agregar inmueble no hace parte de este mock">${ic('plus', 18)}Agregar inmueble</button></div>
+      <div class="houses street">${PROPERTIES.map((p) => house(p, true)).join('')}</div>`;
+  },
+};
+
+function paySheet(id) {
+  const b = billById(id), u = billUnit(b);
+  return `<div class="scrim" data-act="close"></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pay-title">
+      <div class="sheet-head"><div><h2 id="pay-title">Registrar pago</h2><p class="small muted">${u.name} · ${u.tenant} · ${billNo(b.number)}</p></div>
+        <button class="icon-btn" data-act="close" aria-label="Cerrar">${ic('x', 22)}</button></div>
+      <form class="form" id="pay-form" data-id="${b.id}">
+        <div class="field"><label for="pay-amount">Valor recibido</label>
+          <input class="input amount num" id="pay-amount" inputmode="numeric" autocomplete="off" value="${pesos(b.balance)}">
+          <p class="hint" id="pay-hint" aria-live="polite"></p></div>
+        <div class="field"><label for="pay-date">Fecha del pago</label><input class="input" id="pay-date" type="date" value="${TODAY}" max="${TODAY}"></div>
+        <fieldset class="field"><legend>Medio de pago</legend>
+          <div class="seg">${Object.entries(METHODS).map(([k, l], i) => `<label><input type="radio" name="method" value="${k}" ${i === 0 ? 'checked' : ''}>${l}</label>`).join('')}</div></fieldset>
+        <div class="field"><span class="small" style="font-weight:600">Comprobante <span class="muted" style="font-weight:400">(opcional)</span></span>
+          <button type="button" class="drop" data-act="toast" data-msg="Aquí se adjunta un PDF, JPG o PNG">${ic('clip', 18)}Adjuntar foto o PDF</button></div>
+        <label class="switch-row">Enviar recibo a ${u.short}<span class="switch"><input type="checkbox" checked><span></span></span></label>
+        <div class="sheet-foot"><button type="button" class="btn" data-act="close">Cancelar</button><button class="btn primary">Guardar pago</button></div>
+      </form>
+    </div>`;
+}
+function payHint() {
+  const form = document.getElementById('pay-form');
+  if (!form) return;
+  const b = billById(form.dataset.id);
+  const input = document.getElementById('pay-amount');
+  const value = Math.min(parsePesos(input.value), b.balance);
+  input.value = value ? pesos(value) : '';
+  const hint = document.getElementById('pay-hint');
+  const left = b.balance - value;
+  hint.className = 'hint ' + (value && !left ? 'st-paid' : value ? 'st-partial' : '');
+  hint.innerHTML = !value ? `Saldo de la cuenta: ${pesos(b.balance)}` : left ? `${ic('half', 14)}Abono. Queda un saldo de ${pesos(left)}` : `${ic('check', 14, 2.5)}La cuenta queda pagada`;
+}
+
+function render() {
+  let route = ROUTE;
+  const paying = route.name === 'pay' && billById(route.arg) && isOpen(billById(route.arg));
+  if (route.name === 'pay') {
+    if (!UNDER || (PREV && PREV.name !== 'pay')) UNDER = PREV && PREV.name !== 'pay' ? PREV : parseHash('bill/' + route.arg);
+    route = UNDER;
+  }
+  const screen = SCREENS[route.name] ? route.name : 'home';
+  document.getElementById('view').innerHTML = SCREENS[screen](route.arg) + `<p class="mock-note">Mock · Propuesta A «Ventanas» · <a href="index.html">ver las tres propuestas</a></p>`;
+  document.querySelectorAll('[data-nav]').forEach((n) => { n.innerHTML = navHTML(SECTION[screen]); });
+  document.getElementById('overlay').innerHTML = paying ? paySheet(ROUTE.arg) : '';
+  if (paying) { payHint(); document.getElementById('pay-amount').focus(); }
+  else if (PREV && PREV.name !== 'pay') window.scrollTo(0, 0);
+}
+function closeSheet() { location.hash = UNDER ? UNDER.hash : 'home'; }
+function onAct(act, el) {
+  if (act === 'close') closeSheet();
+  if (act === 'filter') { FILTER.status = el.dataset.status; render(); }
+}
+document.addEventListener('change', (e) => { if (e.target.matches('[data-filter-unit]')) { FILTER.unit = e.target.value; render(); } });
+document.addEventListener('input', (e) => { if (e.target.id === 'pay-amount') payHint(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ROUTE.name === 'pay') closeSheet(); });
+document.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const amount = parsePesos(document.getElementById('pay-amount').value);
+  if (!amount) { toast('Escribe el valor recibido'); return; }
+  const b = registerPayment(form.dataset.id, amount, form.method.value, document.getElementById('pay-date').value);
+  toast(b.status === 'paid' ? `Pago guardado. ${billUnit(b).name} quedó al día` : `Abono guardado. Saldo: ${pesos(b.balance)}`);
+  closeSheet();
+});
+
+document.querySelectorAll('[data-mark]').forEach((el) => { el.outerHTML = mark(34); });
+document.querySelector('[data-plus]').outerHTML = ic('plus', 20);
+document.querySelector('[data-back]').outerHTML = ic('back', 18);
+start();
+</script>
+</body>
+</html>

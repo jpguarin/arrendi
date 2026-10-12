@@ -15,7 +15,7 @@ Guía de trabajo de la etapa 4 (correo y tarea diaria), ya cerrada. Las tareas y
 Tomadas el 11 de octubre de 2026:
 
 1. **Proveedor: Resend.** Por su API HTTP, sin SDK: se usa `httpx2`, como con Storage. El plan gratuito (unos 3.000 correos al mes y 100 al día, según páginas de terceros) sobra para el piloto; las cifras y la API se confirman en su documentación antes de configurar.
-2. **Todo al buzón de pruebas hasta la etapa 6, también en Producción.** Mientras `EMAIL_TEST_INBOX` tenga valor, todo correo va a ese buzón, con el destinatario real en el asunto. Fuera de producción la variable es obligatoria: sin ella no se envía nada. En la etapa 6, con el dominio propio, se quita de Producción. Hasta entonces el remitente es el de pruebas de Resend, que solo entrega al correo de la cuenta de Resend: ese debe ser el buzón de pruebas.
+2. **Todo al buzón de pruebas hasta la etapa 7, también en Producción.** Mientras `EMAIL_TEST_INBOX` tenga valor, todo correo va a ese buzón, con el destinatario real en el asunto. Fuera de producción la variable es obligatoria: sin ella no se envía nada. En la etapa 7, con el dominio propio, se quita de Producción. Hasta entonces el remitente es el de pruebas de Resend, que solo entrega al correo de la cuenta de Resend: ese debe ser el buzón de pruebas.
 3. **Lo generado a mano no se envía solo.** La cuenta que generas desde el contrato o como manual queda sin enviar, con el botón "Enviar" en su detalle. Solo la tarea diaria envía sola, y solo si el contrato tiene envío automático.
 
 ## Límites asumidos
@@ -52,7 +52,7 @@ En los pasos 2, 5 y 6 la prueba va primero.
 
 ### [x] Paso 1. Documentos al día
 
-- `docs/decisiones.md`: Resend, el desvío hasta la etapa 6 y el envío a mano; salen de "Pendientes" el proveedor y el dominio de envío (este pasa a la etapa 6).
+- `docs/decisiones.md`: Resend, el desvío hasta la etapa 7 y el envío a mano; salen de "Pendientes" el proveedor y el dominio de envío (este pasa a la etapa 7).
 - `docs/reglas-de-negocio.md`: lo generado a mano no se envía solo; recordatorios solo de cuentas enviadas; reintentos.
 - `docs/modelo-de-datos.md` (estado `pending`), `docs/api.md` (enviar, recordar, `settings` completo, tarea y aviso de rebotes), `docs/arquitectura.md` (entornos y variables de correo) y `CLAUDE.md` (este documento en la tabla).
 
