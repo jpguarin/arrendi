@@ -31,7 +31,7 @@ Dime si alguno no te sirve antes de empezar.
 - **Inicio sin selector de inmueble ni campana.** El mockup los trae, pero `GET /api/summary` es por propietario y las notificaciones push están fuera del MVP. Los correos rebotados se muestran como un aviso en el inicio, con enlace a la cuenta.
 - **Navegar entre meses:** el inicio muestra el mes en curso. `month` existe en la API, pero la web no trae selector de mes en esta etapa.
 - **Correo en Playwright:** la API corre sin proveedor configurado, así que el recibo queda "no se pudo enviar" y la prueba no lo marca. El correo ya está cubierto por pytest.
-- **Dependencias nuevas:** `@playwright/test` en `apps/e2e` (la prueba de extremo a extremo) y el componente `checkbox` de shadcn/ui ("Enviar recibo"), si el interruptor no encaja con el mockup.
+- **Dependencia nueva:** `@playwright/test` en `apps/e2e` (la prueba de extremo a extremo).
 
 ## Lo que haces tú
 
@@ -78,22 +78,22 @@ En los pasos 2 y 3 la prueba va primero.
 - `pnpm gen:api`.
 - **Se comprueba:** las cifras coinciden con las del listado del mismo mes; una deuda de un mes anterior aparece en "por cobrar" y no en el esperado; aislamiento.
 
-### [ ] Paso 6. Web: registrar pago
+### [x] Paso 6. Web: registrar pago
 
 - `/bills/[id]/payment` (mockup `Pago`): valor prellenado con el saldo, fecha de hoy, medio con `ToggleGroup`, comprobante opcional con `components/leases/DocumentPicker.tsx` y "Enviar recibo".
 - `lib/api/queries.ts`: `useRegisterPayment` y `useDeletePayment`, que actualizan la cuenta y marcan viejos el listado, el resumen, el contrato y los inmuebles.
 
-### [ ] Paso 7. Web: pagos en la cuenta y en el listado
+### [x] Paso 7. Web: pagos en la cuenta y en el listado
 
 - `components/bills/BillScreen.tsx`: "Registrar pago" como acción principal, saldo, pagos en la actividad con "ver comprobante" y eliminar con `AlertDialog`.
 - `components/bills/BillsScreen.tsx` y `BillRow.tsx`: "recaudado de total" en cada mes, y "saldo" y "pagó el" en cada fila.
 
-### [ ] Paso 8. Web: inicio
+### [x] Paso 8. Web: inicio
 
 - `components/HomeScreen.tsx` (mockup `Main`): `SummaryCard` con recaudado, esperado, barra de avance, pendiente y en mora; "Por cobrar" con "Enviar recordatorio" y "Registrar pago" en la primera fila vencida; "Pagadas"; aviso de correos rebotados; estado vacío. El cierre de sesión pasa a Ajustes.
-- Componente `progress` de shadcn/ui para la barra, o una barra propia si alcanza con Tailwind.
+- La barra de avance es propia, con Tailwind; no se agregó `progress` de shadcn/ui. "Enviar recibo" usa el interruptor que ya existía, no `checkbox`.
 
-### [ ] Paso 9. Web: estado de cada unidad
+### [x] Paso 9. Web: estado de cada unidad
 
 - `components/properties/PropertiesScreen.tsx`: "En mora" y "Pago parcial".
 - **Se comprueba (pasos 6 a 9):** ambos temas; el pago desde el inicio toma dos toques.

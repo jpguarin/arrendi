@@ -9,6 +9,7 @@ import { FormMessage } from "@/components/FormMessage";
 import { Header } from "@/components/Header";
 import { LoadError, Loading } from "@/components/LoadState";
 import { SelectField } from "@/components/SelectField";
+import { SignOutButton } from "@/components/SignOutButton";
 import { TextareaField } from "@/components/TextareaField";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { Button } from "@/components/ui/button";
@@ -214,6 +215,9 @@ export function SettingsScreen() {
               </h2>
               <ThemeSelector />
             </section>
+            <div className="grid pt-4">
+              <SignOutButton />
+            </div>
           </>
         ) : error ? (
           <LoadError message={errorMessage(error)} onRetry={refetch} />

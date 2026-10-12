@@ -150,8 +150,11 @@ Los íconos son de Lucide, que es la librería que usa shadcn/ui: de trazo, de 2
 - El selector de tema en configuración no aparece en el mockup; va como una sección más, "Apariencia".
 - En el contrato, "Próximo incremento" no se construye: el incremento anual está fuera del MVP.
 - En inmuebles, cada fila de unidad tiene además un botón de lápiz para editarla, que el mockup no trae. Una unidad vacía dice "Crear contrato" y lleva a crearlo.
-- En el listado de cuentas, el encabezado de cada mes muestra solo el total hasta que existan los pagos (etapa 5), y las pastillas de estado no llevan contador. Hay una pastilla más, "Anuladas".
-- En el detalle de cuenta, "Registrar pago" llega en la etapa 5. Mientras la cuenta no se haya enviado, la acción principal es "Enviar al arrendatario"; después aparecen "Enviar recordatorio" y "Reenviar". La actividad lista cada correo y dice si falló o rebotó.
+- En el listado de cuentas, las pastillas de estado no llevan contador y hay una más, "Anuladas".
+- En el detalle de cuenta hay una sección "Pagos" con el saldo, el comprobante de cada pago y un botón para eliminarlo. La actividad lista cada correo y dice si falló o rebotó. Bajo "Registrar pago" van "Enviar" o "Reenviar", "Recordar", "Descargar PDF" y "Anular".
 - En el contrato, la sección "Cuentas de cobro" tiene además el botón "Generar cuenta del mes".
 - En configuración, "Tus datos" y "Datos de pago" se editan en la misma pantalla, sin botón "Editar", y hay un selector de tipo de documento (cédula o NIT).
+- En el inicio no hay selector de inmueble ni campana: el resumen es de todos los inmuebles del propietario y las notificaciones push están fuera del MVP. Cada cuenta por cobrar trae "Registrar pago", y las vencidas además "Enviar recordatorio". Una línea dice cuánto se debe de meses anteriores, y los correos rebotados salen como un aviso.
+- En registrar pago, "Enviar recibo" es un interruptor en vez de una casilla.
+- El cierre de sesión está al final de configuración.
 - La marca visible es el nombre "Arrendi" en texto, en el acceso y en el pie del PDF. No hay logo todavía. El ícono de la aplicación instalada es provisional: una "A" blanca sobre el verde primario.

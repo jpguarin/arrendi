@@ -16,10 +16,14 @@ import { UNIT_USE_LABELS } from "@/lib/labels";
 type Property = components["schemas"]["PropertyResponse"];
 type Unit = components["schemas"]["UnitResponse"];
 
-// Until stage 5 a unit is only vacant or not; "En mora" and "Pago parcial" come with
-// the bills.
-const STATUS: Record<Unit["status"], { label: string; tone: "positive" | "neutral" }> = {
+// How each unit is doing, from what its active lease still owes.
+const STATUS: Record<
+  Unit["status"],
+  { label: string; tone: "positive" | "alert" | "info" | "neutral" }
+> = {
   up_to_date: { label: "Al día", tone: "positive" },
+  overdue: { label: "En mora", tone: "alert" },
+  partial: { label: "Pago parcial", tone: "info" },
   vacant: { label: "Vacía", tone: "neutral" },
 };
 
