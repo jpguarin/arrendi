@@ -43,6 +43,7 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 ### Reglas
 
 - **Inmutable:** una cuenta emitida no se edita. Si hay un error, se anula y se genera otra con consecutivo nuevo.
+- **Datos de pago:** al emitir, la cuenta toma los suyos si es manual y los trae; si no, los del contrato; si no, los de Ajustes. Quedan guardados en la cuenta: el PDF, la pantalla y todos sus correos muestran esos, aunque después cambien Ajustes o el contrato. La cuenta mensual, a mano o por la tarea diaria, empieza por los del contrato.
 - **Anulación:** solo si la cuenta no tiene pagos. La cuenta anulada conserva su consecutivo y su PDF.
 - **Consecutivo:** uno por propietario, creciente y sin saltos. Se asigna en la misma transacción que crea la cuenta, bloqueando la fila del propietario (`select ... for update`).
 - **Una por periodo:** no puede haber dos cuentas mensuales no anuladas del mismo contrato y periodo. Si se anula la del mes, se puede generar otra.

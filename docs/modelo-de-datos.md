@@ -58,7 +58,7 @@ El contrato es el centro: une una unidad con un arrendatario, y de él nacen las
 | `document_type` | text, por defecto `cc` | `cc` (cédula) o `nit`: qué es `document_number` |
 | `document_number` | text, nulo | Cédula o NIT |
 | `email` | text | |
-| `payment_details` | text, nulo | Texto libre que aparece en cada cuenta |
+| `payment_details` | text, nulo | Texto libre con los datos de pago. Es el valor por defecto: un contrato o una cuenta pueden llevar los suyos |
 | `send_day` | smallint, por defecto 1 | Entre 1 y 28 |
 | `reminder_1` | boolean, por defecto true | |
 | `reminder_2` | boolean, por defecto true | |
@@ -116,6 +116,7 @@ En esta tabla, `owner_id` es la propia columna `id`.
 | `deposit` | bigint, nulo | Cero o más |
 | `status` | text | `active`, `ended` |
 | `auto_send` | boolean, por defecto true | |
+| `payment_details` | text, nulo | Datos de pago propios del contrato. Nulo: sus cuentas usan los del propietario |
 | `document_path` | text, nulo | Ruta en el almacenamiento |
 | `document_uploaded_at` | timestamptz, nulo | |
 
@@ -135,6 +136,7 @@ Restricción: índice único parcial sobre `unit_id` donde `status = 'active'`. 
 | `due_date` | date | |
 | `total` | bigint | Mayor que cero |
 | `status` | text | `pending`, `partial`, `paid`, `overdue`, `voided` |
+| `payment_details` | text, nulo | Datos de pago con los que se emitió. Se fijan al emitir y no cambian |
 | `pdf_path` | text | |
 | `voided_at` | timestamptz, nulo | |
 
