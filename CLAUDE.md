@@ -140,6 +140,7 @@ alembic revision --autogenerate -m "descripcion"
 ## Forma de trabajo
 
 - Trabaja **una etapa a la vez**, en el orden de `docs/plan.md`. No adelantes etapas.
+- Cuando el pedido diga "new feature" o "nuevo feature", **crea una rama** `feat/<nombre-corto>` desde `main` antes de tocar código y trabaja ahí. No la fusiones ni la subas sin que te lo pidan. Los arreglos pequeños siguen directo en `main`.
 - Antes de escribir código en una etapa, **propón el plan** de archivos y pasos, y espera confirmación.
 - En lo delicado (consecutivo, estados, tarea diaria, aislamiento) **escribe primero la prueba**.
 - Las pruebas nunca se conectan a un proyecto de Supabase: usan `TEST_DATABASE_URL`, que apunta al PostgreSQL local.
