@@ -1,10 +1,9 @@
 "use client";
 
-import { FileText, Plus, Upload } from "lucide-react";
+import { FileText, Pencil, Plus, Upload } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 
-import { ActionFooter } from "@/components/ActionFooter";
 import { FormMessage } from "@/components/FormMessage";
 import { Header } from "@/components/Header";
 import { LoadError, Loading } from "@/components/LoadState";
@@ -19,6 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { BillStatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -43,7 +43,7 @@ import {
   formatPesos,
   todayInBogota,
 } from "@/lib/format";
-import { BILL_STATUS, DOCUMENT_TYPE_LABELS } from "@/lib/labels";
+import { DOCUMENT_TYPE_LABELS } from "@/lib/labels";
 
 type Lease = components["schemas"]["LeaseResponse"];
 
@@ -187,7 +187,6 @@ function BillsSection({
       {lease.recent_bills.length > 0 ? (
         <ul className="flex flex-col rounded-xl border border-border bg-card px-3.5">
           {lease.recent_bills.map((bill) => {
-            const status = BILL_STATUS[bill.status];
             return (
               <li key={bill.id} className="border-t border-border first:border-t-0">
                 <Link
@@ -201,7 +200,7 @@ function BillsSection({
                     · {formatBillNumber(bill.number)}
                   </span>
                   <span className="flex shrink-0 items-center gap-2.5">
-                    <Badge tone={status.tone}>{status.label}</Badge>
+                    <BillStatusBadge status={bill.status} />
                     <span className="text-section font-semibold">{formatPesos(bill.total)}</span>
                   </span>
                 </Link>
@@ -355,11 +354,20 @@ export function LeaseScreen({
             />
           </label>
         )}
-      </main>
-      <ActionFooter>
-        <div className={active ? "grid grid-cols-2 gap-2" : "grid"}>
+
+        {/* The changes to the lease itself go last, after everything there is to read. */}
+        <div className="flex flex-col gap-2 pt-2">
+          <Button asChild size="md">
+            <Link href={`/leases/${lease.id}/edit`}>
+              <Pencil aria-hidden className="size-4" />
+              Editar contrato
+            </Link>
+          </Button>
           <Button asChild variant="outline" size="md">
-            <Link href={`/leases/${lease.id}/edit`}>Editar contrato</Link>
+            <Link href={`/units/${lease.unit.id}/edit`}>
+              <Pencil aria-hidden className="size-4" />
+              Editar unidad
+            </Link>
           </Button>
           {active && (
             <AlertDialog>
@@ -389,7 +397,7 @@ export function LeaseScreen({
             </AlertDialog>
           )}
         </div>
-      </ActionFooter>
+      </main>
     </>
   );
 }

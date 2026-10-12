@@ -5,84 +5,110 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Colors from docs/diseno.md. Components use the Tailwind names from the @theme block,
- * never these values. The first group are the variables shadcn/ui expects, so its
- * components come out with Arrendi's look; the second group are Arrendi's own.
+ * Colors from docs/diseno.md, built on the brand of docs/new-brand-design. Components use
+ * the Tailwind names from the @theme block, never these values. The first group are the
+ * variables shadcn/ui expects, so its components come out with Arrendi's look; the
+ * second group are Arrendi's own.
  */
 :root {
-  --background: #f3f5f4;
-  --foreground: #14201c;
+  --background: #f5f6f9;
+  --foreground: #14264c;
   --card: #ffffff;
-  --card-foreground: #14201c;
+  --card-foreground: #14264c;
   --popover: #ffffff;
-  --popover-foreground: #14201c;
-  --primary: #0f6b4f;
-  --primary-foreground: #ffffff;
-  --secondary: #d9efe6;
-  --secondary-foreground: #0a4e3a;
-  --muted: #e1e6e3;
-  --muted-foreground: #55635e;
-  --accent: #d9efe6;
-  --accent-foreground: #0a4e3a;
-  --destructive: #8a3d06;
-  --border: #e1e6e3;
-  --input: #c9d1cd;
-  --ring: #0f6b4f;
-  --radius: 0.75rem;
+  --popover-foreground: #14264c;
+  --primary: #14264c;
+  --primary-foreground: #f4f1e8;
+  --secondary: #e9edf7;
+  --secondary-foreground: #14264c;
+  --muted: #eef0f5;
+  --muted-foreground: #55607a;
+  --accent: #e9edf7;
+  --accent-foreground: #14264c;
+  --destructive: #a3321e;
+  --border: #dfe3ec;
+  --input: #b8c0d2;
+  --ring: #2f4a94;
+  --radius: 0.625rem;
 
-  --surface: #ffffff;
-  --foreground-soft: #3a4743;
-  --border-dashed: #8e9a95;
-  --primary-strong: #0a4e3a;
-  --primary-tint: #d9efe6;
-  --alert: #8a3d06;
-  --alert-tint: #fbe6d4;
-  --info: #1d4e89;
-  --info-tint: #dce9f8;
+  --foreground-soft: #33456e;
+  --border-dashed: #8a93a8;
   /* Behind a dialog. */
-  --overlay: rgb(20 32 28 / 0.5);
-  /* The summary card looks the same in both themes. */
-  --summary: #0f6b4f;
-  --summary-inner: #0a4e3a;
-  --summary-foreground: #ffffff;
-  --summary-foreground-soft: #d6ede4;
+  --overlay: rgb(20 38 76 / 0.45);
+
+  /* The rail and the bottom bar: brand navy in both themes. */
+  --rail: #14264c;
+  --rail-foreground: #f4f1e8;
+  --rail-muted: #a9b3cc;
+  --rail-active: rgb(244 241 232 / 0.12);
+  --brand-green: #28b779;
+
+  /*
+   * Status. The bare name fills a mark (bar, dot, chart), `-ink` is text and `-tint` its
+   * background. Always with a label, never color alone.
+   */
+  --positive: #1fa36c;
+  --positive-ink: #14734b;
+  --positive-tint: #ddf3e8;
+  --warning: #d4951a;
+  --warning-ink: #7a5200;
+  --warning-tint: #ffefc9;
+  --info: #4c6fc4;
+  --info-ink: #2f4a94;
+  --info-tint: #e1e8f8;
+  --alert: #d2513a;
+  --alert-ink: #a3321e;
+  --alert-tint: #fadfd8;
+  --neutral: #8a90a0;
+  /* The collected bar of a chart. */
+  --chart-bar: #14264c;
 }
 
 .dark {
-  --background: #0f1513;
-  --foreground: #e8eeeb;
-  --card: #18201d;
-  --card-foreground: #e8eeeb;
-  --popover: #18201d;
-  --popover-foreground: #e8eeeb;
-  --primary: #3fb58e;
-  --primary-foreground: #06231a;
-  --secondary: #143b2e;
-  --secondary-foreground: #9fe0c8;
-  --muted: #26302c;
-  --muted-foreground: #a3b0ab;
-  --accent: #143b2e;
-  --accent-foreground: #9fe0c8;
-  --destructive: #f2a66b;
-  --border: #26302c;
-  --input: #6b7a73;
-  --ring: #3fb58e;
+  --background: #0a1122;
+  --foreground: #f4f1e8;
+  --card: #111b33;
+  --card-foreground: #f4f1e8;
+  --popover: #18243f;
+  --popover-foreground: #f4f1e8;
+  --primary: #f4f1e8;
+  --primary-foreground: #14264c;
+  --secondary: #1d2b4d;
+  --secondary-foreground: #f4f1e8;
+  --muted: #18243f;
+  --muted-foreground: #a9b3cc;
+  --accent: #1d2b4d;
+  --accent-foreground: #f4f1e8;
+  --destructive: #ff9d88;
+  --border: #26345a;
+  --input: #53648f;
+  --ring: #ffc857;
 
-  --surface: #18201d;
-  --foreground-soft: #c5cfcb;
-  --border-dashed: #8e9a95;
-  --primary-strong: #9fe0c8;
-  --primary-tint: #143b2e;
-  --alert: #f2a66b;
-  --alert-tint: #40240f;
-  --info: #8db8ec;
-  --info-tint: #15294a;
-  --overlay: rgb(0 0 0 / 0.65);
+  --foreground-soft: #cfd6e6;
+  --border-dashed: #7c87a3;
+  --overlay: rgb(4 8 18 / 0.7);
+
+  --rail: #0e1830;
+
+  --positive: #25a870;
+  --positive-ink: #6bddaa;
+  --positive-tint: rgb(37 168 112 / 0.18);
+  --warning: #c08618;
+  --warning-ink: #ffc857;
+  --warning-tint: rgb(255 200 87 / 0.15);
+  --info: #6485da;
+  --info-ink: #a9bef5;
+  --info-tint: rgb(100 133 218 / 0.2);
+  --alert: #e05f47;
+  --alert-ink: #ff9d88;
+  --alert-tint: rgb(224 95 71 / 0.2);
+  --neutral: #7c87a3;
+  --chart-bar: #8fa6e6;
 }
 
 @theme inline {
-  --font-sans: var(--font-figtree);
-  --font-heading: var(--font-figtree);
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-heading: var(--font-red-hat-display), var(--font-inter), system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -103,39 +129,50 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --color-surface: var(--surface);
   --color-foreground-soft: var(--foreground-soft);
   --color-border-dashed: var(--border-dashed);
-  --color-primary-strong: var(--primary-strong);
-  --color-primary-tint: var(--primary-tint);
-  --color-alert: var(--alert);
-  --color-alert-tint: var(--alert-tint);
-  --color-info: var(--info);
-  --color-info-tint: var(--info-tint);
   --color-overlay: var(--overlay);
-  --color-summary: var(--summary);
-  --color-summary-inner: var(--summary-inner);
-  --color-summary-foreground: var(--summary-foreground);
-  --color-summary-foreground-soft: var(--summary-foreground-soft);
+  --color-rail: var(--rail);
+  --color-rail-foreground: var(--rail-foreground);
+  --color-rail-muted: var(--rail-muted);
+  --color-rail-active: var(--rail-active);
+  --color-brand-green: var(--brand-green);
+  --color-positive: var(--positive);
+  --color-positive-ink: var(--positive-ink);
+  --color-positive-tint: var(--positive-tint);
+  --color-warning: var(--warning);
+  --color-warning-ink: var(--warning-ink);
+  --color-warning-tint: var(--warning-tint);
+  --color-info: var(--info);
+  --color-info-ink: var(--info-ink);
+  --color-info-tint: var(--info-tint);
+  --color-alert: var(--alert);
+  --color-alert-ink: var(--alert-ink);
+  --color-alert-tint: var(--alert-tint);
+  --color-neutral: var(--neutral);
+  --color-chart-bar: var(--chart-bar);
 
   /* Radii from docs/diseno.md. */
-  --radius-sm: 0.5rem; /* 8px: badges */
-  --radius-md: 0.625rem;
-  --radius-lg: 0.75rem; /* 12px: buttons and fields */
-  --radius-xl: 1rem; /* 16px: cards */
+  --radius-sm: 0.375rem; /* 6px: small marks */
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem; /* 10px: buttons and fields */
+  --radius-xl: 0.875rem; /* 14px: cards */
 
   /* Type scale from docs/diseno.md. */
-  --text-figure: 2.125rem; /* 34px: main figure on the home screen */
+  --text-figure: 2.125rem; /* 34px: the balance of a bill */
   --text-title-onboarding: 1.625rem; /* 26px */
-  --text-title: 1.375rem; /* 22px: screen title */
+  --text-title: 1.5rem; /* 24px: screen title */
   --text-title-back: 1.125rem; /* 18px: title next to a back button */
-  --text-body: 1rem; /* 16px: rows and buttons */
-  --text-section: 0.9375rem; /* 15px: section heading */
+  --text-kpi: 1.375rem; /* 22px: a figure of the summary */
+  --text-body: 1rem; /* 16px: fields and main buttons */
+  --text-section: 0.9375rem; /* 15px: rows */
   --text-support: 0.8125rem; /* 13px */
-  --text-badge: 0.75rem; /* 12px: status badge */
+  --text-badge: 0.75rem; /* 12px: status badge, column heading */
 
-  /* On desktop the content stays in one phone-sized column. */
+  /* Screens outside the shell (sign-in, onboarding) stay in one phone-sized column. */
   --container-app: 30rem;
+  /* The panel next to a list, from tablet up. */
+  --container-pane: 25.5rem;
 }
 
 @layer base {
@@ -150,6 +187,10 @@
   body {
     @apply bg-background text-foreground;
     font-variant-numeric: tabular-nums;
+  }
+
+  h1 {
+    @apply font-heading tracking-tight;
   }
 
   button:not(:disabled),

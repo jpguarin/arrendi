@@ -34,7 +34,7 @@ export function ThemeSelector() {
           aria-checked={mounted && theme === value}
           variant="outline"
           size="md"
-          className="aria-checked:border-primary aria-checked:bg-primary-tint aria-checked:text-primary-strong"
+          className="aria-checked:border-primary aria-checked:bg-primary aria-checked:text-primary-foreground"
           onClick={() => setTheme(value)}
         >
           <Icon aria-hidden />

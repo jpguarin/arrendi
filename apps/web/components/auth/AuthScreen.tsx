@@ -1,3 +1,5 @@
+import { Brand } from "@/components/Brand";
+
 type AuthScreenProps = {
   title: string;
   description?: string;
@@ -8,7 +10,7 @@ type AuthScreenProps = {
 export function AuthScreen({ title, description, children }: AuthScreenProps) {
   return (
     <main className="flex flex-1 flex-col gap-6 px-5 py-10">
-      <p className="text-title-back font-bold text-primary">Arrendi</p>
+      <Brand />
       <div className="flex flex-col gap-1">
         <h1 className="text-title font-bold">{title}</h1>
         {description && <p className="text-support text-muted-foreground">{description}</p>}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { Ban, Bell, Check, FilePlus2, type LucideIcon, Mail, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
+import { BillStatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
 import { openTemporaryLink } from "@/lib/api/documents";
@@ -35,13 +35,12 @@ import type { components } from "@/lib/api/schema";
 import {
   formatBillNumber,
   formatDate,
-  formatDateTime,
+  formatDateHour,
   formatLongDate,
   formatMonth,
   formatPesos,
 } from "@/lib/format";
 import {
-  BILL_STATUS,
   DELIVERY_PROBLEMS,
   DOCUMENT_TYPE_LABELS,
   type DocumentType,
@@ -111,6 +110,89 @@ function DocumentPreview({ bill }: { bill: Bill }) {
         Vence el {formatLongDate(bill.due_date)}
         {bill.issuer.payment_details && `\nPagar a: ${bill.issuer.payment_details}`}
       </p>
+    </section>
+  );
+}
+
+type Tone = "positive" | "alert" | "neutral";
+type Event = { key: string; at: string; Icon: LucideIcon; text: string; problem?: string; tone: Tone };
+
+const EVENT_TONES: Record<Tone, string> = {
+  positive: "bg-positive-tint text-positive-ink",
+  alert: "bg-alert-tint text-alert-ink",
+  neutral: "bg-muted text-foreground",
+};
+
+/** Everything that happened to the bill, oldest first: issued, emails, payments, voided. */
+function history(bill: Bill): Event[] {
+  const events: Event[] = [
+    { key: "created", at: bill.created_at, Icon: FilePlus2, text: "Generada", tone: "neutral" },
+  ];
+  for (const notification of bill.notifications) {
+    const failed =
+      notification.delivery_status === "failed" || notification.delivery_status === "bounced";
+    events.push({
+      key: notification.id,
+      at: notification.sent_at ?? notification.created_at,
+      Icon: notification.type.includes("reminder") ? Bell : Mail,
+      text: NOTIFICATION_LABELS[notification.type],
+      problem: DELIVERY_PROBLEMS[notification.delivery_status],
+      tone: failed ? "alert" : "neutral",
+    });
+  }
+  for (const payment of bill.payments) {
+    events.push({
+      key: payment.id,
+      at: payment.created_at,
+      Icon: Check,
+      text: `Pago de ${formatPesos(payment.amount)} · ${PAYMENT_METHOD_LABELS[payment.method].toLowerCase()}`,
+      tone: "positive",
+    });
+  }
+  if (bill.voided_at) {
+    events.push({ key: "voided", at: bill.voided_at, Icon: Ban, text: "Anulada", tone: "alert" });
+  }
+  return events.sort((a, b) => a.at.localeCompare(b.at));
+}
+
+/** The history of the bill as a timeline, each event with its date and hour. */
+function History({ bill }: { bill: Bill }) {
+  return (
+    <section aria-labelledby="activity" className="flex flex-col gap-3">
+      <h2 id="activity" className="text-section font-semibold">
+        Historial
+      </h2>
+      <ol className="flex flex-col">
+        {history(bill).map(({ key, at, Icon, text, problem, tone }) => (
+          <li
+            key={key}
+            className="relative grid grid-cols-[1.75rem_minmax(0,1fr)] gap-3 pb-4 not-last:before:absolute not-last:before:top-8 not-last:before:bottom-0.5 not-last:before:left-[0.8125rem] not-last:before:w-0.5 not-last:before:rounded-full not-last:before:bg-border last:pb-0"
+          >
+            <span className={cn("grid size-7 place-items-center rounded-lg", EVENT_TONES[tone])}>
+              <Icon aria-hidden strokeWidth={2.5} className="size-4" />
+            </span>
+            <div className="flex min-w-0 flex-col">
+              <p className="text-section font-medium">
+                {text}
+                {problem && (
+                  <span
+                    className={cn(
+                      "font-semibold",
+                      tone === "alert" ? "text-alert-ink" : "text-muted-foreground",
+                    )}
+                  >
+                    {" "}
+                    · {problem}
+                  </span>
+                )}
+              </p>
+              <time dateTime={at} className="text-support text-muted-foreground">
+                {formatDateHour(at)}
+              </time>
+            </div>
+          </li>
+        ))}
+      </ol>
     </section>
   );
 }
@@ -246,7 +328,6 @@ export function BillScreen({
     );
   }
 
-  const status = BILL_STATUS[bill.status];
   // A bill with payments is not voided; neither is one already voided.
   const voidable =
     (bill.status === "pending" || bill.status === "overdue") && bill.payments.length === 0;
@@ -298,7 +379,7 @@ export function BillScreen({
         subtitle={`${bill.unit_name} · ${bill.tenant_name}`}
         backHref={BACK}
       >
-        <Badge tone={status.tone}>{status.label}</Badge>
+        <BillStatusBadge status={bill.status} />
       </Header>
       <main className="flex flex-1 flex-col gap-4.5 px-5 pt-2 pb-6">
         {error && <FormMessage tone="error">{error}</FormMessage>}
@@ -312,6 +393,22 @@ export function BillScreen({
           </FormMessage>
         )}
 
+        {!voided && (
+          <section aria-label="Saldo" className="flex flex-col">
+            <p className="text-support text-muted-foreground">
+              {hasBalance ? "Saldo por cobrar" : "Total pagado"}
+            </p>
+            <p className="font-heading text-figure leading-tight font-extrabold tracking-tight">
+              {formatPesos(hasBalance ? bill.balance : bill.total)}
+            </p>
+            <p className="text-support text-muted-foreground">
+              {hasBalance ? `Vence el ${formatDate(bill.due_date)}` : "Cuenta al día"}
+              {hasBalance && bill.balance < bill.total &&
+                ` · abonó ${formatPesos(bill.total - bill.balance)}`}
+            </p>
+          </section>
+        )}
+
         <DocumentPreview bill={bill} />
 
         {bill.payments.length > 0 && (
@@ -323,50 +420,7 @@ export function BillScreen({
           />
         )}
 
-        <section aria-labelledby="activity" className="flex flex-col gap-2.5">
-          <h2 id="activity" className="text-section font-semibold">
-            Actividad
-          </h2>
-          {/* Newest first. */}
-          <ol className="flex flex-col gap-2.5 text-section">
-            {bill.voided_at && (
-              <li className="flex justify-between gap-3">
-                <span>Anulada</span>
-                <span className="text-muted-foreground">{formatDateTime(bill.voided_at)}</span>
-              </li>
-            )}
-            {bill.notifications.map((notification) => {
-              const problem = DELIVERY_PROBLEMS[notification.delivery_status];
-              return (
-                <li key={notification.id} className="flex justify-between gap-3">
-                  <span className="min-w-0">
-                    {NOTIFICATION_LABELS[notification.type]}
-                    {problem && (
-                      <span
-                        className={cn(
-                          "font-semibold",
-                          notification.delivery_status === "pending"
-                            ? "text-muted-foreground"
-                            : "text-alert",
-                        )}
-                      >
-                        {" "}
-                        · {problem}
-                      </span>
-                    )}
-                  </span>
-                  <span className="shrink-0 text-muted-foreground">
-                    {formatDateTime(notification.sent_at ?? notification.created_at)}
-                  </span>
-                </li>
-              );
-            })}
-            <li className="flex justify-between gap-3">
-              <span>Generada</span>
-              <span className="text-muted-foreground">{formatDateTime(bill.created_at)}</span>
-            </li>
-          </ol>
-        </section>
+        <History bill={bill} />
       </main>
       <ActionFooter>
         {hasBalance && (

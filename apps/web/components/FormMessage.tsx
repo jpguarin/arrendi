@@ -12,10 +12,10 @@ export function FormMessage({ tone, children }: FormMessageProps) {
       role={tone === "error" ? "alert" : "status"}
       className={cn(
         "rounded-lg px-3.5 py-3 text-support",
-        tone === "error" && "bg-alert-tint text-alert",
-        tone === "success" && "bg-primary-tint text-primary-strong",
+        tone === "error" && "bg-alert-tint text-alert-ink",
+        tone === "success" && "bg-positive-tint text-positive-ink",
         // Something the owner should know that is not a problem.
-        tone === "info" && "bg-info-tint text-info",
+        tone === "info" && "bg-info-tint text-info-ink",
       )}
     >
       {children}

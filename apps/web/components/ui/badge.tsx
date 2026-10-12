@@ -4,16 +4,18 @@ import { cn } from "@/lib/utils"
 
 // A status, always said with text (docs/diseno.md). The tone only supports it.
 const badgeVariants = cva(
-  "inline-flex h-6 w-fit shrink-0 items-center justify-center rounded-sm px-2 text-badge font-semibold whitespace-nowrap",
+  "inline-flex h-6 w-fit shrink-0 items-center justify-center gap-1 rounded-full px-2 text-badge font-semibold whitespace-nowrap [&_svg]:size-3.5 [&_svg]:shrink-0",
   {
     variants: {
       tone: {
         // Pagada, Al día, Activo.
-        positive: "bg-primary-tint text-primary-strong",
+        positive: "bg-positive-tint text-positive-ink",
         // Vencida, En mora.
-        alert: "bg-alert-tint text-alert",
-        // Parcial.
-        info: "bg-info-tint text-info",
+        alert: "bg-alert-tint text-alert-ink",
+        // Parcial, Pago parcial.
+        warning: "bg-warning-tint text-warning-ink",
+        // Pendiente.
+        info: "bg-info-tint text-info-ink",
         // Vacía, Terminado, Anulada.
         neutral: "bg-muted text-muted-foreground",
       },
