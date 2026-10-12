@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 // On a wide screen the list stays next to the open detail. It runs after the billing
 // cycle, on the bill that story leaves paid.
 
-test("the list keeps its filter while a bill opens and closes next to it", async ({ browser }) => {
+test("the list keeps its filter and follows the changes of the bill open next to it", async ({ browser }) => {
   const context = await browser.newContext({
     viewport: { width: 1360, height: 850 },
     baseURL: test.info().project.use.baseURL,
@@ -31,5 +31,16 @@ test("the list keeps its filter while a bill opens and closes next to it", async
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(page.getByRole("radio", { name: "Pagadas" })).toHaveAttribute("data-state", "on");
   await expect(page.getByRole("main")).toHaveCount(1);
+
+  // A change made in the detail reaches the list beside it without leaving the screen:
+  // with a payment removed the bill is no longer paid, so the filter drops it.
+  await page.getByRole("link", { name: /Apto 1 · Carlos Rojas/ }).click();
+  await page.getByRole("button", { name: "Eliminar el pago de $600.000" }).click();
+  await page.getByRole("button", { name: "Eliminar pago" }).click();
+  await expect(page.getByText("Saldo $600.000")).toBeVisible();
+  const list = page.getByRole("region", { name: "Lista" });
+  await expect(list.getByText("No hay cuentas con estos filtros.")).toBeVisible();
+  await list.getByRole("radio", { name: "Por cobrar" }).click();
+  await expect(list.getByRole("link", { name: /Apto 1 · Carlos Rojas/ })).toBeVisible();
   await context.close();
 });
