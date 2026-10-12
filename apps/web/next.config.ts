@@ -12,6 +12,8 @@ const apiUrl = withRelatedProject({
 });
 
 const nextConfig: NextConfig = {
+  // The end-to-end run builds into its own folder, next to a `pnpm dev` that is open.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   // CLAUDE.md is the only rules file for agents in this repository.
   agentRules: false,
   async rewrites() {

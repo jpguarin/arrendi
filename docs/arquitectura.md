@@ -220,6 +220,22 @@ Supabase retira las claves antiguas `anon` y `service_role` a finales de 2026; p
 - **Actualizaciones:** al publicar una versión nueva, la aplicación muestra el aviso "Hay una versión nueva de Arrendi." con el botón "Actualizar", y se recarga cuando el propietario lo toca. No se recarga sola, para no interrumpir un formulario a medias.
 - **Íconos:** provisionales, en `apps/web/public/icons/` y `apps/web/app/` (`icon.png`, `apple-icon.png`).
 
+## Pruebas de extremo a extremo
+
+`pnpm e2e` corre Playwright (`apps/e2e`) sin tocar Supabase, Resend ni `arrendi-dev`. Levanta tres procesos en puertos propios, para convivir con un `pnpm dev` abierto:
+
+| Proceso | Puerto | Qué es |
+| --- | --- | --- |
+| Supabase falso | 54399 | `apps/e2e/fakes/supabase.ts`: acceso y almacenamiento, en memoria |
+| API | 8100 | La API real, contra la base local `arrendi_e2e` con el rol `arrendi_api` |
+| Web | 3100 | `next dev`, compilando en `.next-e2e` |
+
+- **Acceso:** el servidor falso firma tokens ES256 con una clave que crea al arrancar y la publica por JWKS. La API y Next.js los verifican igual que los de Supabase; nada del código de la aplicación cambia para las pruebas. Acepta cualquier correo y contraseña.
+- **Base de datos:** antes de cada corrida, `apps/e2e/reset_db.py` crea `arrendi_e2e` si falta, la vacía y aplica las migraciones. Se niega a correr contra un servidor que no sea local.
+- **Almacenamiento:** el mismo servidor falso guarda los archivos en memoria e imita las rutas de Storage que usan la API y el navegador.
+- **Correo:** la API corre sin proveedor configurado y se niega a enviar. El correo se prueba en pytest.
+- Las pruebas corren con un celular simulado (Pixel 7), en español y en hora de Colombia.
+
 ## PDF
 
 - Una sola plantilla, construida con ReportLab (`apps/api/app/pdf/bill.py`), en tamaño carta y con Helvetica, que todo lector de PDF trae. Siempre en claro: el PDF no depende del tema de la aplicación.

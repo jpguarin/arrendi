@@ -31,7 +31,7 @@ Lee el documento que corresponda antes de tocar esa parte del sistema. Si el có
 - **Datos:** PostgreSQL en Supabase, con seguridad por fila. Supabase Storage para archivos.
 - **Acceso:** Supabase Auth, con Google y con correo y contraseña.
 - **PDF:** ReportLab. **Correo:** Resend, con plantillas en Jinja2.
-- **Pruebas:** pytest en la API, contra un PostgreSQL local instalado con Homebrew. En la web, las funciones puras de `lib/` se prueban con el ejecutor de pruebas de Node (`node --test`), sin dependencias. Playwright de extremo a extremo, desde la etapa 5.
+- **Pruebas:** pytest en la API, contra un PostgreSQL local instalado con Homebrew. En la web, las funciones puras de `lib/` se prueban con el ejecutor de pruebas de Node (`node --test`), sin dependencias. Playwright de extremo a extremo en `apps/e2e`, todo en local: la web, la API contra la base `arrendi_e2e` y un servidor que hace de Supabase (acceso y almacenamiento).
 - **Monorepo:** Turborepo con pnpm.
 - **Despliegue:** Vercel, dos proyectos (`arrendi-web` y `arrendi-api`) desde este repositorio. Sin Docker. La guía está en `docs/arquitectura.md`.
 
@@ -62,7 +62,10 @@ arrendi/
       components/ui/     componentes de shadcn/ui, adaptados al tema
       components/        componentes propios de Arrendi
       lib/api/           cliente y tipos generados desde OpenAPI
-    e2e/                 Playwright (se crea en la etapa 5)
+    e2e/                 Playwright
+      tests/             las pruebas de extremo a extremo
+      fakes/             servidor que hace de Supabase Auth y Storage
+      reset_db.py        deja vacía y migrada la base arrendi_e2e
   docs/
   package.json           scripts de la raíz
   pnpm-workspace.yaml
@@ -81,12 +84,14 @@ Estos comandos se crean en la etapa 1. Si alguno cambia, actualiza esta sección
 pnpm install
 cd apps/api && python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt -r requirements-dev.txt
+pnpm --filter e2e exec playwright install chromium   # el navegador de las pruebas de extremo a extremo
 
 # Todo el proyecto, con Turborepo (desde la raíz)
 pnpm dev             # web en :3000 y API en :8000; la web redirige /api a la API (sin service worker)
 pnpm lint            # ruff en la API, eslint en la web
 pnpm test            # pytest en la API (necesita el PostgreSQL local encendido) y las pruebas de la web
 pnpm build           # compila la web
+pnpm e2e             # Playwright: levanta todo en local, en puertos propios (necesita el PostgreSQL local)
 pnpm gen:api         # regenera apps/web/lib/api desde el OpenAPI de la API
 
 # Una sola aplicación

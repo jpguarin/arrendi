@@ -123,8 +123,8 @@ Objetivo: cerrar el ciclo de cobro.
 - [ ] Web: pantalla de registrar pago.
 - [ ] Web: pantalla de inicio.
 - [ ] Web: estado de cada unidad en inmuebles.
-- [ ] Playwright en `apps/e2e/` y el script `pnpm e2e`.
-- [ ] Prueba de extremo a extremo: alta, generación de cuenta, pago parcial y pago del saldo.
+- [x] Playwright en `apps/e2e/` y el script `pnpm e2e`.
+- [x] Prueba de extremo a extremo: alta, generación de cuenta, pago parcial y pago del saldo.
 - [x] Pruebas: transiciones de estado de `docs/reglas-de-negocio.md`, una por una.
 
 **Criterios de aceptación**

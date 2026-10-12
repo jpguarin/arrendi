@@ -10,7 +10,8 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "build": "turbo run build",
-    "gen:api": "turbo run gen:api"
+    "gen:api": "turbo run gen:api",
+    "e2e": "turbo run e2e"
   },
   "devDependencies": {
     "turbo": "^2.11.7"

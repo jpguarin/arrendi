@@ -33,6 +33,9 @@
       "dependsOn": [
         "api#gen:api"
       ]
+    },
+    "e2e": {
+      "cache": false
     }
   }
 }

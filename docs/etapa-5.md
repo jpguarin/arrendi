@@ -38,7 +38,7 @@ Dime si alguno no te sirve antes de empezar.
 | Cuándo | Qué | Dónde |
 | --- | --- | --- |
 | Después del paso 2 | `alembic upgrade head` (migración `0006`), antes de hacer push | `arrendi-dev` |
-| Una vez, antes del paso 10 | Crear la base local: `createdb arrendi_e2e` | Tu computador |
+| Una vez | Instalar el navegador de Playwright: `pnpm --filter e2e exec playwright install chromium`. La base `arrendi_e2e` se crea sola | Tu computador |
 | Al final | Recorrer los criterios de aceptación en local y en el iPhone | `arrendi-web.vercel.app` |
 
 No hay variables nuevas ni nada que configurar en Supabase, Resend o Vercel.
@@ -98,7 +98,7 @@ En los pasos 2 y 3 la prueba va primero.
 - `components/properties/PropertiesScreen.tsx`: "En mora" y "Pago parcial".
 - **Se comprueba (pasos 6 a 9):** ambos temas; el pago desde el inicio toma dos toques.
 
-### [ ] Paso 10. Playwright
+### [x] Paso 10. Playwright
 
 - `apps/e2e/`: `playwright.config.ts`, los dos servidores falsos (`fakes/auth.ts`, `fakes/storage.ts`) y la preparación de la base `arrendi_e2e` con las migraciones. Script `pnpm e2e` en la raíz y en `turbo.json`.
 - Consulto antes la documentación vigente de Playwright (`webServer`) y de `@supabase/ssr` (qué rutas de acceso llama el navegador).
