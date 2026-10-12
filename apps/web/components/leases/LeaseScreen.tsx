@@ -321,7 +321,20 @@ export function LeaseScreen({
           onChange={refresh}
         />
 
-        {active && settings && !settings.payment_details && (
+        {lease.payment_details && (
+          <section
+            aria-labelledby="lease-payment-details"
+            className="flex flex-col gap-0.5 rounded-xl border border-border bg-card p-4"
+          >
+            <h2 id="lease-payment-details" className="text-support text-muted-foreground">
+              Datos de pago de este contrato
+            </h2>
+            <p className="text-section break-words whitespace-pre-line text-foreground-soft">
+              {lease.payment_details}
+            </p>
+          </section>
+        )}
+        {active && settings && !settings.payment_details && !lease.payment_details && (
           <FormMessage tone="info">
             Tus cuentas saldrán sin datos de pago.{" "}
             <Link href="/settings" className="font-semibold underline">

@@ -86,7 +86,13 @@ export function NewLeaseScreen({ unitId }: { unitId: string | undefined }) {
       saving={leaving}
       error={create.error ? errorMessage(create.error) : undefined}
     >
-      <LeaseForm id={FORM_ID} showDeposit showTenantDocument onSubmit={onSubmit}>
+      <LeaseForm
+        id={FORM_ID}
+        showDeposit
+        showTenantDocument
+        showPaymentDetails
+        onSubmit={onSubmit}
+      >
         <DocumentPicker file={file} onChange={setFile} />
       </LeaseForm>
     </FormScreen>
@@ -125,6 +131,7 @@ export function EditLeaseScreen({ leaseId }: { leaseId: string }) {
         id={FORM_ID}
         showDeposit
         showTenantDocument
+        showPaymentDetails
         defaultValues={{
           tenant_name: lease.tenant.name,
           tenant_email: lease.tenant.email,
@@ -138,6 +145,7 @@ export function EditLeaseScreen({ leaseId }: { leaseId: string }) {
           start_date: lease.start_date,
           end_date: lease.end_date ?? "",
           deposit: lease.deposit,
+          payment_details: lease.payment_details ?? "",
         }}
         onSubmit={(values: LeaseValues) =>
           update.mutate(

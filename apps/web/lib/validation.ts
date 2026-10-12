@@ -11,3 +11,6 @@ export const requiredText = (message: string) =>
 
 /** A text the owner may leave empty. */
 export const optionalText = z.string().trim().max(200, "Usa 200 caracteres o menos.");
+
+/** How the owner gets paid: free text of several lines, which may be left empty. */
+export const paymentDetails = z.string().trim().max(500, "Usa 500 caracteres o menos.");

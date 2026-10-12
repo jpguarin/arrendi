@@ -7,6 +7,7 @@ import { z } from "zod";
 import { FormField } from "@/components/FormField";
 import { MoneyField } from "@/components/MoneyField";
 import { SelectField } from "@/components/SelectField";
+import { TextareaField } from "@/components/TextareaField";
 import { FieldLegend, FieldSet } from "@/components/ui/field";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
@@ -15,7 +16,7 @@ import {
   TENANT_DOCUMENT_TYPE,
   TENANT_DOCUMENT_TYPE_OPTIONS,
 } from "@/lib/labels";
-import { email, optionalText, requiredText } from "@/lib/validation";
+import { email, optionalText, paymentDetails, requiredText } from "@/lib/validation";
 
 const schema = z
   .object({
@@ -32,6 +33,7 @@ const schema = z
     start_date: z.string().min(1, "Elige la fecha de inicio."),
     end_date: z.string(),
     deposit: z.number().nullable(),
+    payment_details: paymentDetails,
   })
   // ISO dates compare as text.
   .refine((values) => !values.end_date || values.end_date > values.start_date, {
@@ -58,6 +60,7 @@ export function leaseTerms(values: LeaseValues) {
     start_date: values.start_date,
     end_date: values.end_date || null,
     deposit: values.deposit,
+    payment_details: values.payment_details || null,
   };
 }
 
@@ -70,6 +73,8 @@ type LeaseFormProps = {
   showDeposit?: boolean;
   /** The tenant's document, which the bill shows. The onboarding leaves it for later. */
   showTenantDocument?: boolean;
+  /** How to pay this lease's bills, when it is not as Ajustes says. */
+  showPaymentDetails?: boolean;
   onSubmit: (values: LeaseValues) => void | Promise<void>;
   /** Shown after the fields, inside the form: the document picker. */
   children?: React.ReactNode;
@@ -82,6 +87,7 @@ export function LeaseForm({
   defaultValues,
   showDeposit = false,
   showTenantDocument = false,
+  showPaymentDetails = false,
   onSubmit,
   children,
 }: LeaseFormProps) {
@@ -104,6 +110,7 @@ export function LeaseForm({
       start_date: "",
       end_date: "",
       deposit: null,
+      payment_details: "",
       ...defaultValues,
     },
   });
@@ -246,6 +253,17 @@ export function LeaseForm({
               error={errors.deposit?.message}
             />
           )}
+        />
+      )}
+      {showPaymentDetails && (
+        <TextareaField
+          id="payment_details"
+          label="Cómo te pagan (opcional)"
+          placeholder="Banco, tipo y número de cuenta, Nequi…"
+          description="Solo para las cuentas de este contrato. Si lo dejas vacío, se usan los de Ajustes."
+          rows={3}
+          error={errors.payment_details?.message}
+          {...register("payment_details")}
         />
       )}
       {children}

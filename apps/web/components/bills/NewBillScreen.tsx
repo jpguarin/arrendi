@@ -12,10 +12,11 @@ import { FormScreen, FormScreenFallback } from "@/components/FormScreen";
 import { LoadError, Loading } from "@/components/LoadState";
 import { MoneyField } from "@/components/MoneyField";
 import { SelectField } from "@/components/SelectField";
+import { TextareaField } from "@/components/TextareaField";
 import { Button } from "@/components/ui/button";
 import { errorMessage } from "@/lib/api/errors";
 import { useCreateBill, useProperties } from "@/lib/api/queries";
-import { requiredText } from "@/lib/validation";
+import { paymentDetails, requiredText } from "@/lib/validation";
 
 const FORM_ID = "bill";
 const TITLE = "Nueva cuenta de cobro";
@@ -28,6 +29,7 @@ const schema = z.object({
     .nullable()
     .refine((value) => value !== null && value > 0, "Escribe el valor."),
   due_date: z.string().min(1, "Elige la fecha de vencimiento."),
+  payment_details: paymentDetails,
 });
 type BillValues = z.infer<typeof schema>;
 
@@ -54,7 +56,13 @@ export function NewBillScreen({ leaseId }: { leaseId?: string }) {
     formState: { errors },
   } = useForm<BillValues>({
     resolver: zodResolver(schema),
-    defaultValues: { lease_id: leaseId ?? "", description: "", amount: null, due_date: "" },
+    defaultValues: {
+      lease_id: leaseId ?? "",
+      description: "",
+      amount: null,
+      due_date: "",
+      payment_details: "",
+    },
   });
 
   if (!properties) {
@@ -84,7 +92,13 @@ export function NewBillScreen({ leaseId }: { leaseId?: string }) {
 
   function submit(values: BillValues) {
     create.mutate(
-      { body: { ...values, amount: values.amount ?? 0 } },
+      {
+        body: {
+          ...values,
+          amount: values.amount ?? 0,
+          payment_details: values.payment_details || null,
+        },
+      },
       { onSuccess: (bill) => router.replace(`/bills/${bill.id}`) },
     );
   }
@@ -156,6 +170,15 @@ export function NewBillScreen({ leaseId }: { leaseId?: string }) {
             {...register("due_date")}
           />
         </div>
+        <TextareaField
+          id="payment_details"
+          label="Cómo te pagan (opcional)"
+          placeholder="Banco, tipo y número de cuenta, Nequi…"
+          description="Solo para esta cuenta. Si lo dejas vacío, se usan los del contrato o los de Ajustes."
+          rows={3}
+          error={errors.payment_details?.message}
+          {...register("payment_details")}
+        />
       </form>
     </FormScreen>
   );

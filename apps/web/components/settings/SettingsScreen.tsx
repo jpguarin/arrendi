@@ -20,7 +20,7 @@ import { errorMessage } from "@/lib/api/errors";
 import { useSettings, useUpdateSettings } from "@/lib/api/queries";
 import type { components } from "@/lib/api/schema";
 import { DOCUMENT_TYPE_OPTIONS, type DocumentType, SEND_DAY_OPTIONS } from "@/lib/labels";
-import { optionalText, requiredText } from "@/lib/validation";
+import { optionalText, paymentDetails, requiredText } from "@/lib/validation";
 
 type Settings = components["schemas"]["SettingsResponse"];
 
@@ -28,7 +28,7 @@ const schema = z.object({
   name: requiredText("Escribe tu nombre."),
   document_type: z.enum(["cc", "nit"]),
   document_number: optionalText,
-  payment_details: z.string().trim().max(500, "Usa 500 caracteres o menos."),
+  payment_details: paymentDetails,
   send_day: z.string().min(1),
   reminder_1: z.boolean(),
   reminder_2: z.boolean(),
@@ -141,7 +141,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
           id="payment_details"
           label="Cómo te pagan"
           placeholder="Banco, tipo y número de cuenta, Nequi…"
-          description="Aparece en cada cuenta de cobro, después de “Pagar a:”."
+          description="Aparece en cada cuenta de cobro, después de “Pagar a:”. Un contrato o una cuenta pueden llevar otros."
           rows={3}
           error={errors.payment_details?.message}
           {...register("payment_details")}
