@@ -21,7 +21,7 @@ Los mockups anteriores (`docs/mockups/`) quedan como registro y ya no guían el 
 | Amarillo | `#FFC857` | Foco en tema oscuro. Nunca como texto |
 | Marfil | `#F4F1E8` | Texto sobre navy, texto del tema oscuro |
 
-El logo tiene dos archivos en `docs/new-brand-design/`: `arrendi-logo.svg` (navy, para fondo claro) y `arrendi-logo-blanco.svg` (blanco, para fondo oscuro). Solo cambian de color; el trazo es el mismo. `components/Brand.tsx` dibuja ese trazo: `Brand` es el logo completo y `BrandMark` el isotipo solo. Por defecto siguen al tema (navy en claro, blanco en oscuro); con `tone="white"` quedan blancos, como en el riel. El PDF dibuja el logo navy con el mismo trazo (`app/pdf/logo.py`).
+El logo tiene dos archivos en `docs/new-brand-design/`: `arrendi-logo.svg` (navy, para fondo claro) y `arrendi-logo-blanco.svg` (blanco, para fondo oscuro). Solo cambian de color; el trazo es el mismo. `components/Brand.tsx` dibuja ese trazo: `Brand` es el logo completo y `BrandMark` el isotipo solo. Por defecto siguen al tema (navy en claro, blanco en oscuro); con `tone="white"` quedan blancos, como en el riel. El PDF dibuja el isotipo navy con el trazo de `isotype.svg` (`app/pdf/logo.py`).
 
 ## Colores
 
@@ -180,5 +180,5 @@ Línea de tiempo, de lo más antiguo a lo más reciente: generada, cada correo, 
 - El contrato conserva "Generar cuenta del mes", "Cobrar otro concepto" y el depósito.
 - En Cuentas, el filtro de estado no lleva contador y tiene "Anuladas" en lugar de "Vencidas".
 - En el resumen, una línea dice cuánto se debe de meses anteriores y los correos rebotados salen como aviso. En celular, los botones de cada cuenta por cobrar van bajo la fila, para registrar un pago en dos toques.
-- El PDF sigue en Helvetica, que trae todo lector de PDF: así no viaja ningún archivo de fuente con la API. Lleva la paleta de la marca, una franja navy arriba y el logo en el pie.
+- El PDF sigue en Helvetica, que trae todo lector de PDF: así no viaja ningún archivo de fuente con la API. Lleva la paleta de la marca, una franja navy arriba y el isotipo en el pie, sin el nombre, igual que los correos.
 - Los correos llevan la paleta de la marca, sin cabecera: son del arrendador. Al pie va el isotipo, centrado. Viaja dentro del correo como imagen incrustada (PNG de `isotype.svg`, en `app/email/assets/`), porque los lectores de correo no dibujan SVG. La versión de texto plano no nombra a Arrendi.

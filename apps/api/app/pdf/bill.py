@@ -14,7 +14,7 @@ from reportlab.lib.utils import simpleSplit
 from reportlab.pdfgen.canvas import FILL_NON_ZERO, Canvas
 
 from app.pdf.format import format_long_date, format_number, format_pesos
-from app.pdf.logo import BOX, GREEN_PATHS, INK_PATHS
+from app.pdf.logo import GREEN_PATHS, INK_PATHS, SIZE
 
 # The light palette of docs/diseno.md, on the brand of docs/new-brand-design.
 FOREGROUND = HexColor("#14264C")
@@ -103,13 +103,12 @@ def _trace(canvas: Canvas, data: str):
     return path
 
 
-def _logo(canvas: Canvas, x: float, y: float, height: float) -> None:
-    """The logo of the brand, with its bottom left corner at `x`, `y`."""
-    left, top, _, box_height = BOX
-    scale = height / box_height
+def _brand_mark(canvas: Canvas, x: float, y: float, height: float) -> None:
+    """The isotipo of the brand, with its bottom left corner at `x`, `y`."""
+    scale = height / SIZE[1]
     canvas.saveState()
-    # The logo measures from its top left corner, with `y` growing downwards.
-    canvas.translate(x - left * scale, y + (top + box_height) * scale)
+    # The isotipo measures from its top left corner, with `y` growing downwards.
+    canvas.translate(x, y + height)
     canvas.scale(scale, -scale)
     for color, paths in ((FOREGROUND, INK_PATHS), (BRAND_GREEN, GREEN_PATHS)):
         canvas.setFillColor(color)
@@ -210,9 +209,9 @@ def render_bill(bill: BillDocument) -> bytes:
         text_y -= 16
 
     # The brand, small at the foot: the bill is the owner's, Arrendi only issues it.
-    logo_height = 14
-    logo_width = BOX[2] * logo_height / BOX[3]
-    _logo(canvas, (WIDTH - logo_width) / 2, MARGIN / 2 - 2, logo_height)
+    mark_height = 16
+    mark_width = SIZE[0] * mark_height / SIZE[1]
+    _brand_mark(canvas, (WIDTH - mark_width) / 2, MARGIN / 2 - 4, mark_height)
 
     if bill.voided:
         # Across the page, so no copy of it passes for a bill still owed.
