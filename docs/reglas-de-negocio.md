@@ -9,7 +9,8 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 - **Periodo:** el mes que se cobra, guardado como el primer día de ese mes (`2026-10-01`).
 - **Emisión:** el día en que se genera.
 - **Vencimiento:** el `due_day` del contrato dentro del mes del periodo. El día de pago va de 1 a 28, así que siempre existe.
-- **Total:** el canon del contrato en el momento de generar. Un cambio posterior del canon no altera cuentas ya emitidas.
+- **Total:** la suma de sus conceptos. Casi siempre es solo el canon del contrato en el momento de generar. Un cambio posterior del canon no altera cuentas ya emitidas.
+- **Depósito:** si el contrato tiene depósito mayor que cero y `charge_deposit` encendido, su primera cuenta mensual lo cobra como un concepto aparte, después del canon. "Primera" quiere decir que el contrato no tiene otra cuenta mensual sin anular: si esa cuenta se anula, la que la reemplaza vuelve a cobrarlo. Las cuentas manuales no lo cobran ni cuentan como primera. Vale igual para la cuenta generada a mano y para la de la tarea diaria.
 
 ### Estados
 

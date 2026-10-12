@@ -32,6 +32,7 @@
 | Cuenta mensual a mano | `POST /api/leases/{id}/bills` genera la del mes en curso, con el mismo servicio que usa la tarea diaria |
 | Ajustes mínimo en la etapa 3 | Nombre, documento y datos de pago se adelantan a la etapa 3, porque el PDF los necesita. El resto de la configuración sigue en la etapa 4 |
 | Cuenta con vencimiento pasado | Nace `overdue`, sin esperar a la tarea diaria |
+| Depósito en la primera cuenta | El depósito del contrato se cobra una sola vez, como concepto aparte en la primera cuenta mensual, y el total es la suma. Un interruptor en el contrato lo apaga si el arrendatario ya lo pagó por fuera. Los contratos que existían antes quedaron apagados: su depósito se da por cobrado. En el inicio cuenta como cualquier cobro, dentro del total de la cuenta |
 | Datos de pago por contrato y por cuenta | Los de Ajustes son el valor por defecto. Un contrato puede llevar los suyos, al crearlo o al editarlo, y una cuenta manual los suyos. La cuenta guarda los que resultan al emitir (cuenta, contrato, Ajustes) y no cambian después. Las cuentas emitidas antes de esto quedaron con los de Ajustes de ese día |
 | Proveedor de correo | Resend, por su API HTTP con `httpx2`, sin SDK |
 | Correos hasta la etapa 7 | Todos van al buzón de pruebas (`EMAIL_TEST_INBOX`), también en Producción, con el destinatario real en el asunto. Con el dominio propio, la variable se quita de Producción |

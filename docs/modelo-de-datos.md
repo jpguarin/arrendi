@@ -114,6 +114,7 @@ En esta tabla, `owner_id` es la propia columna `id`.
 | `start_date` | date | |
 | `end_date` | date, nulo | Posterior a `start_date` |
 | `deposit` | bigint, nulo | Cero o más |
+| `charge_deposit` | boolean, por defecto false | Si la primera cuenta mensual cobra el depósito. La API lo enciende en los contratos nuevos, salvo que el propietario diga que no; los anteriores a esta columna quedaron en false |
 | `status` | text | `active`, `ended` |
 | `auto_send` | boolean, por defecto true | |
 | `payment_details` | text, nulo | Datos de pago propios del contrato. Nulo: sus cuentas usan los del propietario |
@@ -159,10 +160,11 @@ Permisos: `arrendi_api` y `arrendi_tasks` leen, crean y modifican cuentas (la ta
 | `bill_id` | uuid, FK | |
 | `description` | text | |
 | `amount` | bigint | Mayor que cero |
+| `position` | smallint, por defecto 0 | Orden del concepto dentro de la cuenta, desde 0 |
 
 Los conceptos de una cuenta emitida no cambian: ningún rol puede modificarlos, solo leerlos y crearlos.
 
-En el MVP cada cuenta tiene un solo concepto. La tabla existe para admitir después servicios, mora o reparaciones.
+Una cuenta tiene un solo concepto, salvo la primera cuenta mensual de un contrato que cobra su depósito: esa lleva dos, el canon y el depósito, y su `total` es la suma. La tabla existe para admitir después servicios, mora o reparaciones.
 
 ### payments
 
