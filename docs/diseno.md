@@ -176,7 +176,7 @@ Línea de tiempo, de lo más antiguo a lo más reciente: generada, cada correo, 
 - El mock abre la cuenta en un panel sobre cualquier pantalla. En la aplicación el panel pertenece a su sección: desde el resumen, la cuenta se abre en Cuentas.
 - El panel de la unidad del mock es, en la aplicación, la pantalla del contrato. Una unidad vacía abre directamente "Crear contrato".
 - Cada fila de unidad tiene además un lápiz para editarla; "Editar unidad" también está al final del contrato, entre "Editar contrato" y "Terminar contrato".
-- El detalle de cuenta conserva lo que el mock no trae: la vista previa del documento, la sección "Pagos" con comprobante y eliminar, y los botones "Enviar" o "Reenviar", "Recordar", "Descargar PDF" y "Anular" en el pie.
+- El detalle de cuenta conserva lo que el mock no trae: la vista previa del documento, la sección "Pagos" con comprobante y eliminar, y los botones "Enviar" o "Reenviar", "Recordar", "Descargar PDF" y "Anular" en el pie. "Reenviar" no aparece en una cuenta ya pagada.
 - El contrato conserva "Generar cuenta del mes", "Cobrar otro concepto" y el depósito.
 - En Cuentas, el filtro de estado no lleva contador y tiene "Anuladas" en lugar de "Vencidas".
 - En el resumen, una línea dice cuánto se debe de meses anteriores y los correos rebotados salen como aviso. En celular, los botones de cada cuenta por cobrar van bajo la fila, para registrar un pago en dos toques.

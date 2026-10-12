@@ -433,7 +433,8 @@ export function BillScreen({
         )}
         {/* The rest, two to a row; an odd one out takes the whole row. */}
         <div className="grid grid-cols-2 gap-2 *:last:odd:col-span-2">
-          {!voided && (
+          {/* A bill that is already paid is not sent again. */}
+          {!voided && !(wasSent && !hasBalance) && (
             <Button variant="outline" size="md" disabled={emailing} onClick={sendBill}>
               {send.isPending ? "Enviando…" : wasSent ? "Reenviar" : "Enviar"}
             </Button>
