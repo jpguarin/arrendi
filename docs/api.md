@@ -34,7 +34,7 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 
 | Ruta | Qué hace |
 | --- | --- |
-| `GET /api/properties` | Lista los inmuebles con sus unidades, y por unidad el contrato activo y su `status`. Hasta la etapa 5 el estado es `vacant` (sin contrato activo) o `up_to_date` (con contrato activo); desde entonces también `overdue` y `partial`, calculados con las cuentas |
+| `GET /api/properties` | Lista los inmuebles con sus unidades, y por unidad el contrato activo y su `status`. `vacant` (sin contrato activo), `overdue` (alguna cuenta vencida), `partial` (alguna parcial) o `up_to_date` |
 | `POST /api/properties` | Crea un inmueble, sin unidades. Responde 201 |
 | `PATCH /api/properties/{id}` | Edita un inmueble. Solo cambian los campos enviados; `address` y `city` se borran con `null` |
 | `POST /api/properties/{id}/units` | Agrega una unidad. Responde 201 |
@@ -59,7 +59,7 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 | --- | --- |
 | `GET /api/bills` | Lista cuentas. Filtros: `unit_id`, `status` (`receivable`, `paid`, `voided`), `from`, `to` |
 | `POST /api/bills` | Crea una cuenta manual sobre un contrato activo: `lease_id`, `description`, `amount` y `due_date`. Responde 201. 400 `lease_not_active` si el contrato está terminado |
-| `GET /api/bills/{id}` | Devuelve la cuenta con conceptos, saldo (`balance`), unidad, arrendatario y los datos del propietario que muestra el documento. Trae sus notificaciones (`notifications`, de la más nueva a la más vieja). Los pagos llegan en la etapa 5 |
+| `GET /api/bills/{id}` | Devuelve la cuenta con conceptos, saldo (`balance`), unidad, arrendatario y los datos del propietario que muestra el documento. Trae sus pagos (`payments`) y sus notificaciones (`notifications`), de lo más nuevo a lo más viejo |
 | `GET /api/bills/{id}/pdf` | Devuelve un enlace temporal al PDF (`url`, `name` y `expires_in`, 5 minutos) |
 | `POST /api/bills/{id}/send` | Envía la cuenta por correo, o la reenvía si ya se había enviado. 400 `bill_voided` si está anulada |
 | `POST /api/bills/{id}/remind` | Envía un recordatorio manual. 400 `bill_has_no_balance` si no tiene saldo; 400 `bill_voided` si está anulada |
@@ -73,22 +73,21 @@ La cuenta mensual y la manual se crean con el PDF ya guardado. Si el almacenamie
 
 Enviar y recordar responden con la cuenta y la notificación recién creada en estado `pending`: el correo sale después de responder. Si el proveedor falla, la notificación queda `failed` y se ve en la actividad de la cuenta.
 
-Hasta la etapa 5 no hay tabla de pagos: una cuenta "tiene pagos" cuando su estado es `partial` o `paid`.
-
 ## Pagos
 
 | Ruta | Qué hace |
 | --- | --- |
-| `POST /api/bills/{id}/payments` | Registra un pago: valor, fecha, medio, `send_receipt`. Recalcula el estado |
-| `POST /api/payments/{id}/proof` | Sube el comprobante del pago |
-| `GET /api/payments/{id}/proof` | Devuelve un enlace temporal al comprobante |
-| `DELETE /api/payments/{id}` | Elimina un pago registrado por error y recalcula el estado |
+| `POST /api/bills/{id}/payments` | Registra un pago: `amount`, `payment_date`, `method` y `send_receipt`. Recalcula el estado y responde 201 con la cuenta. 400 `bill_voided`, `bill_already_paid`, `payment_exceeds_balance` o `payment_date_in_future` |
+| `POST /api/payments/{id}/proof/upload-url` | Primer paso del comprobante: devuelve el enlace firmado de subida y la ruta |
+| `POST /api/payments/{id}/proof` | Segundo paso: valida el archivo y lo asocia al pago. Responde con la cuenta |
+| `GET /api/payments/{id}/proof` | Devuelve un enlace temporal al comprobante. 404 `document_not_found` si no tiene |
+| `DELETE /api/payments/{id}` | Elimina un pago registrado por error, borra su comprobante y recalcula el estado. Responde con la cuenta |
 
 ## Inicio
 
 | Ruta | Qué hace |
 | --- | --- |
-| `GET /api/summary?month=AAAA-MM` | Esperado, recaudado y pendiente del mes; unidades en mora; cuentas por cobrar y pagadas; correos rebotados |
+| `GET /api/summary?month=AAAA-MM` | Del mes (`expected`, `collected`, `pending`); unidades en mora (`units_overdue` de `units_total`); cuentas por cobrar de cualquier mes, con lo vencido primero (`receivable`), y cuánto viene de meses anteriores (`previous_pending`); pagadas del mes (`paid`); correos rebotados (`bounced`). Sin `month`, el mes en curso en Colombia |
 
 ## Sistema
 

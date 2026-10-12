@@ -173,6 +173,8 @@ En el MVP cada cuenta tiene un solo concepto. La tabla existe para admitir despu
 | `method` | text | `transfer`, `nequi`, `cash`, `other` |
 | `proof_path` | text, nulo | Comprobante |
 
+Permisos: `arrendi_api` lee, crea, modifica y borra pagos; es la única tabla donde un rol borra. `arrendi_tasks` solo lee, para el saldo de los recordatorios.
+
 ### notifications
 
 | Columna | Tipo | Notas |
@@ -248,7 +250,7 @@ Un solo contenedor privado. Las rutas empiezan por el propietario:
 ```
 {owner_id}/leases/{lease_id}/{upload_id}/{nombre}
 {owner_id}/bills/{bill_id}.pdf
-{owner_id}/proofs/{payment_id}/{nombre}
+{owner_id}/proofs/{payment_id}/{upload_id}/{nombre}
 ```
 
 Cada subida va a una carpeta nueva (`upload_id`): así el archivo que se reemplaza sigue intacto hasta que el nuevo se confirma, y un enlace de subida nunca puede sobrescribir un archivo ya asociado. El nombre se limpia: solo letras sin tilde, números, guiones y la extensión que corresponde al tipo.

@@ -37,7 +37,7 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 | `overdue` | `voided` | El propietario la anula, si no tiene pagos |
 
 - Un abono sobre una cuenta `overdue` no cambia su estado: sigue vencida hasta cubrir el saldo.
-- `paid` y `voided` son estados finales.
+- `paid` y `voided` son estados finales, salvo que se elimine un pago de una cuenta `paid`: vuelve al estado que le corresponda.
 - El **saldo** nunca se guarda: es el total menos la suma de los pagos.
 
 ### Reglas
@@ -60,15 +60,18 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 - La fecha del pago no puede ser futura.
 - Medios: `transfer`, `nequi`, `cash`, `other`.
 - El comprobante es opcional.
-- Al guardar un pago se recalcula el estado en la misma transacción.
-- Un pago no se edita. Si hubo un error, se elimina y se registra de nuevo; al eliminarlo se recalcula el estado.
+- Al guardar un pago se recalcula el estado en la misma transacción, con la cuenta bloqueada: dos pagos simultáneos no pueden sumar más que el saldo.
+- **Recálculo:** sin saldo, `paid`; con saldo y vencimiento anterior a hoy, `overdue`; con saldo y algún pago, `partial`; si no, `pending`. Una cuenta anulada no cambia.
+- Un pago no se edita. Si hubo un error, se elimina y se registra de nuevo; al eliminarlo se recalcula el estado, también si la cuenta estaba `paid`. Eliminar es un borrado real: el pago y su comprobante desaparecen.
+- **A qué mes pertenece el dinero:** un pago cuenta en el mes de su cuenta (su `period`, o el mes de su vencimiento si es manual), no en el mes en que se recibió. Así el inicio y el listado dan las mismas cifras.
+- **Recibo:** si el propietario lo marca, sale después de confirmar la transacción. Si falla, la notificación queda `failed` y no se reintenta sola.
 
 ## Contratos y unidades
 
 - Una unidad tiene como máximo un contrato `active`.
 - Una unidad sin contrato activo está **vacía** y no genera cuentas.
 - Terminar un contrato lo pasa a `ended`: deja de generar cuentas, pero conserva su historial y sus saldos.
-- Una unidad está **en mora** cuando su contrato activo tiene al menos una cuenta `overdue`.
+- Una unidad está **en mora** cuando su contrato activo tiene al menos una cuenta `overdue`. Si no, está en **pago parcial** cuando tiene alguna `partial`. Si no, está al día.
 - El correo del arrendatario es obligatorio.
 - **Decisión provisional:** un contrato que pasa su fecha de fin sigue activo hasta que el propietario lo termine. La aplicación lo avisa en la pantalla del contrato.
 - **Decisión provisional:** no hay prorrateo. Un contrato que empieza a mitad de mes genera su primera cuenta completa en el siguiente día de envío.
@@ -111,6 +114,13 @@ Condiciones:
 - **Con límite de tiempo:** procesa los contratos uno a uno, cada cual en su transacción, y se detiene antes de exceder el tiempo máximo de la función. Lo que no alcance queda para la siguiente ejecución.
 - **Un fallo no detiene el resto:** un error con un contrato se registra y la tarea sigue con los demás.
 - **Registro:** cada ejecución deja cuántas cuentas generó, cuántos correos envió y cuántos errores hubo.
+
+## Inicio
+
+- **Cifras del mes:** esperado es la suma de las cuentas no anuladas del mes; recaudado, lo pagado sobre ellas; pendiente, la diferencia.
+- **Por cobrar:** todas las cuentas con saldo, de cualquier mes, con lo vencido primero. Lo que viene de meses anteriores se suma aparte y no entra en las cifras del mes.
+- **Pagadas:** las del mes.
+- **En mora:** unidades en mora sobre el total de unidades.
 
 ## Alta guiada
 

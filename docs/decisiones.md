@@ -36,6 +36,10 @@
 | Correos hasta la etapa 6 | Todos van al buzón de pruebas (`EMAIL_TEST_INBOX`), también en Producción, con el destinatario real en el asunto. Con el dominio propio, la variable se quita de Producción |
 | Cuenta generada a mano | No se envía sola: queda con el botón "Enviar". Solo la tarea diaria envía sola |
 | Recordatorios | Solo de cuentas que ya se enviaron, y uno por cuenta en cada ejecución de la tarea |
+| Playwright | Corre todo en local: la web, la API contra la base `arrendi_e2e` de PostgreSQL y dos servidores falsos (acceso y almacenamiento). Nunca contra Supabase |
+| Deuda de meses anteriores | El inicio la lista en "Por cobrar" y la suma aparte; las cifras del mes no la incluyen |
+| Mes de un pago | El de su cuenta, no el de la fecha en que se recibió |
+| Eliminar un pago | Borrado real, con su comprobante. Es la única tabla donde la API borra |
 | PDF | ReportLab con Helvetica, que ya trae; no se empaqueta Figtree |
 
 ## Provisionales
