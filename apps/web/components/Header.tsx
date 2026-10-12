@@ -19,9 +19,9 @@ export function Header({ title, subtitle, backHref, children }: HeaderProps) {
   return (
     <header
       className={cn(
-        "flex min-h-11 items-center gap-2",
+        "flex items-center gap-2",
         // Next to a back button it heads a detail; alone, a whole section.
-        backHref ? "px-5 pt-4 pb-3" : "flex-wrap px-4 pt-5 pb-4 md:px-6 md:pt-6 xl:px-8",
+        backHref ? "px-5 pt-5 pb-3" : "flex-wrap px-4 pt-5 pb-4 md:px-6 md:pt-6 xl:px-8",
       )}
     >
       {backHref && (
