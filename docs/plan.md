@@ -2,7 +2,7 @@
 
 Seis etapas, en orden. Cada una termina con sus criterios de aceptación cumplidos y sus casillas marcadas. No se empieza una etapa sin cerrar la anterior.
 
-**Etapa en curso: 5**
+**Etapa en curso: 6**
 
 ---
 
@@ -120,9 +120,9 @@ Objetivo: cerrar el ciclo de cobro.
 - [x] API: comprobante del pago.
 - [x] API: correo de recibo.
 - [x] API: `GET /api/summary`.
-- [ ] Web: pantalla de registrar pago.
-- [ ] Web: pantalla de inicio.
-- [ ] Web: estado de cada unidad en inmuebles.
+- [x] Web: pantalla de registrar pago.
+- [x] Web: pantalla de inicio.
+- [x] Web: estado de cada unidad en inmuebles.
 - [x] Playwright en `apps/e2e/` y el script `pnpm e2e`.
 - [x] Prueba de extremo a extremo: alta, generación de cuenta, pago parcial y pago del saldo.
 - [x] Pruebas: transiciones de estado de `docs/reglas-de-negocio.md`, una por una.

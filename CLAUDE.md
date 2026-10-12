@@ -20,7 +20,7 @@ Lee el documento que corresponda antes de tocar esa parte del sistema. Si el có
 | `docs/etapa-2.md` | Guía paso a paso de la etapa 2 (inmuebles y contratos), ya cerrada. Sirve de registro de lo decidido |
 | `docs/etapa-3.md` | Guía paso a paso de la etapa 3 (cuentas de cobro), ya cerrada. Sirve de registro de lo decidido |
 | `docs/etapa-4.md` | Guía paso a paso de la etapa 4 (correo y tarea diaria), ya cerrada. Sirve de registro de lo decidido |
-| `docs/etapa-5.md` | Guía paso a paso de la etapa 5 (pagos e inicio), en curso |
+| `docs/etapa-5.md` | Guía paso a paso de la etapa 5 (pagos e inicio), ya cerrada. Sirve de registro de lo decidido |
 | `docs/decisiones.md` | Decisiones tomadas, provisionales y pendientes |
 | `docs/mockups/` | Marcado de las 10 pantallas diseñadas, como referencia visual |
 

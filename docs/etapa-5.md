@@ -1,6 +1,6 @@
 # Etapa 5: guía paso a paso
 
-Guía de trabajo de la etapa 5 (pagos e inicio). Las tareas y los criterios de aceptación oficiales están en `docs/plan.md`; este documento detalla el orden, qué hace cada paso y cómo se comprueba. Se marca cada paso al terminarlo.
+Guía de trabajo de la etapa 5 (pagos e inicio), ya cerrada. Las tareas y los criterios de aceptación oficiales están en `docs/plan.md`; este documento detalla el orden, qué hace cada paso y cómo se comprueba. Se marca cada paso al terminarlo.
 
 **Objetivo:** cerrar el ciclo de cobro.
 
@@ -105,11 +105,12 @@ En los pasos 2 y 3 la prueba va primero.
 - Prueba: alta, generación de la cuenta, pago parcial y pago del saldo, comprobando el estado en cada paso y las cifras del inicio.
 - **Se comprueba:** `pnpm e2e` pasa dos veces seguidas desde una base limpia.
 
-### [ ] Paso 11. Cierre
+### [x] Paso 11. Cierre
 
 - `pnpm lint`, `pnpm test`, `pnpm build` y `pnpm e2e` pasan (11 de octubre de 2026).
-- Falta aplicar la migración `0006` en `arrendi-dev` y revisar las pantallas nuevas en el navegador, en ambos temas. Hasta entonces las tres casillas de pantallas de la web en `docs/plan.md` quedan sin marcar.
-- Casillas de la etapa 5 en `docs/plan.md`. La etapa pasa a 6 cuando confirmes los criterios de aceptación.
+- Migración `0006` aplicada en `arrendi-dev`.
+- El fundador revisó las pantallas nuevas y dio la etapa por cerrada (11 de octubre de 2026).
+- Casillas de la etapa 5 marcadas en `docs/plan.md`; la etapa en curso pasa a 6. La etapa pasa a 6 cuando confirmes los criterios de aceptación.
 
 ## Verificación de extremo a extremo
 
