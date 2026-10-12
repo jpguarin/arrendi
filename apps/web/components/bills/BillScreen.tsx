@@ -145,7 +145,8 @@ function history(bill: Bill): Event[] {
       key: payment.id,
       at: payment.created_at,
       Icon: Check,
-      text: `Pago de ${formatPesos(payment.amount)} · ${PAYMENT_METHOD_LABELS[payment.method].toLowerCase()}`,
+      // The hour is when it was written down; the day it was paid goes in the text.
+      text: `Pago del ${formatDate(payment.payment_date)} registrado · ${formatPesos(payment.amount)} · ${PAYMENT_METHOD_LABELS[payment.method].toLowerCase()}`,
       tone: "positive",
     });
   }
@@ -166,7 +167,7 @@ function History({ bill }: { bill: Bill }) {
         {history(bill).map(({ key, at, Icon, text, problem, tone }) => (
           <li
             key={key}
-            className="relative grid grid-cols-[1.75rem_minmax(0,1fr)] gap-3 pb-4 not-last:before:absolute not-last:before:top-8 not-last:before:bottom-0.5 not-last:before:left-[0.8125rem] not-last:before:w-0.5 not-last:before:rounded-full not-last:before:bg-border last:pb-0"
+            className="relative grid grid-cols-[1.75rem_minmax(0,1fr)] gap-3 pb-4 not-last:before:absolute not-last:before:top-8 not-last:before:bottom-0.5 not-last:before:left-3.25 not-last:before:w-0.5 not-last:before:rounded-full not-last:before:bg-border last:pb-0"
           >
             <span className={cn("grid size-7 place-items-center rounded-lg", EVENT_TONES[tone])}>
               <Icon aria-hidden strokeWidth={2.5} className="size-4" />
@@ -402,7 +403,9 @@ export function BillScreen({
               {formatPesos(hasBalance ? bill.balance : bill.total)}
             </p>
             <p className="text-support text-muted-foreground">
-              {hasBalance ? `Vence el ${formatDate(bill.due_date)}` : "Cuenta al día"}
+              {!hasBalance
+                ? "Cuenta al día"
+                : `${bill.status === "overdue" ? "Venció" : "Vence"} el ${formatDate(bill.due_date)}`}
               {hasBalance && bill.balance < bill.total &&
                 ` · abonó ${formatPesos(bill.total - bill.balance)}`}
             </p>

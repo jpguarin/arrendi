@@ -21,6 +21,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { errorMessage } from "@/lib/api/errors";
 import { type BillFilters, useBills, useProperties } from "@/lib/api/queries";
 import type { components } from "@/lib/api/schema";
+import { monthOf } from "@/lib/bills";
 import { formatMonth, formatPesos } from "@/lib/format";
 
 type Bill = components["schemas"]["BillSummary"];
@@ -35,9 +36,6 @@ const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
   { value: "voided", label: "Anuladas" },
 ];
 
-/** The month a bill belongs to (`2026-10`): its period, or when it is due if it is manual. */
-export const monthOf = (bill: Bill) => (bill.period ?? bill.due_date).slice(0, 7);
-
 /** The bills by month, in the order the API sends them: newest first. */
 function byMonth(bills: Bill[]): [string, Bill[]][] {
   const months = new Map<string, Bill[]>();
@@ -51,8 +49,15 @@ const sum = (bills: Bill[], amount: (bill: Bill) => number) =>
   bills.reduce((total, bill) => total + amount(bill), 0);
 
 export function BillsScreen() {
-  // A lease links here with its unit already chosen.
-  const [unitId, setUnitId] = useState(useSearchParams().get("unit") ?? ALL);
+  // A lease links here with its unit already chosen. The list stays on screen while
+  // bills open and close next to it, so a new link has to move the filter too.
+  const linkedUnit = useSearchParams().get("unit");
+  const [seenLink, setSeenLink] = useState(linkedUnit);
+  const [unitId, setUnitId] = useState(linkedUnit ?? ALL);
+  if (linkedUnit !== seenLink) {
+    setSeenLink(linkedUnit);
+    if (linkedUnit) setUnitId(linkedUnit);
+  }
   const [status, setStatus] = useState<StatusFilter>(ALL);
   const filtered = unitId !== ALL || status !== ALL;
   const {
@@ -92,7 +97,7 @@ export function BillsScreen() {
               <ToggleGroupItem
                 key={filter.value}
                 value={filter.value}
-                className="h-10 rounded-lg border-transparent bg-transparent px-3 text-support text-muted-foreground hover:bg-transparent hover:text-foreground data-[state=on]:border-transparent data-[state=on]:bg-card data-[state=on]:text-foreground data-[state=on]:shadow-xs"
+                className="h-11 rounded-lg border-transparent bg-transparent px-3 text-support text-muted-foreground hover:bg-transparent hover:text-foreground data-[state=on]:border-transparent data-[state=on]:bg-card data-[state=on]:text-foreground data-[state=on]:shadow-xs"
               >
                 {filter.label}
               </ToggleGroupItem>

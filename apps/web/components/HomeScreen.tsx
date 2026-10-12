@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell } from "lucide-react";
+import { Bell, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -13,14 +13,13 @@ import { Button } from "@/components/ui/button";
 import { errorMessage } from "@/lib/api/errors";
 import { useBills, useMe, useRemindBill, useSummary } from "@/lib/api/queries";
 import type { components } from "@/lib/api/schema";
-import { formatBillNumber, formatMonth, formatPesos } from "@/lib/format";
+import { firstDayMonthsAgo, monthOf } from "@/lib/bills";
+import { formatBillNumber, formatMonth, formatPesos, todayInBogota } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type Summary = components["schemas"]["SummaryResponse"];
 type Bill = components["schemas"]["BillSummary"];
 
-/** The month a bill belongs to (`2026-10`): its period, or when it is due if it is manual. */
-const monthOf = (bill: Bill) => (bill.period ?? bill.due_date).slice(0, 7);
 const percentOf = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 
 /** The month in four figures: expected, collected, pending and units behind. */
@@ -104,10 +103,10 @@ function Composition({ summary }: { summary: Summary }) {
           />
         ))}
       </div>
-      <ul className="mt-3.5 grid grid-cols-2 gap-x-4 gap-y-2.5 @min-[900px]:grid-cols-4">
+      <ul className="mt-3.5 grid grid-cols-2 gap-x-4 gap-y-2.5 @4xl:grid-cols-4">
         {parts.map((part) => (
           <li key={part.label} className="grid grid-cols-[0.625rem_1fr] items-center gap-x-2 text-support">
-            <span aria-hidden className={cn("size-2.5 rounded-[3px]", part.fill)} />
+            <span aria-hidden className={cn("size-2.5 rounded-xs", part.fill)} />
             <span>{part.label}</span>
             <span className="col-start-2 text-section font-semibold">
               {formatPesos(part.value)}{" "}
@@ -126,7 +125,14 @@ const MONTHS_SHOWN = 6;
 
 /** Collected over expected in the latest months, from the bills themselves. */
 function MonthlyChart() {
-  const { data: bills } = useBills();
+  // Only the months it draws, not every bill there has ever been.
+  const { data: bills, isPending } = useBills({
+    from: firstDayMonthsAgo(todayInBogota(), MONTHS_SHOWN),
+  });
+  // Its place is kept while the bills arrive, so the summary does not jump.
+  if (isPending) {
+    return <div role="status" aria-label="Cargando el recaudo por mes" className="min-h-52 animate-pulse rounded-xl bg-muted" />;
+  }
   if (!bills || bills.length === 0) return null;
 
   const byMonth = new Map<string, { expected: number; collected: number }>();
@@ -227,7 +233,7 @@ function MonthSummary({ summary }: { summary: Summary }) {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-3 @min-[720px]:grid-cols-[1.6fr_1fr]">
+        <div className="grid gap-3 @3xl:grid-cols-[1.6fr_1fr]">
           <Composition summary={summary} />
           <MonthlyChart />
         </div>
@@ -259,8 +265,12 @@ function MonthSummary({ summary }: { summary: Summary }) {
                           aria-label={`Enviar recordatorio a ${bill.tenant_name}`}
                           onClick={() => sendReminder(bill)}
                         >
-                          <Bell aria-hidden className="size-4" />
-                          <span className="@min-[600px]:sr-only">
+                          {reminding ? (
+                            <LoaderCircle aria-hidden className="size-4 animate-spin" />
+                          ) : (
+                            <Bell aria-hidden className="size-4" />
+                          )}
+                          <span className="@row:sr-only">
                             {reminding ? "Enviando…" : "Recordar"}
                           </span>
                         </Button>

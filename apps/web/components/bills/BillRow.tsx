@@ -5,7 +5,13 @@ import { usePathname } from "next/navigation";
 
 import { BillStatusBadge, TONE_BAR } from "@/components/StatusBadge";
 import type { components } from "@/lib/api/schema";
-import { formatBillNumber, formatDayMonth, formatPesos } from "@/lib/format";
+import {
+  daysBetween,
+  formatBillNumber,
+  formatDayMonth,
+  formatPesos,
+  todayInBogota,
+} from "@/lib/format";
 import { BILL_STATUS } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +19,7 @@ type Bill = components["schemas"]["BillSummary"];
 
 // The columns of a wide table: who, number (only when there is room), due, amount, status.
 const COLUMNS =
-  "@min-[600px]:grid-cols-[minmax(0,1.6fr)_6.5rem_7.5rem_7.25rem] @min-[800px]:grid-cols-[minmax(0,1.6fr)_5.5rem_6.5rem_7.5rem_7.25rem] @min-[600px]:gap-x-3";
+  "@row:grid-cols-[minmax(0,1.6fr)_6.5rem_7.5rem_7.25rem] @row-wide:grid-cols-[minmax(0,1.6fr)_5.5rem_6.5rem_7.5rem_7.25rem] @row:gap-x-3";
 
 /** What matters about the bill right now, next to its due date or its number. */
 function situation(bill: Bill): string {
@@ -23,8 +29,11 @@ function situation(bill: Bill): string {
   }
   // With a payment on it, what came in matters more than when it is due.
   if (bill.balance < bill.total) return `abonó ${formatPesos(bill.total - bill.balance)}`;
-  const due = formatDayMonth(bill.due_date);
-  return bill.status === "overdue" ? `venció el ${due}` : `vence el ${due}`;
+  if (bill.status === "overdue") {
+    const days = daysBetween(bill.due_date, todayInBogota());
+    return days === 1 ? "venció hace 1 día" : `venció hace ${days} días`;
+  }
+  return `vence el ${formatDayMonth(bill.due_date)}`;
 }
 
 /**
@@ -46,13 +55,13 @@ export function BillTable({
       <div
         aria-hidden
         className={cn(
-          "hidden border-b border-border py-2.5 pr-3.5 pl-4 text-badge font-semibold text-muted-foreground @min-[600px]:grid",
+          "hidden border-b border-border py-2.5 pr-3.5 pl-4 text-badge font-semibold text-muted-foreground @row:grid",
           COLUMNS,
-          withActions && "@min-[600px]:mr-48",
+          withActions && "@row:mr-48",
         )}
       >
         <span>Unidad y arrendatario</span>
-        <span className="hidden @min-[800px]:block">Cuenta</span>
+        <span className="hidden @row-wide:block">Cuenta</span>
         <span>Vence</span>
         <span className="text-right">{amountLabel}</span>
         <span>Estado</span>
@@ -84,7 +93,7 @@ export function BillRow({ bill, actions }: { bill: Bill; actions?: React.ReactNo
   return (
     <li
       className={cn(
-        "relative flex flex-col border-t border-border before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-r-full first:border-t-0 @min-[600px]:flex-row @min-[600px]:items-stretch",
+        "relative flex flex-col border-t border-border before:absolute before:inset-y-2 before:left-0 before:w-0.75 before:rounded-r-full first:border-t-0 @row:flex-row @row:items-stretch",
         TONE_BAR[BILL_STATUS[bill.status].tone],
       )}
     >
@@ -92,7 +101,7 @@ export function BillRow({ bill, actions }: { bill: Bill; actions?: React.ReactNo
         href={`/bills/${bill.id}`}
         aria-current={open ? "true" : undefined}
         className={cn(
-          "grid min-h-14 min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 py-2 pr-3.5 pl-4 outline-none hover:bg-muted focus-visible:bg-muted @min-[600px]:min-h-12",
+          "grid min-h-14 min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 py-2 pr-3.5 pl-4 outline-none hover:bg-muted focus-visible:bg-muted @row:min-h-12",
           COLUMNS,
           open && "bg-accent hover:bg-accent",
         )}
@@ -100,12 +109,13 @@ export function BillRow({ bill, actions }: { bill: Bill; actions?: React.ReactNo
         <span className="truncate text-section font-semibold">
           {bill.unit_name} <span className="font-normal text-muted-foreground">· {bill.tenant_name}</span>
         </span>
-        <span className="hidden text-support text-muted-foreground @min-[800px]:block">
+        <span className="hidden text-support text-muted-foreground @row-wide:block">
           {formatBillNumber(bill.number)}
         </span>
-        <span className="hidden flex-col text-support @min-[600px]:flex">
+        <span className="hidden flex-col text-support @row:flex">
           {formatDayMonth(bill.due_date)}
-          {bill.balance < bill.total && owed && (
+          {/* Under the date, what makes this bill urgent: it is late, or half paid. */}
+          {owed && (bill.status === "overdue" || bill.balance < bill.total) && (
             <span className="text-badge text-muted-foreground">{situation(bill)}</span>
           )}
         </span>
@@ -115,15 +125,15 @@ export function BillRow({ bill, actions }: { bill: Bill; actions?: React.ReactNo
             <span className="ml-1 text-badge font-normal text-muted-foreground">saldo</span>
           )}
         </span>
-        <span className="truncate text-support text-muted-foreground @min-[600px]:hidden">
+        <span className="truncate text-support text-muted-foreground @row:hidden">
           {formatBillNumber(bill.number)} · {situation(bill)}
         </span>
-        <span className="justify-self-end @min-[600px]:justify-self-start">
+        <span className="justify-self-end @row:justify-self-start">
           <BillStatusBadge status={bill.status} />
         </span>
       </Link>
       {actions && (
-        <div className="flex items-center gap-1.5 px-4 pb-3 *:flex-1 @min-[600px]:w-48 @min-[600px]:shrink-0 @min-[600px]:justify-end @min-[600px]:py-0 @min-[600px]:pr-3 @min-[600px]:pl-0 @min-[600px]:*:flex-none">
+        <div className="flex items-center gap-1.5 px-4 pb-3 *:flex-1 @row:w-48 @row:shrink-0 @row:justify-end @row:py-0 @row:pr-3 @row:pl-0 @row:*:flex-none">
           {actions}
         </div>
       )}

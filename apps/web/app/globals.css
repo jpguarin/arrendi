@@ -170,9 +170,14 @@
   --text-section: 0.9375rem; /* 15px: rows */
   --text-support: 0.8125rem; /* 13px */
   --text-badge: 0.75rem; /* 12px: status badge, column heading */
+  --text-nav: 0.6875rem; /* 11px: label under an icon of the navigation */
 
   /* Screens outside the shell (sign-in, onboarding) stay in one phone-sized column. */
   --container-app: 30rem;
+  /* A table lays its rows out in columns from this width of its own, and adds the
+     number of the bill from the next one. */
+  --container-row: 37.5rem;
+  --container-row-wide: 50rem;
   /* The panel next to a list, from tablet up. */
   --container-pane: 25.5rem;
 }

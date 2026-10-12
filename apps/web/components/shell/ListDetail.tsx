@@ -32,13 +32,17 @@ export function ListDetail({
         open && "md:grid-cols-[minmax(0,1fr)_22.5rem] xl:grid-cols-[minmax(0,1fr)_var(--container-pane)]",
       )}
     >
-      {open ? (
-        <section aria-label="Lista" className="flex min-w-0 flex-col max-md:hidden">
-          <BesideDetail value={true}>{list}</BesideDetail>
-        </section>
-      ) : (
-        <div className="flex min-w-0 flex-1 flex-col">{list}</div>
-      )}
+      {/*
+        Always the same element, so opening or closing a detail does not start the list
+        over: its filters and its scroll stay. On a phone it hides behind the detail.
+      */}
+      <div
+        role={open ? "region" : undefined}
+        aria-label={open ? "Lista" : undefined}
+        className={cn("flex min-w-0 flex-1 flex-col", open && "max-md:hidden")}
+      >
+        <BesideDetail value={open}>{list}</BesideDetail>
+      </div>
       {open && (
         <div className="flex min-h-dvh min-w-0 flex-col bg-card md:sticky md:top-0 md:h-dvh md:min-h-0 md:overflow-y-auto md:border-l md:border-border">
           {children}
@@ -54,10 +58,12 @@ export function ListDetail({
  */
 export function ListMain({ className, children }: { className?: string; children: React.ReactNode }) {
   const beside = useContext(BesideDetail);
-  const Tag = beside ? "div" : "main";
   return (
-    <Tag className={cn("flex flex-1 flex-col gap-4 px-4 pb-8 md:px-6 xl:px-8", className)}>
+    <div
+      role={beside ? undefined : "main"}
+      className={cn("flex flex-1 flex-col gap-4 px-4 pb-8 md:px-6 xl:px-8", className)}
+    >
       {children}
-    </Tag>
+    </div>
   );
 }

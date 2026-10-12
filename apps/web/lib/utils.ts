@@ -12,6 +12,7 @@ const FONT_SIZES = [
   "section",
   "support",
   "badge",
+  "nav",
 ]
 
 export const cn = createCn({

@@ -16,7 +16,12 @@ type Unit = Schemas["UnitResponse"];
 type Lease = Schemas["LeaseResponse"];
 type Bill = Schemas["BillResponse"];
 type Settings = Schemas["SettingsResponse"];
-export type BillFilters = { unit_id?: string; status?: "receivable" | "paid" | "voided" };
+export type BillFilters = {
+  unit_id?: string;
+  status?: "receivable" | "paid" | "voided";
+  /** Only the bills of this month and later (`2026-05-01`). */
+  from?: string;
+};
 
 const ME = $api.queryOptions("get", "/api/me").queryKey;
 const PROPERTIES = $api.queryOptions("get", "/api/properties").queryKey;

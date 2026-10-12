@@ -21,7 +21,7 @@ type Unit = components["schemas"]["UnitResponse"];
 
 // The columns of a wide table: unit, tenant, rent, status.
 const COLUMNS =
-  "@min-[600px]:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_9rem_7.75rem] @min-[600px]:gap-x-3";
+  "@row:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_9rem_7.75rem] @row:gap-x-3";
 
 function UnitRow({ unit }: { unit: Unit }) {
   const pathname = usePathname();
@@ -31,7 +31,7 @@ function UnitRow({ unit }: { unit: Unit }) {
   return (
     <li
       className={cn(
-        "relative flex items-stretch border-t border-border before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-r-full first:border-t-0",
+        "relative flex items-stretch border-t border-border before:absolute before:inset-y-2 before:left-0 before:w-0.75 before:rounded-r-full first:border-t-0",
         TONE_BAR[UNIT_STATUS[unit.status].tone],
       )}
     >
@@ -40,7 +40,7 @@ function UnitRow({ unit }: { unit: Unit }) {
         href={lease ? `/leases/${lease.id}` : `/leases/new?unit=${unit.id}`}
         aria-current={open ? "true" : undefined}
         className={cn(
-          "grid min-h-14 min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 py-2 pr-2 pl-4 outline-none hover:bg-muted focus-visible:bg-muted @min-[600px]:min-h-12",
+          "grid min-h-14 min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 py-2 pr-2 pl-4 outline-none hover:bg-muted focus-visible:bg-muted @row:min-h-12",
           COLUMNS,
           open && "bg-accent hover:bg-accent",
         )}
@@ -49,16 +49,16 @@ function UnitRow({ unit }: { unit: Unit }) {
           {unit.name}{" "}
           <span className="font-normal text-muted-foreground">· {UNIT_USE_LABELS[unit.use]}</span>
         </span>
-        <span className="hidden truncate text-section @min-[600px]:block">
+        <span className="hidden truncate text-section @row:block">
           {lease ? lease.tenant_name : <span className="text-muted-foreground">Crear contrato</span>}
         </span>
         <span className="text-right text-section font-semibold whitespace-nowrap">
           {lease ? formatPesos(lease.rent) : "—"}
         </span>
-        <span className="truncate text-support text-muted-foreground @min-[600px]:hidden">
+        <span className="truncate text-support text-muted-foreground @row:hidden">
           {lease ? lease.tenant_name : "Crear contrato"}
         </span>
-        <span className="justify-self-end @min-[600px]:justify-self-start">
+        <span className="justify-self-end @row:justify-self-start">
           <UnitStatusBadge status={unit.status} />
         </span>
       </Link>
@@ -112,7 +112,7 @@ function PropertyTable({ property }: { property: Property }) {
         <div
           aria-hidden
           className={cn(
-            "mr-12 hidden border-b border-border py-2.5 pr-2 pl-4 text-badge font-semibold text-muted-foreground @min-[600px]:grid",
+            "mr-12 hidden border-b border-border py-2.5 pr-2 pl-4 text-badge font-semibold text-muted-foreground @row:grid",
             COLUMNS,
           )}
         >
