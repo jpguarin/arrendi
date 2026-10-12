@@ -22,6 +22,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // No zoom on a phone: the app behaves like an installed one, and a field does not
+  // zoom the screen in when it takes focus.
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: BACKGROUND_LIGHT },
     { media: "(prefers-color-scheme: dark)", color: BACKGROUND_DARK },

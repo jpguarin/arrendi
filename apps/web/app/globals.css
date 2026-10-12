@@ -188,7 +188,9 @@
   }
 
   html {
-    @apply font-sans;
+    /* Safari on iOS ignores the viewport's zoom lock; allowing only panning is what
+       stops the pinch and the double tap there. */
+    @apply touch-pan-x touch-pan-y font-sans;
   }
 
   body {
