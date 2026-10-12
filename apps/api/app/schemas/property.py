@@ -8,7 +8,7 @@ from app.schemas.common import Name, OptionalText, PatchModel
 PropertyType = Literal["house", "building", "apartment", "shop"]
 UnitUse = Literal["residential", "commercial"]
 # Until stage 5 a unit is only vacant or not; `overdue` and `partial` come with the bills.
-UnitStatus = Literal["vacant", "up_to_date"]
+UnitStatus = Literal["vacant", "up_to_date", "partial", "overdue"]
 
 
 class UnitCreate(BaseModel):

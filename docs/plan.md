@@ -119,7 +119,7 @@ Objetivo: cerrar el ciclo de cobro.
 - [x] API: registrar y eliminar pagos, con recálculo de estado.
 - [x] API: comprobante del pago.
 - [x] API: correo de recibo.
-- [ ] API: `GET /api/summary`.
+- [x] API: `GET /api/summary`.
 - [ ] Web: pantalla de registrar pago.
 - [ ] Web: pantalla de inicio.
 - [ ] Web: estado de cada unidad en inmuebles.

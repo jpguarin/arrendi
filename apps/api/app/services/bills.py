@@ -193,7 +193,7 @@ def issue_manual_bill(session: Session, storage: Storage, today: date, data: Bil
 # Reads
 
 # The month a bill belongs to: its period, or the month it is due when it is manual.
-_MONTH = func.coalesce(Bill.period, func.date_trunc("month", Bill.due_date))
+BILL_MONTH = func.coalesce(Bill.period, func.date_trunc("month", Bill.due_date))
 
 
 # What has been paid on each bill. The balance is never stored: it is the total minus this.
@@ -266,7 +266,7 @@ def list_bills(
     from_date: date | None = None,
     to_date: date | None = None,
 ) -> list[BillSummary]:
-    query = select(Bill).order_by(_MONTH.desc(), Bill.number.desc())
+    query = select(Bill).order_by(BILL_MONTH.desc(), Bill.number.desc())
     if unit_id is not None:
         query = query.where(Lease.unit_id == unit_id)
     if status is not None:

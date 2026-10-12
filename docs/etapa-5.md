@@ -71,7 +71,7 @@ En los pasos 2 y 3 la prueba va primero.
 - Recibo: con `send_receipt`, el pago aparta una notificación `receipt` y el correo sale después de confirmar, por `app/services/notifications.py`.
 - **Se comprueba:** un archivo falso o demasiado grande se rechaza; el comprobante ajeno responde 404; el recibo dice valor, fecha, medio y saldo restante, y no sale si el pago se rechaza.
 
-### [ ] Paso 5. Resumen e inmuebles
+### [x] Paso 5. Resumen e inmuebles
 
 - `GET /api/summary?month=AAAA-MM` en `app/services/summary.py`: esperado, recaudado y pendiente del mes; unidades en mora sobre el total; "por cobrar" de cualquier mes con lo vencido primero y cuánto viene de meses anteriores; pagadas del mes; correos rebotados.
 - `GET /api/properties`: estado `overdue` y `partial` por unidad (`app/services/properties.py`).

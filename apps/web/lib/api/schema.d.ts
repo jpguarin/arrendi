@@ -467,6 +467,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Summary
+         * @description The home screen. Without `month` (`AAAA-MM`), the current month in Colombia.
+         */
+        get: operations["summary_api_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -652,6 +672,25 @@ export interface components {
             unit_name: string;
             /** Tenant Name */
             tenant_name: string;
+        };
+        /**
+         * BouncedEmail
+         * @description A bill whose email came back: the tenant's address is probably wrong.
+         */
+        BouncedEmail: {
+            /**
+             * Bill Id
+             * Format: uuid
+             */
+            bill_id: string;
+            /** Number */
+            number: number;
+            /** Unit Name */
+            unit_name: string;
+            /** Tenant Name */
+            tenant_name: string;
+            /** Recipient */
+            recipient: string;
         };
         /** DailyResponse */
         DailyResponse: {
@@ -1011,6 +1050,32 @@ export interface components {
             /** Email Copy */
             email_copy?: boolean | null;
         };
+        /** SummaryResponse */
+        SummaryResponse: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Expected */
+            expected: number;
+            /** Collected */
+            collected: number;
+            /** Pending */
+            pending: number;
+            /** Previous Pending */
+            previous_pending: number;
+            /** Units Total */
+            units_total: number;
+            /** Units Overdue */
+            units_overdue: number;
+            /** Receivable */
+            receivable: components["schemas"]["BillSummary"][];
+            /** Paid */
+            paid: components["schemas"]["BillSummary"][];
+            /** Bounced */
+            bounced: components["schemas"]["BouncedEmail"][];
+        };
         /** TenantCreate */
         TenantCreate: {
             /** Name */
@@ -1082,7 +1147,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "vacant" | "up_to_date";
+            status: "vacant" | "up_to_date" | "partial" | "overdue";
             active_lease: components["schemas"]["ActiveLeaseSummary"] | null;
         };
         /** UnitUpdate */
@@ -2760,6 +2825,46 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    summary_api_summary_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SummaryResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

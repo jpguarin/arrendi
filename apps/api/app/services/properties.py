@@ -5,7 +5,7 @@ from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
 from app.errors import not_found
-from app.models import Lease, Property, Tenant, Unit
+from app.models import Bill, Lease, Property, Tenant, Unit
 from app.schemas.property import (
     ActiveLeaseSummary,
     PropertyCreate,
@@ -33,13 +33,33 @@ def _unit_responses(session: Session, units: list[Unit]) -> list[UnitResponse]:
             .where(Lease.unit_id.in_([unit.id for unit in units]), Lease.status == "active")
         )
     }
+    # What each active lease still owes says how its unit is doing.
+    owing: dict[UUID, set[str]] = defaultdict(set)
+    for lease_id, bill_status in session.execute(
+        select(Bill.lease_id, Bill.status)
+        .where(
+            Bill.lease_id.in_([lease.id for lease in active_leases.values()]),
+            Bill.status.in_(("overdue", "partial")),
+        )
+        .distinct()
+    ):
+        owing[lease_id].add(bill_status)
+
+    def status_of(unit: Unit) -> str:
+        lease = active_leases.get(unit.id)
+        if lease is None:
+            return "vacant"
+        if "overdue" in owing[lease.id]:
+            return "overdue"
+        return "partial" if "partial" in owing[lease.id] else "up_to_date"
+
     return [
         UnitResponse(
             id=unit.id,
             property_id=unit.property_id,
             name=unit.name,
             use=unit.use,
-            status="up_to_date" if unit.id in active_leases else "vacant",
+            status=status_of(unit),
             active_lease=active_leases.get(unit.id),
         )
         for unit in units
