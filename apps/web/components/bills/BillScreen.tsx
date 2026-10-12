@@ -1,5 +1,7 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { ActionFooter } from "@/components/ActionFooter";
@@ -22,10 +24,17 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
 import { openTemporaryLink } from "@/lib/api/documents";
 import { errorMessage, hasCode } from "@/lib/api/errors";
-import { useBill, useRemindBill, useSendBill, useVoidBill } from "@/lib/api/queries";
+import {
+  useBill,
+  useDeletePayment,
+  useRemindBill,
+  useSendBill,
+  useVoidBill,
+} from "@/lib/api/queries";
 import type { components } from "@/lib/api/schema";
 import {
   formatBillNumber,
+  formatDate,
   formatDateTime,
   formatLongDate,
   formatMonth,
@@ -36,12 +45,15 @@ import {
   DELIVERY_PROBLEMS,
   DOCUMENT_TYPE_LABELS,
   NOTIFICATION_LABELS,
+  PAYMENT_METHOD_LABELS,
 } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 
 type Bill = components["schemas"]["BillResponse"];
 
 const BACK = "/bills";
+const PROOF_FAILED =
+  "El pago quedó guardado, pero no pudimos subir el comprobante. Elimina el pago y regístralo de nuevo si lo necesitas.";
 
 const withDocument = (name: string, document: string | null) =>
   document ? `${name} · C.C./NIT ${document}` : name;
@@ -102,13 +114,117 @@ function DocumentPreview({ bill }: { bill: Bill }) {
   );
 }
 
-export function BillScreen({ billId }: { billId: string }) {
+/** What has been paid on the bill, with the proof of each payment and a way to undo it. */
+function PaymentsSection({
+  bill,
+  deleting,
+  onDelete,
+  onError,
+}: {
+  bill: Bill;
+  deleting: boolean;
+  onDelete: (paymentId: string) => void;
+  onError: (message: string | undefined) => void;
+}) {
+  const [opening, setOpening] = useState<string>();
+
+  async function openProof(paymentId: string) {
+    setOpening(paymentId);
+    onError(undefined);
+    const problem = await openTemporaryLink(() =>
+      api.GET("/api/payments/{payment_id}/proof", { params: { path: { payment_id: paymentId } } }),
+    );
+    setOpening(undefined);
+    onError(problem);
+  }
+
+  return (
+    <section aria-labelledby="payments" className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 id="payments" className="text-section font-semibold">
+          Pagos
+        </h2>
+        <p className="text-support text-muted-foreground">
+          {bill.balance > 0 ? `Saldo ${formatPesos(bill.balance)}` : "Sin saldo"}
+        </p>
+      </div>
+      <ul className="flex flex-col rounded-xl border border-border bg-card pr-1.5 pl-3.5">
+        {bill.payments.map((payment) => (
+          <li
+            key={payment.id}
+            className="flex min-h-16 items-center gap-2 border-t border-border py-2 first:border-t-0"
+          >
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <p className="text-section font-semibold">{formatPesos(payment.amount)}</p>
+              <p className="truncate text-support text-muted-foreground">
+                {formatDate(payment.payment_date)} · {PAYMENT_METHOD_LABELS[payment.method]}
+              </p>
+            </div>
+            {payment.has_proof && (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={Boolean(opening)}
+                onClick={() => openProof(payment.id)}
+              >
+                {opening === payment.id ? "Abriendo…" : "Comprobante"}
+              </Button>
+            )}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground"
+                  disabled={deleting}
+                  aria-label={`Eliminar el pago de ${formatPesos(payment.amount)}`}
+                >
+                  <Trash2 aria-hidden className="size-4.5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Eliminar este pago?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Se borra el pago de {formatPesos(payment.amount)} del{" "}
+                    {formatDate(payment.payment_date)}
+                    {payment.has_proof && ", con su comprobante"}, y la cuenta vuelve a deber ese
+                    valor. Úsalo solo si lo registraste por error. No se puede deshacer.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogAction variant="destructive" onClick={() => onDelete(payment.id)}>
+                    Eliminar pago
+                  </AlertDialogAction>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export function BillScreen({
+  billId,
+  proofFailed = false,
+}: {
+  billId: string;
+  /** A payment was just saved, but its proof did not go up. */
+  proofFailed?: boolean;
+}) {
   const { data: bill, error: loadError, refetch } = useBill(billId);
   const voidBill = useVoidBill();
   const send = useSendBill();
   const remind = useRemindBill();
+  const deletePayment = useDeletePayment();
   const [opening, setOpening] = useState(false);
-  const [pdfError, setPdfError] = useState<string>();
+  // What went wrong opening or uploading a file; the changes keep their own errors.
+  const [pdfError, setPdfError] = useState<string | undefined>(
+    proofFailed ? PROOF_FAILED : undefined,
+  );
   // What the last email asked for was, until the next one.
   const [emailed, setEmailed] = useState<string>();
 
@@ -131,8 +247,9 @@ export function BillScreen({ billId }: { billId: string }) {
 
   const status = BILL_STATUS[bill.status];
   // A bill with payments is not voided; neither is one already voided.
-  const voidable = bill.status === "pending" || bill.status === "overdue";
-  const changeError = voidBill.error ?? send.error ?? remind.error;
+  const voidable =
+    (bill.status === "pending" || bill.status === "overdue") && bill.payments.length === 0;
+  const changeError = voidBill.error ?? send.error ?? remind.error ?? deletePayment.error;
   const error = pdfError ?? (changeError ? errorMessage(changeError) : undefined);
   const path = { bill_id: billId };
   const voided = bill.status === "voided";
@@ -196,11 +313,20 @@ export function BillScreen({ billId }: { billId: string }) {
 
         <DocumentPreview bill={bill} />
 
+        {bill.payments.length > 0 && (
+          <PaymentsSection
+            bill={bill}
+            deleting={deletePayment.isPending}
+            onError={setPdfError}
+            onDelete={(payment_id) => deletePayment.mutate({ params: { path: { payment_id } } })}
+          />
+        )}
+
         <section aria-labelledby="activity" className="flex flex-col gap-2.5">
           <h2 id="activity" className="text-section font-semibold">
             Actividad
           </h2>
-          {/* Newest first. Payments join this list in stage 5. */}
+          {/* Newest first. */}
           <ol className="flex flex-col gap-2.5 text-section">
             {bill.voided_at && (
               <li className="flex justify-between gap-3">
@@ -242,39 +368,25 @@ export function BillScreen({ billId }: { billId: string }) {
         </section>
       </main>
       <ActionFooter>
-        {!voided && !wasSent && (
-          <Button disabled={emailing} onClick={sendBill}>
-            {send.isPending ? "Enviando…" : "Enviar al arrendatario"}
+        {hasBalance && (
+          <Button asChild>
+            <Link href={`/bills/${bill.id}/payment`}>Registrar pago</Link>
           </Button>
         )}
-        {wasSent && hasBalance && (
-          <Button
-            variant="outline"
-            size="md"
-            disabled={emailing}
-            onClick={sendReminder}
-          >
-            {remind.isPending ? "Enviando…" : "Enviar recordatorio"}
-          </Button>
-        )}
-        <div
-          className={cn(
-            "grid gap-2",
-            voidable && wasSent ? "grid-cols-3" : voidable || wasSent ? "grid-cols-2" : "",
+        {/* The rest, two to a row; an odd one out takes the whole row. */}
+        <div className="grid grid-cols-2 gap-2 *:last:odd:col-span-2">
+          {!voided && (
+            <Button variant="outline" size="md" disabled={emailing} onClick={sendBill}>
+              {send.isPending ? "Enviando…" : wasSent ? "Reenviar" : "Enviar"}
+            </Button>
           )}
-        >
-          {!voided && wasSent && (
-            <Button
-              variant="outline"
-              size="md"
-              disabled={emailing}
-              onClick={sendBill}
-            >
-              {send.isPending ? "Enviando…" : "Reenviar"}
+          {wasSent && hasBalance && (
+            <Button variant="outline" size="md" disabled={emailing} onClick={sendReminder}>
+              {remind.isPending ? "Enviando…" : "Recordar"}
             </Button>
           )}
           <Button variant="outline" size="md" disabled={opening} onClick={openPdf}>
-            {opening ? "Abriendo…" : wasSent && voidable ? "PDF" : "Descargar PDF"}
+            {opening ? "Abriendo…" : "Descargar PDF"}
           </Button>
           {voidable && (
             <AlertDialog>

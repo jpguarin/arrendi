@@ -13,23 +13,25 @@ export function documentProblem(file: File): string | undefined {
   return undefined;
 }
 
+type Answer<T> = { data?: T; error?: ApiError };
+
 /**
- * Attaches the signed lease to a lease. Returns an error message, or undefined if it worked.
+ * Sends a file in three steps. Returns an error message, or undefined if it worked.
  *
  * The file does not go through the API, which cannot take large requests: the API hands
  * out a signed link, the browser sends the file straight to storage, and the API then
  * checks what arrived.
  */
-export async function uploadLeaseDocument(leaseId: string, file: File): Promise<string | undefined> {
+async function sendFile(
+  file: File,
+  askForLink: () => Promise<Answer<{ upload_url: string; path: string }>>,
+  confirm: (path: string) => Promise<Answer<unknown>>,
+): Promise<string | undefined> {
   const problem = documentProblem(file);
   if (problem) return problem;
 
   try {
-    const path = { lease_id: leaseId };
-    const link = await api.POST("/api/leases/{lease_id}/document/upload-url", {
-      params: { path },
-      body: { filename: file.name, content_type: file.type, size: file.size },
-    });
+    const link = await askForLink();
     if (!link.data) return apiErrorMessage(link.error);
 
     const sent = await fetch(link.data.upload_url, {
@@ -39,14 +41,37 @@ export async function uploadLeaseDocument(leaseId: string, file: File): Promise<
     });
     if (!sent.ok) return "No pudimos subir el archivo. Inténtalo de nuevo.";
 
-    const confirmed = await api.POST("/api/leases/{lease_id}/document", {
-      params: { path },
-      body: { path: link.data.path },
-    });
+    const confirmed = await confirm(link.data.path);
     return confirmed.data ? undefined : apiErrorMessage(confirmed.error);
   } catch {
     return CONNECTION_ERROR;
   }
+}
+
+const describe = (file: File) => ({
+  filename: file.name,
+  content_type: file.type,
+  size: file.size,
+});
+
+/** Attaches the signed lease to a lease. Returns an error message, or undefined. */
+export function uploadLeaseDocument(leaseId: string, file: File): Promise<string | undefined> {
+  const params = { path: { lease_id: leaseId } };
+  return sendFile(
+    file,
+    () => api.POST("/api/leases/{lease_id}/document/upload-url", { params, body: describe(file) }),
+    (path) => api.POST("/api/leases/{lease_id}/document", { params, body: { path } }),
+  );
+}
+
+/** Attaches the proof of payment to a payment. Returns an error message, or undefined. */
+export function uploadPaymentProof(paymentId: string, file: File): Promise<string | undefined> {
+  const params = { path: { payment_id: paymentId } };
+  return sendFile(
+    file,
+    () => api.POST("/api/payments/{payment_id}/proof/upload-url", { params, body: describe(file) }),
+    (path) => api.POST("/api/payments/{payment_id}/proof", { params, body: { path } }),
+  );
 }
 
 /**

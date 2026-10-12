@@ -10,10 +10,16 @@ import { DOCUMENT_TYPES, documentProblem } from "@/lib/api/documents";
 type DocumentPickerProps = {
   file: File | null;
   onChange: (file: File | null) => void;
+  /** What the button says. By default, it asks for the signed lease. */
+  label?: string;
 };
 
-/** Picks the signed lease from the camera or the files of the phone. It is optional. */
-export function DocumentPicker({ file, onChange }: DocumentPickerProps) {
+/** Picks a document from the camera or the files of the phone. It is optional. */
+export function DocumentPicker({
+  file,
+  onChange,
+  label = "Subir contrato firmado (opcional)",
+}: DocumentPickerProps) {
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string>();
 
@@ -56,7 +62,7 @@ export function DocumentPicker({ file, onChange }: DocumentPickerProps) {
       ) : (
         <Button type="button" variant="dashed" size="md" onClick={() => input.current?.click()}>
           <Upload aria-hidden />
-          Subir contrato firmado (opcional)
+          {label}
         </Button>
       )}
       {error && <FieldError>{error}</FieldError>}

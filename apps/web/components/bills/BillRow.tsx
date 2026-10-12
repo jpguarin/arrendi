@@ -10,7 +10,11 @@ type Bill = components["schemas"]["BillSummary"];
 /** What matters about the bill right now, next to its number. */
 function situation(bill: Bill): string {
   if (bill.status === "voided") return "anulada";
-  if (bill.status === "paid") return "pagada";
+  if (bill.status === "paid") {
+    return bill.last_payment_date ? `pagó el ${formatDayMonth(bill.last_payment_date)}` : "pagada";
+  }
+  // With a payment on it, what is left matters more than when it is due.
+  if (bill.balance < bill.total) return `saldo ${formatPesos(bill.balance)}`;
   const due = formatDayMonth(bill.due_date);
   return bill.status === "overdue" ? `venció el ${due}` : `vence el ${due}`;
 }

@@ -81,3 +81,12 @@ export function formatDateTime(isoInstant: string): string {
 export function todayInBogota(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" }).format(now);
 }
+
+/** Whole days from one business date to another: positive when `to` is later. */
+export function daysBetween(fromIsoDate: string, toIsoDate: string): number {
+  const utc = (isoDate: string) => {
+    const [year, month, day] = isoDate.slice(0, 10).split("-").map(Number);
+    return Date.UTC(year, month - 1, day);
+  };
+  return Math.round((utc(toIsoDate) - utc(fromIsoDate)) / 86_400_000);
+}

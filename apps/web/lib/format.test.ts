@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  daysBetween,
   formatBillNumber,
   formatDate,
   formatDateTime,
@@ -86,4 +87,11 @@ test("a month is written with its name and year", () => {
 test("a date can be written long, or short without its year", () => {
   assert.equal(formatLongDate("2026-10-05"), "5 de octubre de 2026");
   assert.equal(formatDayMonth("2026-10-05"), "5 oct");
+});
+
+test("days between two business dates, across months and years", () => {
+  assert.equal(daysBetween("2026-10-05", "2026-10-10"), 5);
+  assert.equal(daysBetween("2026-10-05", "2026-10-05"), 0);
+  assert.equal(daysBetween("2026-10-05", "2026-10-03"), -2);
+  assert.equal(daysBetween("2026-12-30", "2027-01-02"), 3);
 });

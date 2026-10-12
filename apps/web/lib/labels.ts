@@ -38,6 +38,19 @@ export const BILL_STATUS: Record<
   voided: { label: "Anulada", tone: "neutral" },
 };
 
+export type PaymentMethod = Schemas["PaymentCreate"]["method"];
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  transfer: "Transferencia",
+  nequi: "Nequi",
+  cash: "Efectivo",
+  other: "Otro",
+};
+
+export const PAYMENT_METHOD_OPTIONS = (
+  Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]
+).map((value) => ({ value, label: PAYMENT_METHOD_LABELS[value] }));
+
 type Notification = Schemas["NotificationResponse"];
 
 // What each email was, as the activity of a bill tells it.

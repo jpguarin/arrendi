@@ -135,9 +135,13 @@ export function BillsScreen({ initialUnitId }: { initialUnitId?: string }) {
                 <h2 id={`month-${month}`} className="text-section font-semibold">
                   {formatMonth(month)}
                 </h2>
-                {/* The collected part joins this figure with the payments (stage 5). */}
+                {/* Collected of expected: the same figures the home screen shows. */}
                 <p className="text-support text-muted-foreground">
-                  {formatPesos(monthBills.reduce((sum, bill) => sum + bill.total, 0))}
+                  {status === "voided"
+                    ? formatPesos(monthBills.reduce((sum, bill) => sum + bill.total, 0))
+                    : `${formatPesos(
+                        monthBills.reduce((sum, bill) => sum + bill.total - bill.balance, 0),
+                      )} de ${formatPesos(monthBills.reduce((sum, bill) => sum + bill.total, 0))}`}
                 </p>
               </div>
               <ul className="flex flex-col rounded-xl border border-border bg-card px-3.5">

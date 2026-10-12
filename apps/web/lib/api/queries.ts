@@ -24,6 +24,8 @@ const leaseKey = (leaseId: string) =>
   $api.queryOptions("get", "/api/leases/{lease_id}", { params: { path: { lease_id: leaseId } } })
     .queryKey;
 
+// Every month of the home screen.
+const SUMMARIES = ["get", "/api/summary"] as const;
 const SETTINGS = $api.queryOptions("get", "/api/settings").queryKey;
 // Every list of bills, whatever its filters: the key of each one starts like this.
 const BILL_LISTS = ["get", "/api/bills"] as const;
@@ -39,6 +41,9 @@ export const useProperties = () => $api.useQuery("get", "/api/properties");
 
 export const useLease = (leaseId: string) =>
   $api.useQuery("get", "/api/leases/{lease_id}", { params: { path: { lease_id: leaseId } } });
+
+/** The home screen: the figures of the current month and who owes what. */
+export const useSummary = () => $api.useQuery("get", "/api/summary");
 
 export const useSettings = () => $api.useQuery("get", "/api/settings");
 
@@ -112,6 +117,9 @@ function putLease(client: QueryClient, lease: Lease) {
 function putBill(client: QueryClient, bill: Bill) {
   client.setQueryData<Bill>(billKey(bill.id), bill);
   markStale(client, BILL_LISTS);
+  // A bill or a payment changes the figures of the home screen and how its unit is doing.
+  markStale(client, SUMMARIES);
+  markStale(client, PROPERTIES);
   // The lease shows its latest bills, and it may be the screen that is open right now.
   client.invalidateQueries({ queryKey: leaseKey(bill.lease_id) });
 }
@@ -257,4 +265,29 @@ export function useRemindBill() {
   return $api.useMutation("post", "/api/bills/{bill_id}/remind", {
     onSuccess: (bill) => putEmailedBill(client, bill),
   });
+}
+
+/** Registers a payment on a bill. The receipt, if asked for, goes out right after. */
+export function useRegisterPayment() {
+  const client = useQueryClient();
+  return $api.useMutation("post", "/api/bills/{bill_id}/payments", {
+    onSuccess: (bill) => putEmailedBill(client, bill),
+  });
+}
+
+/** Removes a payment entered by mistake. */
+export function useDeletePayment() {
+  const client = useQueryClient();
+  return $api.useMutation("delete", "/api/payments/{payment_id}", {
+    onSuccess: (bill) => putBill(client, bill),
+  });
+}
+
+/** Asks for a bill again, after a proof of payment went up outside these hooks. */
+export function useRefreshBill(billId: string) {
+  const client = useQueryClient();
+  return useCallback(
+    () => client.invalidateQueries({ queryKey: billKey(billId) }),
+    [client, billId],
+  );
 }
