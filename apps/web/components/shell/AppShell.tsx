@@ -4,7 +4,7 @@ import { Building2, FileText, House, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { BrandMark } from "@/components/Brand";
+import { Brand, BrandMark } from "@/components/Brand";
 import { cn } from "@/lib/utils";
 
 // `under` are the paths that belong to a section without starting like its link.
@@ -29,7 +29,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-dvh flex-col md:grid md:grid-cols-[4.25rem_minmax(0,1fr)]">
-      <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* On a phone the brand heads each section; from tablet up it is on the rail. */}
+        {topLevel && (
+          <div className="flex h-13 items-center border-b border-border bg-card px-4 md:hidden">
+            <Brand />
+          </div>
+        )}
+        {children}
+      </div>
       <nav
         aria-label="Principal"
         className={cn(

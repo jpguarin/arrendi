@@ -99,7 +99,7 @@ Los cuatro rellenos se validaron como paleta (separación para daltonismo y cont
 
 | Ancho | Navegación | Lista y detalle |
 | --- | --- | --- |
-| Celular (menos de 768 px) | Barra inferior navy con las cuatro secciones. Se oculta al abrir un detalle | El detalle ocupa toda la pantalla; "volver" regresa a la lista |
+| Celular (menos de 768 px) | Cabecera con el isotipo y el nombre, y barra inferior navy con las cuatro secciones. Las dos se ocultan al abrir un detalle | El detalle ocupa toda la pantalla; "volver" regresa a la lista |
 | Tablet (768 px o más) | Riel navy de 68 px a la izquierda | Lista y panel de 360 px lado a lado |
 | Escritorio (1280 px o más) | Igual | El panel mide 408 px |
 
