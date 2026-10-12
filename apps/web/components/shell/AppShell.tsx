@@ -32,7 +32,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* On a phone the brand heads each section; from tablet up it is on the rail. */}
         {topLevel && (
-          <div className="flex h-15 items-center border-b border-border bg-card px-4 md:hidden">
+          <div className="flex h-15 items-center border-b border-border bg-card px-4 pt-2 md:hidden">
             <Brand className="h-6" />
           </div>
         )}
