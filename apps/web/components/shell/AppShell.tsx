@@ -32,7 +32,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* On a phone the brand heads each section; from tablet up it is on the rail. */}
         {topLevel && (
-          <div className="flex h-13 items-center border-b border-border bg-card px-4 md:hidden">
+          <div className="flex h-15 items-center border-b border-border bg-card px-4 md:hidden">
             <Brand className="h-6" />
           </div>
         )}
@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               href={href}
               aria-current={current ? "page" : undefined}
               className={cn(
-                "relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-nav font-semibold outline-none hover:text-rail-foreground focus-visible:bg-rail-active md:w-full md:flex-none md:rounded-lg",
+                "relative flex min-h-18 pb-2 flex-1 flex-col items-center justify-center gap-0.5 text-nav font-semibold outline-none hover:text-rail-foreground focus-visible:bg-rail-active md:w-full md:flex-none md:rounded-lg",
                 // A green mark on the current section: above it on the bar, beside it on the rail.
                 "before:absolute before:top-0 before:left-1/2 before:hidden before:h-0.75 before:w-7 before:-translate-x-1/2 before:rounded-b-full before:bg-brand-green md:before:top-1/2 md:before:-left-1.5 md:before:h-6 md:before:w-0.75 md:before:translate-x-0 md:before:-translate-y-1/2 md:before:rounded-r-full md:before:rounded-bl-none",
                 current && "text-rail-foreground before:block md:bg-rail-active",
