@@ -33,7 +33,7 @@
 | Ajustes mínimo en la etapa 3 | Nombre, documento y datos de pago se adelantan a la etapa 3, porque el PDF los necesita. El resto de la configuración sigue en la etapa 4 |
 | Cuenta con vencimiento pasado | Nace `overdue`, sin esperar a la tarea diaria |
 | Proveedor de correo | Resend, por su API HTTP con `httpx2`, sin SDK |
-| Correos hasta la etapa 6 | Todos van al buzón de pruebas (`EMAIL_TEST_INBOX`), también en Producción, con el destinatario real en el asunto. Con el dominio propio, la variable se quita de Producción |
+| Correos hasta la etapa 7 | Todos van al buzón de pruebas (`EMAIL_TEST_INBOX`), también en Producción, con el destinatario real en el asunto. Con el dominio propio, la variable se quita de Producción |
 | Cuenta generada a mano | No se envía sola: queda con el botón "Enviar". Solo la tarea diaria envía sola |
 | Recordatorios | Solo de cuentas que ya se enviaron, y uno por cuenta en cada ejecución de la tarea |
 | Playwright | Corre todo en local: la web, la API contra la base `arrendi_e2e` de PostgreSQL y dos servidores falsos (acceso y almacenamiento). Nunca contra Supabase |
@@ -63,11 +63,11 @@ Hay que resolverlas antes de la etapa indicada.
 
 | Decisión | Antes de |
 | --- | --- |
-| Dominio de envío del correo | Etapa 6 |
-| Plan de Vercel: confirmar si el gratuito admite uso comercial | Etapa 6 |
-| Verificar dominio y registro de marca de Arrendi ante la SIC | Etapa 6 |
-| Confirmar con un contador si basta la cuenta de cobro o hará falta factura electrónica | Etapa 6 |
-| Texto de la política de tratamiento de datos | Etapa 6 |
+| Dominio de envío del correo | Etapa 7 |
+| Plan de Vercel: confirmar si el gratuito admite uso comercial | Etapa 7 |
+| Verificar dominio y registro de marca de Arrendi ante la SIC | Etapa 7 |
+| Confirmar con un contador si basta la cuenta de cobro o hará falta factura electrónica | Etapa 7 |
+| Texto de la política de tratamiento de datos | Etapa 7 |
 | Precios y límites de los planes | Después del MVP |
 
 ## Por verificar en documentación vigente

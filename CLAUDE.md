@@ -21,7 +21,8 @@ Lee el documento que corresponda antes de tocar esa parte del sistema. Si el có
 | `docs/etapa-3.md` | Guía paso a paso de la etapa 3 (cuentas de cobro), ya cerrada. Sirve de registro de lo decidido |
 | `docs/etapa-4.md` | Guía paso a paso de la etapa 4 (correo y tarea diaria), ya cerrada. Sirve de registro de lo decidido |
 | `docs/etapa-5.md` | Guía paso a paso de la etapa 5 (pagos e inicio), ya cerrada. Sirve de registro de lo decidido |
-| `docs/etapa-6.md` | Plan de la etapa 6 (piloto), propuesto y sin empezar |
+| `docs/etapa-7.md` | Plan de la etapa 7 (piloto), propuesto y sin empezar |
+| `docs/new-brand-design/` | Marca nueva: colores, fuentes, logo y los mocks de la etapa 6. La propuesta elegida es `mockups/propuesta-b-libro.html` |
 | `docs/decisiones.md` | Decisiones tomadas, provisionales y pendientes |
 | `docs/mockups/` | Marcado de las 10 pantallas diseñadas, como referencia visual |
 

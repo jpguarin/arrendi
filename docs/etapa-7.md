@@ -1,6 +1,6 @@
-# Etapa 6: guía paso a paso
+# Etapa 7: guía paso a paso
 
-Guía de trabajo de la etapa 6 (piloto). Las tareas y los criterios de aceptación oficiales están en `docs/plan.md`; este documento detalla el orden, qué hace cada paso y cómo se comprueba. Se marca cada paso al terminarlo.
+Guía de trabajo de la etapa 7 (piloto). Las tareas y los criterios de aceptación oficiales están en `docs/plan.md`; este documento detalla el orden, qué hace cada paso y cómo se comprueba. Se marca cada paso al terminarlo.
 
 **Estado:** plan propuesto el 11 de octubre de 2026. No se ha empezado: falta la aprobación del fundador y el nombre del dominio.
 
@@ -119,7 +119,7 @@ Sigue la guía de despliegue de `docs/arquitectura.md`:
 
 ### [ ] Paso 10. Cierre
 
-- `pnpm lint`, `pnpm test`, `pnpm build` y `pnpm e2e`; casillas de la etapa 6 en `docs/plan.md`.
+- `pnpm lint`, `pnpm test`, `pnpm build` y `pnpm e2e`; casillas de la etapa 7 en `docs/plan.md`.
 
 ## Riesgos
 

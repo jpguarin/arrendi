@@ -1,6 +1,6 @@
 # Plan de construcción
 
-Seis etapas, en orden. Cada una termina con sus criterios de aceptación cumplidos y sus casillas marcadas. No se empieza una etapa sin cerrar la anterior.
+Siete etapas, en orden. Cada una termina con sus criterios de aceptación cumplidos y sus casillas marcadas. No se empieza una etapa sin cerrar la anterior.
 
 **Etapa en curso: 6**
 
@@ -135,7 +135,32 @@ Objetivo: cerrar el ciclo de cobro.
 
 ---
 
-## Etapa 6. Piloto
+## Etapa 6. Marca nueva
+
+Objetivo: llevar la marca nueva y el diseño elegido (propuesta B, "Libro", en `docs/new-brand-design/mockups/`) a toda la aplicación, sin cambiar reglas de negocio ni rutas.
+
+- [ ] Documentos: `docs/diseno.md` reescrito con el sistema nuevo.
+- [ ] Web: tema nuevo (colores de marca, estados, Inter y Red Hat Display) en claro y oscuro.
+- [ ] Web: estructura con riel en tablet y escritorio, barra inferior en celular, y lista con panel de detalle.
+- [ ] Web: resumen del mes con indicadores, composición y recaudo por mes.
+- [ ] Web: cuentas en tabla por mes; detalle y registrar pago en el panel; historial con hora.
+- [ ] Web: inmuebles en tabla; contrato en el panel.
+- [ ] Web: acceso, alta guiada, formularios y ajustes con el tema nuevo.
+- [ ] PWA: íconos, favicon y colores del manifiesto con la marca.
+- [ ] API: PDF de la cuenta de cobro con la marca.
+- [ ] API: plantillas de correo con la marca.
+- [ ] Prueba de extremo a extremo al día con la navegación nueva.
+
+**Criterios de aceptación**
+
+- Todas las pantallas se ven bien en celular, tablet y escritorio, en claro y en oscuro.
+- En escritorio abro una cuenta o un contrato sin perder de vista la lista.
+- Ninguna función existente se pierde: todo lo que se podía hacer antes se puede hacer ahora.
+- El PDF y los correos llevan la marca nueva.
+
+---
+
+## Etapa 7. Piloto
 
 Objetivo: usarlo con los 3 arrendatarios reales durante al menos un ciclo de cobro.
 

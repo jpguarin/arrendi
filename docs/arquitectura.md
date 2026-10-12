@@ -171,9 +171,9 @@ Fuentes: <https://vercel.com/docs/frameworks/backend/fastapi>, <https://vercel.c
 | Local | En el computador, con `pnpm dev` | Proyecto Supabase de desarrollo | Desviado a un buzón de pruebas |
 | Pruebas | pytest en el computador | PostgreSQL local, con Homebrew | Doble de pruebas |
 | Vista previa | Vercel, por rama | Proyecto Supabase de desarrollo | Desviado a un buzón de pruebas |
-| Producción | Vercel | Proyecto Supabase de producción | Real desde la etapa 6; antes, desviado a un buzón de pruebas |
+| Producción | Vercel | Proyecto Supabase de producción | Real desde la etapa 7; antes, desviado a un buzón de pruebas |
 
-Fuera de producción, la API nunca envía correo a arrendatarios reales: todo destinatario se reemplaza por el buzón de pruebas (`EMAIL_TEST_INBOX`), y si esa variable falta no se envía nada. En Producción el desvío también aplica mientras la variable tenga valor; se quita en la etapa 6, con el dominio propio. El desvío vive en un solo lugar, `apps/api/app/email/sender.py`.
+Fuera de producción, la API nunca envía correo a arrendatarios reales: todo destinatario se reemplaza por el buzón de pruebas (`EMAIL_TEST_INBOX`), y si esa variable falta no se envía nada. En Producción el desvío también aplica mientras la variable tenga valor; se quita en la etapa 7, con el dominio propio. El desvío vive en un solo lugar, `apps/api/app/email/sender.py`.
 
 ## Variables de entorno
 
@@ -190,7 +190,7 @@ Fuera de producción, la API nunca envía correo a arrendatarios reales: todo de
 | `SUPABASE_SECRET_KEY` | Clave secreta (`sb_secret_...`), para el almacenamiento desde la API |
 | `STORAGE_BUCKET` | Nombre del contenedor privado |
 | `EMAIL_API_KEY` | Clave del proveedor de correo |
-| `EMAIL_SENDER` | Dirección de envío. Hasta la etapa 6, la de pruebas de Resend, que solo entrega al correo de la cuenta de Resend |
+| `EMAIL_SENDER` | Dirección de envío. Hasta la etapa 7, la de pruebas de Resend, que solo entrega al correo de la cuenta de Resend |
 | `EMAIL_TEST_INBOX` | Buzón al que se desvía todo correo. Obligatorio fuera de producción |
 | `EMAIL_WEBHOOK_SECRET` | Firma de los avisos del proveedor |
 | `CRON_SECRET` | Secreto de la tarea diaria |
