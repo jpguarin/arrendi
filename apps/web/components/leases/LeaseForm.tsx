@@ -9,6 +9,7 @@ import { MoneyField } from "@/components/MoneyField";
 import { SelectField } from "@/components/SelectField";
 import { TextareaField } from "@/components/TextareaField";
 import { FieldLegend, FieldSet } from "@/components/ui/field";
+import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   type DocumentType,
@@ -33,6 +34,7 @@ const schema = z
     start_date: z.string().min(1, "Elige la fecha de inicio."),
     end_date: z.string(),
     deposit: z.number().nullable(),
+    charge_deposit: z.boolean(),
     payment_details: paymentDetails,
   })
   // ISO dates compare as text.
@@ -60,6 +62,7 @@ export function leaseTerms(values: LeaseValues) {
     start_date: values.start_date,
     end_date: values.end_date || null,
     deposit: values.deposit,
+    charge_deposit: values.charge_deposit,
     payment_details: values.payment_details || null,
   };
 }
@@ -71,6 +74,8 @@ type LeaseFormProps = {
   units?: readonly { value: string; label: string }[];
   defaultValues?: Partial<LeaseValues>;
   showDeposit?: boolean;
+  /** Whether the first monthly bill charges the deposit. Pointless once that bill exists. */
+  showChargeDeposit?: boolean;
   /** The tenant's document, which the bill shows. The onboarding leaves it for later. */
   showTenantDocument?: boolean;
   /** How to pay this lease's bills, when it is not as Ajustes says. */
@@ -86,6 +91,7 @@ export function LeaseForm({
   units,
   defaultValues,
   showDeposit = false,
+  showChargeDeposit = false,
   showTenantDocument = false,
   showPaymentDetails = false,
   onSubmit,
@@ -110,12 +116,14 @@ export function LeaseForm({
       start_date: "",
       end_date: "",
       deposit: null,
+      charge_deposit: true,
       payment_details: "",
       ...defaultValues,
     },
   });
 
   const isNit = useWatch({ control, name: "tenant_document_type" }) === "nit";
+  const hasDeposit = Boolean(useWatch({ control, name: "deposit" }));
 
   return (
     <form id={id} onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
@@ -254,6 +262,23 @@ export function LeaseForm({
             />
           )}
         />
+      )}
+      {showDeposit && showChargeDeposit && hasDeposit && (
+        <label className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
+          <span className="flex flex-col gap-0.5">
+            <span className="text-section">Cobrar el depósito en la primera cuenta</span>
+            <span className="text-support text-muted-foreground">
+              Sale como un ítem aparte, sumado al canon. Apágalo si ya te lo pagaron.
+            </span>
+          </span>
+          <Controller
+            control={control}
+            name="charge_deposit"
+            render={({ field }) => (
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
+            )}
+          />
+        </label>
       )}
       {showPaymentDetails && (
         <TextareaField

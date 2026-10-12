@@ -89,6 +89,7 @@ export function NewLeaseScreen({ unitId }: { unitId: string | undefined }) {
       <LeaseForm
         id={FORM_ID}
         showDeposit
+        showChargeDeposit
         showTenantDocument
         showPaymentDetails
         onSubmit={onSubmit}
@@ -130,6 +131,10 @@ export function EditLeaseScreen({ leaseId }: { leaseId: string }) {
       <LeaseForm
         id={FORM_ID}
         showDeposit
+        // Only the first monthly bill charges the deposit; once it is out, there is nothing to choose.
+        showChargeDeposit={
+          !lease.recent_bills.some((bill) => bill.origin === "monthly" && bill.status !== "voided")
+        }
         showTenantDocument
         showPaymentDetails
         defaultValues={{
@@ -145,6 +150,7 @@ export function EditLeaseScreen({ leaseId }: { leaseId: string }) {
           start_date: lease.start_date,
           end_date: lease.end_date ?? "",
           deposit: lease.deposit,
+          charge_deposit: lease.charge_deposit,
           payment_details: lease.payment_details ?? "",
         }}
         onSubmit={(values: LeaseValues) =>
