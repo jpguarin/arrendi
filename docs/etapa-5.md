@@ -107,7 +107,9 @@ En los pasos 2 y 3 la prueba va primero.
 
 ### [ ] Paso 11. Cierre
 
-- `pnpm lint`, `pnpm test`, `pnpm build` y `pnpm e2e`; casillas de la etapa 5 en `docs/plan.md`. La etapa pasa a 6 cuando confirmes los criterios de aceptación.
+- `pnpm lint`, `pnpm test`, `pnpm build` y `pnpm e2e` pasan (11 de octubre de 2026).
+- Falta aplicar la migración `0006` en `arrendi-dev` y revisar las pantallas nuevas en el navegador, en ambos temas. Hasta entonces las tres casillas de pantallas de la web en `docs/plan.md` quedan sin marcar.
+- Casillas de la etapa 5 en `docs/plan.md`. La etapa pasa a 6 cuando confirmes los criterios de aceptación.
 
 ## Verificación de extremo a extremo
 
