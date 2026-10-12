@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, StringConstraints
 
 from app.schemas.common import PositivePesos
+from app.schemas.payment import PaymentMethod, PaymentResponse
 from app.schemas.settings import DocumentType
 
 BillStatus = Literal["pending", "partial", "paid", "overdue", "voided"]
@@ -36,6 +37,9 @@ class BillSummary(BaseModel):
     # Never stored: the total minus what has been paid.
     balance: int
     status: BillStatus
+    # The latest payment, if any: when it was made and how.
+    last_payment_date: date | None
+    last_payment_method: PaymentMethod | None
     lease_id: UUID
     unit_id: UUID
     unit_name: str
@@ -79,5 +83,6 @@ class BillResponse(BillSummary):
     issuer: BillIssuer
     created_at: datetime
     voided_at: datetime | None
-    # Newest first.
+    # Both newest first.
+    payments: list[PaymentResponse]
     notifications: list[NotificationResponse]

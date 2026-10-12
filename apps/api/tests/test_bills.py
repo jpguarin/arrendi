@@ -100,6 +100,8 @@ def test_monthly_bill_takes_its_terms_from_the_lease(
         "total": 950000,
         "balance": 950000,
         "status": "pending",
+        "last_payment_date": None,
+        "last_payment_method": None,
         "lease_id": str(anas.lease_id),
         "unit_id": str(anas.unit_id),
         "unit_name": "Apto ana",
@@ -115,6 +117,7 @@ def test_monthly_bill_takes_its_terms_from_the_lease(
         },
         "created_at": None,
         "voided_at": None,
+        "payments": [],
         "notifications": [],
     }
     # The PDF is stored when the bill is issued, under the owner's folder.

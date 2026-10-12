@@ -37,23 +37,27 @@ def _too_large() -> AppError:
     return AppError(422, "El archivo supera los 10 MB.", "file_too_large")
 
 
-def safe_name(filename: str, extension: str) -> str:
+def safe_name(filename: str, extension: str, fallback: str = "contrato") -> str:
     """A name storage accepts: plain letters, digits, dots and dashes, with our extension."""
     name = filename.replace("\\", "/").rsplit("/", 1)[-1]
     stem = name.rsplit(".", 1)[0] if "." in name else name
     plain = unicodedata.normalize("NFKD", stem).encode("ascii", "ignore").decode()
     plain = re.sub(r"[^A-Za-z0-9_-]+", "-", plain).strip("-_")[:MAX_NAME_LENGTH]
-    return f"{plain or 'contrato'}.{extension}"
+    return f"{plain or fallback}.{extension}"
 
 
 def _folder(lease: Lease) -> str:
     return f"{lease.owner_id}/leases/{lease.id}"
 
 
-def create_upload_url(
-    session: Session, storage: Storage, lease_id: UUID, data: UploadUrlRequest
+# The three steps of an upload, the same for a lease's document and a payment's proof.
+# `folder` is where the files of that one thing live, and starts with its owner.
+
+
+def new_upload(
+    storage: Storage, folder: str, data: UploadUrlRequest, fallback_name: str
 ) -> UploadUrlResponse:
-    lease = get_lease(session, lease_id)
+    """A signed link to upload one file into the folder, once its type and size pass."""
     extension = EXTENSIONS.get(data.content_type)
     if extension is None:
         raise _unsupported_type()
@@ -62,25 +66,67 @@ def create_upload_url(
 
     # A new folder per upload: the file being replaced stays untouched until this one is
     # confirmed, and a link can never overwrite a file that is already attached.
-    path = f"{_folder(lease)}/{uuid4()}/{safe_name(data.filename, extension)}"
+    path = f"{folder}/{uuid4()}/{safe_name(data.filename, extension, fallback_name)}"
     try:
         return UploadUrlResponse(upload_url=storage.create_upload_url(path), path=path)
     except StorageError as error:
         raise storage_unavailable() from error
 
 
-def _is_upload_of(lease: Lease, path: str) -> bool:
-    """Whether the path is one `create_upload_url` could have handed out for this lease."""
-    pattern = rf"{re.escape(_folder(lease))}/[0-9a-f-]{{36}}/[A-Za-z0-9_-]+\.(pdf|jpg|png)"
+def is_upload_of(folder: str, path: str) -> bool:
+    """Whether the path is one `new_upload` could have handed out for this folder."""
+    pattern = rf"{re.escape(folder)}/[0-9a-f-]{{36}}/[A-Za-z0-9_-]+\.(pdf|jpg|png)"
     return re.fullmatch(pattern, path) is not None
 
 
-def _delete_quietly(storage: Storage, path: str) -> None:
+def check_upload(storage: Storage, path: str) -> None:
+    """Checks what really arrived at the path: it exists, fits, and is what it says."""
+    try:
+        size = storage.size(path)
+        if size is None:
+            raise AppError(
+                400, "No recibimos el archivo. Súbelo de nuevo.", "document_not_uploaded"
+            )
+        problem = None
+        if size > MAX_SIZE:
+            problem = _too_large()
+        else:
+            extension = path.rsplit(".", 1)[-1]
+            start = storage.read_start(path, SIGNATURE_LENGTH)
+            if not start.startswith(SIGNATURES[extension]):
+                problem = _unsupported_type()
+        if problem is not None:
+            storage.delete(path)
+            raise problem
+    except StorageError as error:
+        raise storage_unavailable() from error
+
+
+def download_url(storage: Storage, path: str) -> DocumentUrlResponse:
+    try:
+        url = storage.create_download_url(path, DOWNLOAD_LINK_SECONDS)
+    except StorageError as error:
+        raise storage_unavailable() from error
+    return DocumentUrlResponse(
+        url=url, name=path.rsplit("/", 1)[-1], expires_in=DOWNLOAD_LINK_SECONDS
+    )
+
+
+def delete_quietly(storage: Storage, path: str) -> None:
     try:
         storage.delete(path)
     except StorageError:
         # The file stays behind, attached to nothing. Not worth failing the request.
         pass
+
+
+# The signed lease
+
+
+def create_upload_url(
+    session: Session, storage: Storage, lease_id: UUID, data: UploadUrlRequest
+) -> UploadUrlResponse:
+    return new_upload(storage, _folder(get_lease(session, lease_id)), data, "contrato")
 
 
 def confirm_document(
@@ -92,30 +138,11 @@ def confirm_document(
 ) -> LeaseResponse:
     lease = get_lease(session, lease_id)
     # Before touching storage: a path from anywhere else is not ours to read or delete.
-    if not _is_upload_of(lease, data.path):
+    if not is_upload_of(_folder(lease), data.path):
         raise not_found()
     if data.path == lease.document_path:
         return lease_response(session, lease)
-
-    try:
-        size = storage.size(data.path)
-        if size is None:
-            raise AppError(
-                400, "No recibimos el archivo. Súbelo de nuevo.", "document_not_uploaded"
-            )
-        problem = None
-        if size > MAX_SIZE:
-            problem = _too_large()
-        else:
-            extension = data.path.rsplit(".", 1)[-1]
-            start = storage.read_start(data.path, SIGNATURE_LENGTH)
-            if not start.startswith(SIGNATURES[extension]):
-                problem = _unsupported_type()
-        if problem is not None:
-            storage.delete(data.path)
-            raise problem
-    except StorageError as error:
-        raise storage_unavailable() from error
+    check_upload(storage, data.path)
 
     previous = lease.document_path
     lease.document_path = data.path
@@ -125,7 +152,7 @@ def confirm_document(
     if previous:
         # After the response, which is after the commit: if saving fails, the lease still
         # points at the previous file and it must still be there.
-        background.add_task(_delete_quietly, storage, previous)
+        background.add_task(delete_quietly, storage, previous)
     return lease_response(session, lease)
 
 
@@ -133,12 +160,4 @@ def get_document_url(session: Session, storage: Storage, lease_id: UUID) -> Docu
     lease = get_lease(session, lease_id)
     if lease.document_path is None:
         raise AppError(404, "Este contrato no tiene documento.", "document_not_found")
-    try:
-        url = storage.create_download_url(lease.document_path, DOWNLOAD_LINK_SECONDS)
-    except StorageError as error:
-        raise storage_unavailable() from error
-    return DocumentUrlResponse(
-        url=url,
-        name=lease.document_path.rsplit("/", 1)[-1],
-        expires_in=DOWNLOAD_LINK_SECONDS,
-    )
+    return download_url(storage, lease.document_path)

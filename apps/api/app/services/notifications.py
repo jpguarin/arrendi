@@ -6,6 +6,7 @@ and writes down how it went.
 """
 
 import logging
+from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
@@ -17,7 +18,7 @@ from app.db import set_owner_id
 from app.email.content import BillEmail, render_email
 from app.email.sender import Attachment, EmailError, EmailMessage, EmailSender
 from app.errors import AppError
-from app.models import Bill, BillItem, Lease, Notification, Owner, Tenant, Unit
+from app.models import Bill, BillItem, Lease, Notification, Owner, Payment, Tenant, Unit
 from app.models.notification import AUTOMATIC_TYPES
 from app.pdf.format import format_month
 from app.storage import Storage, StorageError
@@ -31,7 +32,25 @@ TEMPLATES = {
     "reminder_1": "reminder_1",
     "reminder_2": "reminder_2",
     "manual_reminder": "manual_reminder",
+    "receipt": "receipt",
 }
+
+# How the receipt names each way of paying.
+METHOD_LABELS = {
+    "transfer": "Transferencia",
+    "nequi": "Nequi",
+    "cash": "Efectivo",
+    "other": "Otro medio",
+}
+
+
+@dataclass(frozen=True)
+class ReceiptDetails:
+    """The payment a receipt is about."""
+
+    amount: int
+    payment_date: date
+    method: str
 
 
 def reserve(session: Session, bill: Bill, kind: str) -> Notification | None:
@@ -58,7 +77,11 @@ def reserve(session: Session, bill: Bill, kind: str) -> Notification | None:
 
 
 def _message(
-    session: Session, storage: Storage, notification: Notification, today: date
+    session: Session,
+    storage: Storage,
+    notification: Notification,
+    today: date,
+    receipt: ReceiptDetails | None,
 ) -> EmailMessage:
     bill = session.get_one(Bill, notification.bill_id)
     owner = session.get_one(Owner, bill.owner_id)
@@ -72,6 +95,9 @@ def _message(
     if bill.period:
         concept.append(format_month(bill.period))
     concept.append(unit.name)
+    paid = session.scalar(
+        select(func.coalesce(func.sum(Payment.amount), 0)).where(Payment.bill_id == bill.id)
+    )
 
     rendered = render_email(
         TEMPLATES[notification.type],
@@ -81,12 +107,27 @@ def _message(
             number=bill.number,
             concept=" · ".join(concept),
             total=bill.total,
-            # Payments arrive in stage 5; until then nothing has been paid.
-            balance=bill.total,
+            balance=bill.total - paid,
             due_date=bill.due_date,
             payment_details=owner.payment_details,
+            payment_amount=receipt.amount if receipt else None,
+            payment_date=receipt.payment_date if receipt else None,
+            payment_method=METHOD_LABELS[receipt.method] if receipt else None,
         ),
         today,
+    )
+    # A receipt says what was paid; the bill itself the tenant already has.
+    attachments = (
+        []
+        if receipt
+        else [
+            Attachment(
+                f"cuenta-de-cobro-{bill.number:04d}.pdf",
+                # The PDF stored when the bill was issued, never a new one.
+                storage.download(bill.pdf_path),
+                "application/pdf",
+            )
+        ]
     )
     return EmailMessage(
         to=notification.recipient,
@@ -95,14 +136,7 @@ def _message(
         subject=rendered.subject,
         html=rendered.html,
         text=rendered.text,
-        # The PDF stored when the bill was issued, never a new one.
-        attachments=[
-            Attachment(
-                f"cuenta-de-cobro-{bill.number:04d}.pdf",
-                storage.download(bill.pdf_path),
-                "application/pdf",
-            )
-        ],
+        attachments=attachments,
         bcc=owner.email if owner.email_copy else None,
         # One email per notification and day: a second run today cannot repeat it, and
         # tomorrow's retry of a failed one is a new attempt.
@@ -117,6 +151,7 @@ def deliver(
     notification_id: UUID,
     today: date,
     owner_id: UUID | None = None,
+    receipt: ReceiptDetails | None = None,
 ) -> bool:
     """Sends a notification that was set aside and records the outcome.
 
@@ -133,7 +168,10 @@ def deliver(
         if notification is None or notification.delivery_status not in ("pending", "failed"):
             return False
         try:
-            message = _message(session, storage, notification, today)
+            if notification.type == "receipt" and receipt is None:
+                # Its payment is only known to the request that registered it.
+                raise EmailError("a receipt cannot be sent again")
+            message = _message(session, storage, notification, today, receipt)
             notification.provider_id = mailer.send(message)
         except (EmailError, StorageError):
             logger.exception("could not send notification %s", notification_id)

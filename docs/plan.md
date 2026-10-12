@@ -115,17 +115,17 @@ Objetivo: que las cuentas y los recordatorios salgan solos.
 
 Objetivo: cerrar el ciclo de cobro.
 
-- [ ] Migración: `payments`.
-- [ ] API: registrar y eliminar pagos, con recálculo de estado.
-- [ ] API: comprobante del pago.
-- [ ] API: correo de recibo.
+- [x] Migración: `payments`.
+- [x] API: registrar y eliminar pagos, con recálculo de estado.
+- [x] API: comprobante del pago.
+- [x] API: correo de recibo.
 - [ ] API: `GET /api/summary`.
 - [ ] Web: pantalla de registrar pago.
 - [ ] Web: pantalla de inicio.
 - [ ] Web: estado de cada unidad en inmuebles.
 - [ ] Playwright en `apps/e2e/` y el script `pnpm e2e`.
 - [ ] Prueba de extremo a extremo: alta, generación de cuenta, pago parcial y pago del saldo.
-- [ ] Pruebas: transiciones de estado de `docs/reglas-de-negocio.md`, una por una.
+- [x] Pruebas: transiciones de estado de `docs/reglas-de-negocio.md`, una por una.
 
 **Criterios de aceptación**
 

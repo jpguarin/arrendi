@@ -53,19 +53,19 @@ En los pasos 2 y 3 la prueba va primero.
 - `docs/api.md`: pagos, comprobante en dos pasos, `summary`, y los estados `overdue` y `partial` de la unidad.
 - `docs/modelo-de-datos.md` (permiso de borrado y ruta del comprobante), `docs/arquitectura.md` (cómo corre Playwright), `docs/decisiones.md`, `docs/diseno.md` y `CLAUDE.md` (esta guía, `pnpm e2e` y la sección de pruebas).
 
-### [ ] Paso 2. Migración `0006` y modelo
+### [x] Paso 2. Migración `0006` y modelo
 
 - `payments`, con `0005_notifications.py` como molde: clave foránea compuesta a `bills`, `amount > 0`, `check` de `method`. `arrendi_api`: select, insert, update y delete. `arrendi_tasks`: select.
 - `app/models/payment.py`; `OWNED_TABLES` de `tests/conftest.py`.
 - **Se comprueba:** `tests/test_payment_tables.py`: restricciones, política, permisos y cruce entre propietarios.
 
-### [ ] Paso 3. Registrar y eliminar pagos
+### [x] Paso 3. Registrar y eliminar pagos
 
 - `app/services/payments.py` y `app/routes/payments.py`: `POST /api/bills/{id}/payments` y `DELETE /api/payments/{id}`. Bloquea la cuenta (`select ... for update`), valida (valor mayor que cero y no mayor al saldo, fecha no futura en `America/Bogota`, cuenta ni `paid` ni `voided`) y recalcula el estado.
 - El saldo deja de ser igual al total: `app/services/bills.py` lo calcula con los pagos en el listado, el detalle, los correos y los recordatorios. La anulación comprueba los pagos de verdad. `GET /api/bills/{id}` trae `payments`.
 - **Se comprueba:** cada transición de `docs/reglas-de-negocio.md`, una por una; pago mayor al saldo, fecha futura y cuenta pagada o anulada se rechazan; dos pagos simultáneos no superan el saldo; eliminar recalcula; no se anula una cuenta con pagos; aislamiento.
 
-### [ ] Paso 4. Comprobante y recibo
+### [x] Paso 4. Comprobante y recibo
 
 - Comprobante: `POST /api/payments/{id}/proof/upload-url`, `POST /api/payments/{id}/proof` y `GET /api/payments/{id}/proof`, reutilizando la validación de `app/services/documents.py` (tipo real, tamaño, ruta entregada por la API).
 - Recibo: con `send_receipt`, el pago aparta una notificación `receipt` y el correo sale después de confirmar, por `app/services/notifications.py`.

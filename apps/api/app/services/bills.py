@@ -3,12 +3,22 @@ from datetime import date
 from uuid import UUID, uuid4
 
 from fastapi import BackgroundTasks
-from sqlalchemy import Select, func, select
+from sqlalchemy import Select, exists, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.errors import AppError, conflict, not_found, storage_unavailable
-from app.models import Bill, BillItem, Lease, Notification, Owner, Property, Tenant, Unit
+from app.models import (
+    Bill,
+    BillItem,
+    Lease,
+    Notification,
+    Owner,
+    Payment,
+    Property,
+    Tenant,
+    Unit,
+)
 from app.pdf.bill import BillDocument, BillLine, render_bill
 from app.pdf.format import format_month
 from app.schemas.bill import (
@@ -21,6 +31,7 @@ from app.schemas.bill import (
     NotificationResponse,
 )
 from app.schemas.document import DocumentUrlResponse
+from app.schemas.payment import PaymentResponse
 from app.storage import Storage, StorageError
 
 logger = logging.getLogger(__name__)
@@ -185,9 +196,43 @@ def issue_manual_bill(session: Session, storage: Storage, today: date, data: Bil
 _MONTH = func.coalesce(Bill.period, func.date_trunc("month", Bill.due_date))
 
 
-def _summaries(session: Session, query: Select) -> list[BillSummary]:
+# What has been paid on each bill. The balance is never stored: it is the total minus this.
+PAID = (
+    select(func.coalesce(func.sum(Payment.amount), 0))
+    .where(Payment.bill_id == Bill.id)
+    .correlate(Bill)
+    .scalar_subquery()
+)
+
+
+def _last_payment(column: object) -> object:
+    return (
+        select(column)
+        .where(Payment.bill_id == Bill.id)
+        .order_by(Payment.payment_date.desc(), Payment.created_at.desc())
+        .limit(1)
+        .correlate(Bill)
+        .scalar_subquery()
+    )
+
+
+def paid_amount(session: Session, bill_id: UUID) -> int:
+    return session.scalar(
+        select(func.coalesce(func.sum(Payment.amount), 0)).where(Payment.bill_id == bill_id)
+    )
+
+
+def bill_summaries(session: Session, query: Select) -> list[BillSummary]:
+    """The bills a `select(Bill)` finds, each with who owes it and what is left to pay."""
     rows = session.execute(
-        query.add_columns(Unit.id, Unit.name, Tenant.name)
+        query.add_columns(
+            Unit.id,
+            Unit.name,
+            Tenant.name,
+            PAID,
+            _last_payment(Payment.payment_date),
+            _last_payment(Payment.method),
+        )
         .join(Lease, Lease.id == Bill.lease_id)
         .join(Unit, Unit.id == Lease.unit_id)
         .join(Tenant, Tenant.id == Lease.tenant_id)
@@ -201,15 +246,16 @@ def _summaries(session: Session, query: Select) -> list[BillSummary]:
             issue_date=bill.issue_date,
             due_date=bill.due_date,
             total=bill.total,
-            # Payments arrive in stage 5; until then nothing has been paid.
-            balance=bill.total,
+            balance=bill.total - paid,
             status=bill.status,
+            last_payment_date=last_date,
+            last_payment_method=last_method,
             lease_id=bill.lease_id,
             unit_id=unit_id,
             unit_name=unit_name,
             tenant_name=tenant_name,
         )
-        for bill, unit_id, unit_name, tenant_name in rows
+        for bill, unit_id, unit_name, tenant_name, paid, last_date, last_method in rows
     ]
 
 
@@ -233,7 +279,7 @@ def list_bills(
         query = query.where(belongs_to >= from_date)
     if to_date is not None:
         query = query.where(belongs_to <= to_date)
-    return _summaries(session, query)
+    return bill_summaries(session, query)
 
 
 def recent_bills(session: Session, lease_id: UUID) -> list[BillSummary]:
@@ -244,7 +290,7 @@ def recent_bills(session: Session, lease_id: UUID) -> list[BillSummary]:
         .order_by(Bill.number.desc())
         .limit(RECENT_BILLS)
     )
-    return _summaries(session, query)
+    return bill_summaries(session, query)
 
 
 def get_bill(session: Session, bill_id: UUID) -> Bill:
@@ -255,13 +301,18 @@ def get_bill(session: Session, bill_id: UUID) -> Bill:
 
 
 def bill_response(session: Session, bill: Bill) -> BillResponse:
-    summary = _summaries(session, select(Bill).where(Bill.id == bill.id))[0]
+    summary = bill_summaries(session, select(Bill).where(Bill.id == bill.id))[0]
     owner = session.get_one(Owner, bill.owner_id)
     lease = session.get_one(Lease, bill.lease_id)
     tenant = session.get_one(Tenant, lease.tenant_id)
     unit = session.get_one(Unit, lease.unit_id)
     items = session.scalars(
         select(BillItem).where(BillItem.bill_id == bill.id).order_by(BillItem.created_at)
+    )
+    payments = session.scalars(
+        select(Payment)
+        .where(Payment.bill_id == bill.id)
+        .order_by(Payment.payment_date.desc(), Payment.created_at.desc())
     )
     notifications = session.scalars(
         select(Notification)
@@ -281,6 +332,17 @@ def bill_response(session: Session, bill: Bill) -> BillResponse:
         ),
         created_at=bill.created_at,
         voided_at=bill.voided_at,
+        payments=[
+            PaymentResponse(
+                id=p.id,
+                payment_date=p.payment_date,
+                amount=p.amount,
+                method=p.method,
+                has_proof=p.proof_path is not None,
+                created_at=p.created_at,
+            )
+            for p in payments
+        ],
         notifications=[
             NotificationResponse(
                 id=n.id,
@@ -326,9 +388,9 @@ def void_bill(
     bill = get_bill(session, bill_id)
     if bill.status == "voided":
         raise AppError(400, "Esta cuenta ya está anulada.", "bill_already_voided")
-    # Until payments have their own table (stage 5), these two statuses are what says
-    # that a bill has them.
-    if bill.status in ("partial", "paid"):
+    # An overdue bill may have payments too, so the status alone does not say.
+    has_payments = session.scalar(select(exists().where(Payment.bill_id == bill.id)))
+    if has_payments or bill.status in ("partial", "paid"):
         raise AppError(
             400,
             "Esta cuenta tiene pagos y no se puede anular.",
