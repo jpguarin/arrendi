@@ -14,13 +14,14 @@ from reportlab.pdfgen.canvas import Canvas
 
 from app.pdf.format import format_long_date, format_number, format_pesos
 
-# The light palette of docs/diseno.md.
-FOREGROUND = HexColor("#14201C")
-MUTED = HexColor("#55635E")
-SOFT = HexColor("#3A4743")
-BORDER = HexColor("#E1E6E3")
-BACKGROUND = HexColor("#F3F5F4")
-ALERT = HexColor("#8A3D06")
+# The light palette of docs/diseno.md, on the brand of docs/new-brand-design.
+FOREGROUND = HexColor("#14264C")
+MUTED = HexColor("#55607A")
+SOFT = HexColor("#33456E")
+BORDER = HexColor("#DFE3EC")
+BACKGROUND = HexColor("#F5F6F9")
+ALERT = HexColor("#A3321E")
+BRAND_GREEN = HexColor("#28B779")
 
 # Helvetica comes with every PDF reader, so no font file travels with the API.
 REGULAR = "Helvetica"
@@ -71,6 +72,37 @@ def _rule(canvas: Canvas, y: float) -> None:
     canvas.line(MARGIN, y, RIGHT, y)
 
 
+def _brand_mark(canvas: Canvas, x: float, y: float, height: float) -> float:
+    """The isotipo, drawn from the measures of arrendi-logo.svg. Returns its width.
+
+    `x` and `y` are its bottom left corner. The house is one thick line with round
+    ends, as in the logo: wall, roof and wall; then the chimney and the four windows.
+    """
+    scale = height / 142
+    canvas.saveState()
+    # The logo measures from its top left corner, with `y` growing downwards.
+    canvas.translate(x - 18 * scale, y + 148 * scale)
+    canvas.scale(scale, -scale)
+    canvas.setStrokeColor(FOREGROUND)
+    canvas.setFillColor(FOREGROUND)
+    canvas.setLineWidth(27)
+    canvas.setLineCap(1)
+    canvas.setLineJoin(1)
+    house = canvas.beginPath()
+    house.moveTo(35, 130.5)
+    house.lineTo(35, 75)
+    house.lineTo(103.5, 22.5)
+    house.lineTo(173, 75)
+    house.lineTo(173, 130.5)
+    canvas.drawPath(house, stroke=1, fill=0)
+    canvas.roundRect(137, 12, 28, 50, 6, stroke=0, fill=1)
+    canvas.setFillColor(BRAND_GREEN)
+    for left, top in ((77, 85), (106, 85), (77, 114), (106, 114)):
+        canvas.roundRect(left, top, 25, 25, 5.5, stroke=0, fill=1)
+    canvas.restoreState()
+    return 172 * scale
+
+
 def _wrapped(text: str, font: str, size: float, width: float) -> list[str]:
     """The text cut into lines that fit, keeping the line breaks it already has."""
     lines: list[str] = []
@@ -85,6 +117,10 @@ def render_bill(bill: BillDocument) -> bytes:
     canvas = Canvas(buffer, pagesize=letter, pageCompression=0)
     canvas.setTitle(f"Cuenta de cobro {format_number(bill.number)}")
     canvas.setAuthor(bill.owner_name)
+
+    # A band of the brand color across the top edge.
+    canvas.setFillColor(FOREGROUND)
+    canvas.rect(0, HEIGHT - 8, WIDTH, 8, stroke=0, fill=1)
 
     # Heading: what it is on the left, who issues it on the right.
     y = HEIGHT - MARGIN - 8
@@ -156,9 +192,15 @@ def render_bill(bill: BillDocument) -> bytes:
         canvas.drawString(MARGIN + 14, text_y, note)
         text_y -= 16
 
-    canvas.setFillColor(MUTED)
-    canvas.setFont(REGULAR, 9)
-    canvas.drawCentredString(WIDTH / 2, MARGIN / 2, "Arrendi")
+    # The brand, small at the foot: the bill is the owner's, Arrendi only issues it.
+    canvas.setFont(BOLD, 10)
+    name_width = canvas.stringWidth("Arrendi", BOLD, 10)
+    mark_height = 12
+    mark_width = 172 * mark_height / 142
+    left = (WIDTH - mark_width - 5 - name_width) / 2
+    _brand_mark(canvas, left, MARGIN / 2 - 2, mark_height)
+    canvas.setFillColor(FOREGROUND)
+    canvas.drawString(left + mark_width + 5, MARGIN / 2, "Arrendi")
 
     if bill.voided:
         # Across the page, so no copy of it passes for a bill still owed.
