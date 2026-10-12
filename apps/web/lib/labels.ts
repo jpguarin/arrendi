@@ -21,6 +21,10 @@ export const UNIT_USE_LABELS: Record<UnitUse, string> = {
 
 // How a bill names the owner's document, and how Ajustes offers the choice.
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = { cc: "C.C.", nit: "NIT" };
+// What a form starts on while no document number has been saved. The API's own default
+// is the cédula; this is only the choice the owner sees first.
+export const DEFAULT_DOCUMENT_TYPE: DocumentType = "nit";
+
 export const DOCUMENT_TYPE_OPTIONS: { value: DocumentType; label: string }[] = [
   { value: "cc", label: "Cédula" },
   { value: "nit", label: "NIT" },

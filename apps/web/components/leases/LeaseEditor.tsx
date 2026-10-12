@@ -13,6 +13,7 @@ import {
 } from "@/components/leases/LeaseForm";
 import { LoadError, Loading } from "@/components/LoadState";
 import { uploadLeaseDocument } from "@/lib/api/documents";
+import { DEFAULT_DOCUMENT_TYPE } from "@/lib/labels";
 import { errorMessage } from "@/lib/api/errors";
 import { useCreateLease, useLease, useProperties, useUpdateLease } from "@/lib/api/queries";
 
@@ -127,7 +128,10 @@ export function EditLeaseScreen({ leaseId }: { leaseId: string }) {
         defaultValues={{
           tenant_name: lease.tenant.name,
           tenant_email: lease.tenant.email,
-          tenant_document_type: lease.tenant.document_type,
+          // Without a number saved, the type was never really chosen.
+          tenant_document_type: lease.tenant.document_number
+            ? lease.tenant.document_type
+            : DEFAULT_DOCUMENT_TYPE,
           tenant_document_number: lease.tenant.document_number ?? "",
           rent: lease.rent,
           due_day: String(lease.due_day),

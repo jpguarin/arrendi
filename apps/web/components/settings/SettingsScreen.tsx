@@ -19,7 +19,12 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { errorMessage } from "@/lib/api/errors";
 import { useSettings, useUpdateSettings } from "@/lib/api/queries";
 import type { components } from "@/lib/api/schema";
-import { DOCUMENT_TYPE_OPTIONS, type DocumentType, SEND_DAY_OPTIONS } from "@/lib/labels";
+import {
+  DEFAULT_DOCUMENT_TYPE,
+  DOCUMENT_TYPE_OPTIONS,
+  type DocumentType,
+  SEND_DAY_OPTIONS,
+} from "@/lib/labels";
 import { optionalText, requiredText } from "@/lib/validation";
 
 type Settings = components["schemas"]["SettingsResponse"];
@@ -38,7 +43,8 @@ type SettingsValues = z.infer<typeof schema>;
 
 const toValues = (settings: Settings): SettingsValues => ({
   name: settings.name,
-  document_type: settings.document_type,
+  // Without a number saved, the type was never really chosen.
+  document_type: settings.document_number ? settings.document_type : DEFAULT_DOCUMENT_TYPE,
   document_number: settings.document_number ?? "",
   payment_details: settings.payment_details ?? "",
   send_day: String(settings.send_day),
