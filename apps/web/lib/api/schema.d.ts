@@ -757,6 +757,11 @@ export interface components {
             /** Deposit */
             deposit?: number | null;
             /**
+             * Charge Deposit
+             * @default true
+             */
+            charge_deposit: boolean;
+            /**
              * Auto Send
              * @default true
              */
@@ -797,6 +802,8 @@ export interface components {
             end_date: string | null;
             /** Deposit */
             deposit: number | null;
+            /** Charge Deposit */
+            charge_deposit: boolean;
             /** Auto Send */
             auto_send: boolean;
             /** Payment Details */
@@ -844,6 +851,8 @@ export interface components {
             end_date?: string | null;
             /** Deposit */
             deposit?: number | null;
+            /** Charge Deposit */
+            charge_deposit?: boolean | null;
             /** Auto Send */
             auto_send?: boolean | null;
             /** Payment Details */
@@ -906,6 +915,11 @@ export interface components {
             end_date?: string | null;
             /** Deposit */
             deposit?: number | null;
+            /**
+             * Charge Deposit
+             * @default true
+             */
+            charge_deposit: boolean;
             /**
              * Auto Send
              * @default true

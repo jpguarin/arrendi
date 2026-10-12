@@ -49,6 +49,7 @@ def lease_response(session: Session, lease: Lease) -> LeaseResponse:
         start_date=lease.start_date,
         end_date=lease.end_date,
         deposit=lease.deposit,
+        charge_deposit=lease.charge_deposit,
         auto_send=lease.auto_send,
         payment_details=lease.payment_details,
         document_name=lease.document_path.rsplit("/", 1)[-1] if lease.document_path else None,

@@ -387,6 +387,139 @@ def test_manual_bill_is_validated(
     assert response.json()["code"] == "validation_error"
 
 
+# The deposit: charged once, next to the rent, on the first monthly bill of the lease.
+
+RENT_ITEM = {"description": "Canon de arrendamiento", "amount": 950000}
+DEPOSIT_ITEM = {"description": "Depósito", "amount": 500000}
+
+
+def with_deposit(api: TestClient, headers: dict[str, str], lease_id: UUID, **changes) -> None:
+    """Gives the lease a deposit of $500.000 to charge, unless `changes` say otherwise."""
+    body = {"deposit": 500000, "charge_deposit": True} | changes
+    assert api.patch(f"/api/leases/{lease_id}", headers=headers, json=body).status_code == 200
+
+
+def test_first_monthly_bill_charges_the_deposit_as_its_own_item(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], storage: FakeStorage
+) -> None:
+    anas, _ = trees
+    with_deposit(api, ana, anas.lease_id)
+
+    bill = monthly(api, ana, anas.lease_id).json()
+
+    assert bill["items"] == [RENT_ITEM, DEPOSIT_ITEM]
+    assert (bill["total"], bill["balance"]) == (1450000, 1450000)
+    # The detail and the list say the same as the answer to issuing.
+    assert api.get(f"/api/bills/{bill['id']}", headers=ana).json()["items"] == bill["items"]
+    assert api.get("/api/bills", headers=ana).json()[0]["total"] == 1450000
+    (pdf,) = storage.objects.values()
+    for text_in_pdf in (b"Canon de arrendamiento", b"$950.000", b"$500.000", b"$1.450.000"):
+        assert text_in_pdf in pdf
+    # "Depósito" has an accent, which the PDF encodes; its plain half is enough.
+    assert b"sito" in pdf
+
+
+def test_later_monthly_bills_do_not_charge_the_deposit_again(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+    with_deposit(api, ana, anas.lease_id)
+    monthly(api, ana, anas.lease_id)
+    set_today(date(2026, 11, 1))
+
+    november = monthly(api, ana, anas.lease_id).json()
+
+    assert november["items"] == [RENT_ITEM]
+    assert november["total"] == 950000
+
+
+def test_bill_that_replaces_a_voided_first_one_charges_the_deposit_again(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+    with_deposit(api, ana, anas.lease_id)
+    first = monthly(api, ana, anas.lease_id).json()
+    api.post(f"/api/bills/{first['id']}/void", headers=ana)
+
+    second = monthly(api, ana, anas.lease_id).json()
+
+    assert second["items"] == [RENT_ITEM, DEPOSIT_ITEM]
+    assert second["total"] == 1450000
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [{"charge_deposit": False}, {"deposit": 0}, {"deposit": None}],
+    ids=["switched off", "zero", "none"],
+)
+def test_deposit_is_not_charged_when_there_is_nothing_to_charge(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], changes: dict
+) -> None:
+    anas, _ = trees
+    with_deposit(api, ana, anas.lease_id, **changes)
+
+    bill = monthly(api, ana, anas.lease_id).json()
+
+    assert bill["items"] == [RENT_ITEM]
+    assert bill["total"] == 950000
+
+
+def test_lease_that_was_never_asked_to_does_not_charge_its_deposit(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], admin_engine: Engine
+) -> None:
+    # A lease from before the switch existed: it has a deposit, and the database default.
+    anas, _ = trees
+    with admin_engine.begin() as connection:
+        connection.execute(
+            text("update leases set deposit = 500000 where id = :id"), {"id": anas.lease_id}
+        )
+
+    assert monthly(api, ana, anas.lease_id).json()["items"] == [RENT_ITEM]
+
+
+def test_manual_bills_neither_charge_the_deposit_nor_count_as_the_first(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+    with_deposit(api, ana, anas.lease_id)
+
+    manual = api.post("/api/bills", headers=ana, json=manual_payload(anas.lease_id)).json()
+    month = monthly(api, ana, anas.lease_id).json()
+
+    assert manual["items"] == [{"description": "Arreglo de la chapa", "amount": 80000}]
+    assert month["items"] == [RENT_ITEM, DEPOSIT_ITEM]
+
+
+def test_changing_the_deposit_later_does_not_touch_the_bill(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+    with_deposit(api, ana, anas.lease_id)
+    bill = monthly(api, ana, anas.lease_id).json()
+
+    with_deposit(api, ana, anas.lease_id, deposit=900000)
+
+    after = api.get(f"/api/bills/{bill['id']}", headers=ana).json()
+    assert (after["items"], after["total"]) == ([RENT_ITEM, DEPOSIT_ITEM], 1450000)
+
+
+def test_first_bill_at_once_charges_the_deposit_only_once(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], admin_engine: Engine
+) -> None:
+    anas, _ = trees
+    with_deposit(api, ana, anas.lease_id)
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        codes = list(pool.map(lambda _: monthly(api, ana, anas.lease_id).status_code, range(4)))
+
+    assert sorted(codes) == [201, 409, 409, 409]
+    with admin_engine.connect() as connection:
+        items = connection.execute(
+            text("select description from bill_items order by position")
+        ).scalars()
+        assert list(items) == ["Canon de arrendamiento", "Depósito"]
+
+
 # Payment details: the bill's own, else the lease's, else the owner's. Kept on the bill.
 
 

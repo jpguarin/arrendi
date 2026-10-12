@@ -7,8 +7,10 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Index,
+    SmallInteger,
     Text,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column
@@ -32,6 +34,8 @@ class BillItem(Base):
     description: Mapped[str] = mapped_column(Text)
     # Money is whole pesos.
     amount: Mapped[int] = mapped_column(BigInteger)
+    # Its place in the bill, from 0: the items of a bill are created in the same instant.
+    position: Mapped[int] = mapped_column(SmallInteger, server_default=text("0"))
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now()
     )

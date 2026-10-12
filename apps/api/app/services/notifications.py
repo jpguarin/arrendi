@@ -88,10 +88,16 @@ def _message(
     lease = session.get_one(Lease, bill.lease_id)
     tenant = session.get_one(Tenant, lease.tenant_id)
     unit = session.get_one(Unit, lease.unit_id)
-    item = session.scalars(
-        select(BillItem).where(BillItem.bill_id == bill.id).order_by(BillItem.created_at)
-    ).first()
-    concept = [item.description if item else "Cuenta de cobro"]
+    items = session.scalars(
+        select(BillItem.description)
+        .where(BillItem.bill_id == bill.id)
+        .order_by(BillItem.position, BillItem.created_at)
+    ).all()
+    # "Canon de arrendamiento y depósito": everything charged, read as one phrase.
+    charged = [
+        item if index == 0 else item[:1].lower() + item[1:] for index, item in enumerate(items)
+    ]
+    concept = [" y ".join(charged) or "Cuenta de cobro"]
     if bill.period:
         concept.append(format_month(bill.period))
     concept.append(unit.name)

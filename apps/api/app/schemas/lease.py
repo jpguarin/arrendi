@@ -46,6 +46,8 @@ class LeaseTerms(BaseModel):
     start_date: date
     end_date: date | None = None
     deposit: Pesos | None = None
+    # The first monthly bill charges the deposit, unless the tenant already paid it.
+    charge_deposit: bool = True
     auto_send: bool = True
     # How to pay the bills of this lease. Left out, they take the owner's.
     payment_details: PaymentDetails = None
@@ -65,13 +67,14 @@ class LeaseCreate(LeaseTerms):
 
 
 class LeaseUpdate(PatchModel):
-    not_nullable = ("rent", "due_day", "start_date", "auto_send", "tenant")
+    not_nullable = ("rent", "due_day", "start_date", "charge_deposit", "auto_send", "tenant")
 
     rent: PositivePesos | None = None
     due_day: DueDay | None = None
     start_date: date | None = None
     end_date: date | None = None
     deposit: Pesos | None = None
+    charge_deposit: bool | None = None
     auto_send: bool | None = None
     payment_details: PaymentDetails = None
     tenant: TenantUpdate | None = None
@@ -102,6 +105,8 @@ class LeaseResponse(BaseModel):
     start_date: date
     end_date: date | None
     deposit: int | None
+    # Only the first monthly bill charges it; after that this changes nothing.
+    charge_deposit: bool
     auto_send: bool
     # The lease's own, if it has them; null means its bills take the owner's.
     payment_details: str | None

@@ -54,6 +54,8 @@ class Lease(Base):
     start_date: Mapped[date]
     end_date: Mapped[date | None]
     deposit: Mapped[int | None] = mapped_column(BigInteger)
+    # Whether the first monthly bill charges the deposit, as an item next to the rent.
+    charge_deposit: Mapped[bool] = mapped_column(server_default=text("false"))
     status: Mapped[str] = mapped_column(Text, server_default=text("'active'"))
     auto_send: Mapped[bool] = mapped_column(server_default=text("true"))
     # How to pay the bills of this lease; null means the owner's.

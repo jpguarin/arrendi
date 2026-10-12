@@ -169,6 +169,37 @@ def test_each_month_gets_its_own_bill(
     ]
 
 
+def test_deposit_is_charged_on_the_first_bill_only_and_the_email_says_so(
+    run, admin_engine: Engine, two_owners: tuple[UUID, UUID], trees: tuple[Tree, Tree], mailer
+) -> None:
+    ana, beto = two_owners
+    execute(
+        admin_engine,
+        "update leases set deposit = 500000, charge_deposit = true where owner_id = :id",
+        id=ana,
+    )
+
+    run(date(2026, 10, 1))
+    run(date(2026, 10, 1))
+    run(date(2026, 11, 1))
+
+    totals = "select total from bills where owner_id = :id order by number"
+    assert rows(admin_engine, totals, id=ana) == [(1450000,), (950000,)]
+    assert rows(admin_engine, totals, id=beto) == [(950000,), (950000,)]
+    items = (
+        "select b.number, i.description, i.amount from bill_items i "
+        "join bills b on b.id = i.bill_id where i.owner_id = :id order by b.number, i.position"
+    )
+    assert rows(admin_engine, items, id=ana) == [
+        (1, "Canon de arrendamiento", 950000),
+        (1, "Depósito", 500000),
+        (2, "Canon de arrendamiento", 950000),
+    ]
+    first = next(m for m in mailer.sent if m.to == "ana@example.com")
+    assert "Canon de arrendamiento y depósito · Octubre 2026 · Apto ana" in first.text
+    assert "$1.450.000" in first.text
+
+
 def test_lease_without_automatic_sending_gets_its_bill_but_no_email(
     run, admin_engine: Engine, two_owners: tuple[UUID, UUID], trees: tuple[Tree, Tree], mailer
 ) -> None:

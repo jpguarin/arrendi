@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 
 ONE_MONTHLY_PER_PERIOD = "bills_one_monthly_per_period"
 RENT = "Canon de arrendamiento"
+DEPOSIT = "Depósito"
 DOWNLOAD_LINK_SECONDS = 300
 RECENT_BILLS = 6
 STATUS_FILTERS: dict[BillStatusFilter, tuple[str, ...]] = {
@@ -63,6 +64,16 @@ def _active_lease(session: Session, lease_id: UUID) -> Lease:
     return lease
 
 
+def _items(session: Session, bill_id: UUID) -> list[BillItem]:
+    return list(
+        session.scalars(
+            select(BillItem)
+            .where(BillItem.bill_id == bill_id)
+            .order_by(BillItem.position, BillItem.created_at)
+        )
+    )
+
+
 def _pdf_path(bill: Bill) -> str:
     return f"{bill.owner_id}/bills/{bill.id}.pdf"
 
@@ -73,10 +84,9 @@ def _document(session: Session, bill: Bill, voided: bool = False) -> BillDocumen
     lease = session.get_one(Lease, bill.lease_id)
     tenant = session.get_one(Tenant, lease.tenant_id)
     unit = session.get_one(Unit, lease.unit_id)
-    detail = f"{format_month(bill.period)} · {unit.name}" if bill.period else unit.name
-    items = session.scalars(
-        select(BillItem).where(BillItem.bill_id == bill.id).order_by(BillItem.created_at)
-    )
+    # The month is what the rent is for, and the rent comes first; anything else charged
+    # with it, like the deposit, is only about the unit.
+    of_the_month = f"{format_month(bill.period)} · {unit.name}" if bill.period else unit.name
     return BillDocument(
         number=bill.number,
         issue_date=bill.issue_date,
@@ -87,10 +97,30 @@ def _document(session: Session, bill: Bill, voided: bool = False) -> BillDocumen
         tenant_name=tenant.name,
         tenant_document_type=tenant.document_type,
         tenant_document=tenant.document_number,
-        lines=[BillLine(item.description, detail, item.amount) for item in items],
+        lines=[
+            BillLine(item.description, unit.name if index else of_the_month, item.amount)
+            for index, item in enumerate(_items(session, bill.id))
+        ],
         total=bill.total,
         payment_details=bill.payment_details,
         voided=voided,
+    )
+
+
+def _owes_deposit(session: Session, lease: Lease) -> bool:
+    """Whether the monthly bill about to be issued is the one that charges the deposit.
+
+    It is the first one of the lease. A voided one does not count, so the bill that
+    replaces it charges the deposit again.
+    """
+    if not (lease.charge_deposit and lease.deposit):
+        return False
+    return not session.scalar(
+        select(
+            exists().where(
+                Bill.lease_id == lease.id, Bill.origin == "monthly", Bill.status != "voided"
+            )
+        )
     )
 
 
@@ -120,6 +150,11 @@ def _issue(
     number = owner.next_number
     owner.next_number = number + 1
 
+    # What is charged, in the order the bill shows it.
+    charges = [(description, amount)]
+    if origin == "monthly" and _owes_deposit(session, lease):
+        charges.append((DEPOSIT, lease.deposit))
+
     bill = Bill(
         # Made here, not by the database, because the path of the PDF carries it.
         id=uuid4(),
@@ -130,7 +165,7 @@ def _issue(
         period=period,
         issue_date=today,
         due_date=due_date,
-        total=amount,
+        total=sum(charged for _, charged in charges),
         # The bill's own, else the lease's, else the owner's. Kept here, so changing any
         # of them later does not touch this bill.
         payment_details=payment_details or lease.payment_details or owner.payment_details,
@@ -149,8 +184,15 @@ def _issue(
                 "bill_already_exists",
             ) from error
         raise
-    session.add(
-        BillItem(owner_id=bill.owner_id, bill_id=bill.id, description=description, amount=amount)
+    session.add_all(
+        BillItem(
+            owner_id=bill.owner_id,
+            bill_id=bill.id,
+            description=charge,
+            amount=charged,
+            position=position,
+        )
+        for position, (charge, charged) in enumerate(charges)
     )
     session.flush()
 
@@ -175,7 +217,8 @@ def issue_monthly_bill(session: Session, storage: Storage, today: date, lease_id
         # The due day goes from 1 to 28, so it exists in every month.
         due_date=period.replace(day=lease.due_day),
         description=RENT,
-        # The rent as it is now; changing it later does not touch this bill.
+        # The rent as it is now; changing it later does not touch this bill. The first
+        # bill of the lease may also charge its deposit: `_issue` decides, under the lock.
         amount=lease.rent,
     )
 
@@ -312,9 +355,7 @@ def bill_response(session: Session, bill: Bill) -> BillResponse:
     lease = session.get_one(Lease, bill.lease_id)
     tenant = session.get_one(Tenant, lease.tenant_id)
     unit = session.get_one(Unit, lease.unit_id)
-    items = session.scalars(
-        select(BillItem).where(BillItem.bill_id == bill.id).order_by(BillItem.created_at)
-    )
+    items = _items(session, bill.id)
     payments = session.scalars(
         select(Payment)
         .where(Payment.bill_id == bill.id)

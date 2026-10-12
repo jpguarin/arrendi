@@ -76,6 +76,7 @@ def test_create_a_lease_with_a_new_tenant(
         "end_date": "2026-12-31",
         "deposit": 950000,
         "auto_send": True,
+        "charge_deposit": True,
         "payment_details": None,
         "document_name": None,
         "document_uploaded_at": None,
@@ -338,6 +339,8 @@ def test_update_can_clear_the_optional_fields(
         {"due_day": 29},
         {"start_date": None},
         {"auto_send": None},
+        {"charge_deposit": None},
+        {"charge_deposit": "sí"},
         {"tenant": {"email": "mal"}},
         {"tenant": {"name": None}},
         {"tenant": {"email": None}},
@@ -574,3 +577,47 @@ def test_owner_cannot_read_or_change_another_owners_payment_details(
             text("select payment_details from leases where id = :id"), {"id": anas.lease_id}
         ).scalar_one()
     assert stored == "de Ana"
+
+
+# Whether the deposit gets charged on the first monthly bill.
+
+
+def test_new_lease_charges_its_deposit_unless_told_not_to(
+    api: TestClient, ana: dict[str, str], vacant_unit: dict
+) -> None:
+    created = api.post(
+        "/api/leases",
+        json=TERMS
+        | {
+            "unit_id": vacant_unit["id"],
+            "tenant": LUISA,
+            "deposit": 950000,
+            "charge_deposit": False,
+        },
+        headers=ana,
+    ).json()
+    assert created["charge_deposit"] is False
+
+    changed = api.patch(f"/api/leases/{created['id']}", json={"charge_deposit": True}, headers=ana)
+    assert changed.json()["charge_deposit"] is True
+    # Leaving it out keeps it.
+    kept = api.patch(f"/api/leases/{created['id']}", json={"rent": 1000000}, headers=ana)
+    assert kept.json()["charge_deposit"] is True
+
+
+def test_owner_cannot_make_another_owners_lease_charge_its_deposit(
+    api: TestClient, beto: dict[str, str], trees: tuple[Tree, Tree], admin_engine: Engine
+) -> None:
+    anas, _ = trees
+
+    response = api.patch(
+        f"/api/leases/{anas.lease_id}", json={"deposit": 1, "charge_deposit": True}, headers=beto
+    )
+
+    assert response.status_code == 404
+    with admin_engine.connect() as connection:
+        row = connection.execute(
+            text("select deposit, charge_deposit from leases where id = :id"),
+            {"id": anas.lease_id},
+        ).one()
+    assert tuple(row) == (None, False)
