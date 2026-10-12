@@ -139,17 +139,17 @@ Objetivo: cerrar el ciclo de cobro.
 
 Objetivo: llevar la marca nueva y el diseño elegido (propuesta B, "Libro", en `docs/new-brand-design/mockups/`) a toda la aplicación, sin cambiar reglas de negocio ni rutas.
 
-- [ ] Documentos: `docs/diseno.md` reescrito con el sistema nuevo.
-- [ ] Web: tema nuevo (colores de marca, estados, Inter y Red Hat Display) en claro y oscuro.
-- [ ] Web: estructura con riel en tablet y escritorio, barra inferior en celular, y lista con panel de detalle.
-- [ ] Web: resumen del mes con indicadores, composición y recaudo por mes.
-- [ ] Web: cuentas en tabla por mes; detalle y registrar pago en el panel; historial con hora.
-- [ ] Web: inmuebles en tabla; contrato en el panel.
-- [ ] Web: acceso, alta guiada, formularios y ajustes con el tema nuevo.
-- [ ] PWA: íconos, favicon y colores del manifiesto con la marca.
-- [ ] API: PDF de la cuenta de cobro con la marca.
-- [ ] API: plantillas de correo con la marca.
-- [ ] Prueba de extremo a extremo al día con la navegación nueva.
+- [x] Documentos: `docs/diseno.md` reescrito con el sistema nuevo.
+- [x] Web: tema nuevo (colores de marca, estados, Inter y Red Hat Display) en claro y oscuro.
+- [x] Web: estructura con riel en tablet y escritorio, barra inferior en celular, y lista con panel de detalle.
+- [x] Web: resumen del mes con indicadores, composición y recaudo por mes.
+- [x] Web: cuentas en tabla por mes; detalle y registrar pago en el panel; historial con hora.
+- [x] Web: inmuebles en tabla; contrato en el panel.
+- [x] Web: acceso, alta guiada, formularios y ajustes con el tema nuevo.
+- [x] PWA: íconos, favicon y colores del manifiesto con la marca.
+- [x] API: PDF de la cuenta de cobro con la marca.
+- [x] API: plantillas de correo con la marca.
+- [x] Prueba de extremo a extremo al día con la navegación nueva.
 
 **Criterios de aceptación**
 

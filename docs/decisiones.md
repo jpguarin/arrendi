@@ -38,6 +38,10 @@
 | Recordatorios | Solo de cuentas que ya se enviaron, y uno por cuenta en cada ejecución de la tarea |
 | Playwright | Corre todo en local: la web, la API contra la base `arrendi_e2e` de PostgreSQL y dos servidores falsos (acceso y almacenamiento). Nunca contra Supabase |
 | Deuda de meses anteriores | El inicio la lista en "Por cobrar" y la suma aparte; las cifras del mes no la incluyen |
+| Marca y diseño (etapa 6) | Marca de `docs/new-brand-design`. De tres propuestas de interfaz se eligió la B, "Libro": riel de secciones, tablas y panel de detalle. `docs/diseno.md` se reescribió con ese sistema |
+| Panel de detalle | Se conservan las rutas: el `layout` de Cuentas y el de Inmuebles dibujan la lista y, al lado, la ruta abierta. Desde el resumen, una cuenta se abre en Cuentas. Se descartó un panel sobre cualquier pantalla con un parámetro en la dirección, que cambiaba los enlaces |
+| Fuente del PDF | Sigue Helvetica, aunque la marca pide Inter: no viaja ningún archivo de fuente con la API |
+| Gráficas | Hechas con Tailwind, sin librería: una barra de composición y barras por mes no la justifican |
 | Mes de un pago | El de su cuenta, no el de la fecha en que se recibió |
 | Eliminar un pago | Borrado real, con su comprobante. Es la única tabla donde la API borra |
 | PDF | ReportLab con Helvetica, que ya trae; no se empaqueta Figtree |

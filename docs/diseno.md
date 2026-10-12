@@ -1,161 +1,184 @@
 # Diseño
 
-El sistema visual sale de los mockups. El marcado de cada pantalla está en `docs/mockups/`: úsalo como referencia de estructura, medidas y textos. Esos archivos son del editor de diseño y no se abren solos en un navegador; lo útil es el HTML con estilos en línea que contienen.
+El sistema visual sale de la marca (`docs/new-brand-design/brand-design.md`) y de la propuesta elegida en la etapa 6: «Libro», en `docs/new-brand-design/mockups/propuesta-b-libro.html`. Ese mock se abre en el navegador y es la referencia de estructura; este documento fija los valores.
 
-Lienzo original: <https://claude.ai/artifact/UzWBdHg2VRw3iBEHvmh9nM> (privado del fundador).
+Los mockups anteriores (`docs/mockups/`) quedan como registro y ya no guían el diseño.
 
 ## Principios
 
-- Pensado primero para celular (390 px de ancho) y para usar con una mano.
-- La acción principal de cada pantalla va abajo, en un pie fijo.
-- El estado de una cuenta siempre se dice con texto, nunca solo con color.
+- Un libro de cobro: todo es lista y detalle. Al abrir una cuenta o un contrato, la lista sigue a la vista.
+- Sobrio: superficies claras, navy en la navegación y en los títulos, y color casi solo en los estados.
+- El estado siempre se dice con ícono y texto, nunca solo con color.
+- Funciona en celular, tablet y escritorio. Cambia la composición, no solo el ancho.
 - Los números usan cifras tabulares para que las columnas de dinero alineen.
+
+## Marca
+
+| Color | Valor | Uso |
+| --- | --- | --- |
+| Navy | `#14264C` | Riel, texto, botón principal |
+| Verde | `#28B779` | Ventanas del isotipo y marca de la sección activa. Nunca como texto sobre claro |
+| Amarillo | `#FFC857` | Foco en tema oscuro. Nunca como texto |
+| Marfil | `#F4F1E8` | Texto sobre navy, texto del tema oscuro |
+
+El isotipo está en `components/Brand.tsx`: la casa toma el color del texto y las ventanas quedan verdes. La marca visible es el isotipo con el nombre en Red Hat Display 900.
 
 ## Colores
 
-Defínelos como variables de tema en Tailwind; no escribas los valores sueltos en los componentes.
-
-shadcn/ui trae sus propias variables de tema (`background`, `foreground`, `primary`, `border`, `destructive` y otras). Los colores de la tabla que tienen equivalente llevan el nombre de esa variable, para que los componentes salgan ya con el aspecto de Arrendi. Además, `surface` se asigna también a `card` y `popover`, `alert` a `destructive`, y `primary` a `ring`. Los colores que no tienen equivalente (tintes y estados) se agregan como variables propias, con el nombre de la tabla.
-
-shadcn/ui usa además tres parejas que el diseño no nombra. Se asignan así: `secondary` y `accent` toman `primary-tint` con texto `primary-strong` (selección), y `muted` toma el valor de `border` (fondo al pasar el cursor). Las variables de gráficas y de barra lateral de shadcn/ui no se usan y se quitaron. Cada variable tiene un valor para el tema claro y otro para el oscuro.
+Son variables de tema en `app/globals.css`; los componentes usan los nombres de Tailwind, nunca los valores. Las que tienen equivalente en shadcn/ui llevan su nombre, para que sus componentes salgan con el aspecto de Arrendi. `secondary` y `accent` son la selección (fila abierta); `muted` es el fondo al pasar el cursor y el de los encabezados de grupo.
 
 | Nombre | Claro | Oscuro | Uso |
 | --- | --- | --- | --- |
-| `background` | `#F3F5F4` | `#0F1513` | Fondo de la aplicación |
-| `surface` | `#FFFFFF` | `#18201D` | Tarjetas, pie, barra de navegación |
-| `foreground` | `#14201C` | `#E8EEEB` | Texto principal |
-| `muted-foreground` | `#55635E` | `#A3B0AB` | Etiquetas y texto de apoyo |
-| `foreground-soft` | `#3A4743` | `#C5CFCB` | Texto sobre el fondo interno de una tarjeta |
-| `border` | `#E1E6E3` | `#26302C` | Borde de tarjetas y divisores |
-| `input` | `#C9D1CD` | `#6B7A73` | Borde de campos y botones secundarios |
-| `border-dashed` | `#8E9A95` | `#8E9A95` | Botones de agregar y subir |
-| `primary` | `#0F6B4F` | `#3FB58E` | Botón principal, enlaces, selección |
-| `primary-foreground` | `#FFFFFF` | `#06231A` | Texto sobre un botón primario |
-| `primary-strong` | `#0A4E3A` | `#9FE0C8` | Texto sobre el tinte primario |
-| `primary-tint` | `#D9EFE6` | `#143B2E` | Fondo de selección y de la etiqueta "pagada" |
-| `alert` | `#8A3D06` | `#F2A66B` | Texto de "vencida" y acciones destructivas |
-| `alert-tint` | `#FBE6D4` | `#40240F` | Fondo de la etiqueta "vencida" |
-| `info` | `#1D4E89` | `#8DB8EC` | Texto de "parcial" |
-| `info-tint` | `#DCE9F8` | `#15294A` | Fondo de la etiqueta "parcial" |
-| `overlay` | `#14201C` al 50 % | negro al 65 % | Velo detrás de un diálogo de confirmación |
-| `summary` | `#0F6B4F` | `#0F6B4F` | Fondo de la tarjeta resumen del inicio |
-| `summary-inner` | `#0A4E3A` | `#0A4E3A` | Recuadros dentro de la tarjeta resumen |
-| `summary-foreground` | `#FFFFFF` | `#FFFFFF` | Cifras sobre la tarjeta resumen |
-| `summary-foreground-soft` | `#D6EDE4` | `#D6EDE4` | Texto de apoyo sobre la tarjeta resumen |
+| `background` | `#F5F6F9` | `#0A1122` | Fondo de la aplicación |
+| `card` | `#FFFFFF` | `#111B33` | Tarjetas, tablas, panel de detalle |
+| `foreground` | `#14264C` | `#F4F1E8` | Texto principal |
+| `muted-foreground` | `#55607A` | `#A9B3CC` | Etiquetas y texto de apoyo |
+| `foreground-soft` | `#33456E` | `#CFD6E6` | Texto sobre el fondo interno de una tarjeta |
+| `muted` | `#EEF0F5` | `#18243F` | Cursor encima, encabezado de grupo, pista de una barra |
+| `accent` | `#E9EDF7` | `#1D2B4D` | Fila abierta en el panel |
+| `border` | `#DFE3EC` | `#26345A` | Borde de tarjetas y divisores |
+| `input` | `#B8C0D2` | `#53648F` | Borde de campos y botones secundarios |
+| `border-dashed` | `#8A93A8` | `#7C87A3` | Botones de agregar y subir |
+| `primary` | `#14264C` | `#F4F1E8` | Botón principal, selección |
+| `primary-foreground` | `#F4F1E8` | `#14264C` | Texto sobre el primario |
+| `destructive` | `#A3321E` | `#FF9D88` | Campo con error |
+| `ring` | `#2F4A94` | `#FFC857` | Anillo de foco |
+| `overlay` | navy al 45 % | casi negro al 70 % | Velo detrás de un diálogo |
+| `rail` | `#14264C` | `#0E1830` | Riel y barra inferior |
+| `rail-foreground`, `rail-muted` | `#F4F1E8`, `#A9B3CC` | igual | Sección activa y las demás |
+| `chart-bar` | `#14264C` | `#8FA6E6` | Barra de lo recaudado |
+
+### Estados
+
+Cada estado tiene tres variables: el nombre solo rellena una marca (barra de la fila, punto de la leyenda, tramo de una gráfica), `-ink` es el texto y `-tint` su fondo.
+
+| Tono | Relleno claro / oscuro | Texto claro / oscuro | Se usa en |
+| --- | --- | --- | --- |
+| `positive` | `#1FA36C` / `#25A870` | `#14734B` / `#6BDDAA` | Pagada, Al día, Activo, mensajes de éxito |
+| `warning` | `#D4951A` / `#C08618` | `#7A5200` / `#FFC857` | Parcial, Pago parcial |
+| `info` | `#4C6FC4` / `#6485DA` | `#2F4A94` / `#A9BEF5` | Pendiente, avisos |
+| `alert` | `#D2513A` / `#E05F47` | `#A3321E` / `#FF9D88` | Vencida, En mora, errores, acciones destructivas |
+| `neutral` | `#8A90A0` / `#7C87A3` | `muted-foreground` | Anulada, Vacía, Terminado |
+
+Los cuatro rellenos se validaron como paleta (separación para daltonismo y contraste) en claro y en oscuro. El ámbar tiene poco contraste contra el fondo claro: por eso nunca va sin etiqueta.
 
 ### Tema claro y oscuro
 
-- **Tres opciones:** claro, oscuro y "igual que el sistema", que es la opción por defecto. El selector está en configuración.
-- **Implementación:** `next-themes` con la clase `dark` en el elemento raíz, que es como lo espera shadcn/ui. La elección se guarda en el dispositivo.
-- **Sin parpadeo:** el tema se aplica antes de pintar la página, para que no se vea un destello claro al abrir en oscuro.
-- **La tarjeta resumen es igual en ambos temas:** verde con texto blanco. Es el único bloque que no se invierte.
-- **En oscuro, el botón primario es verde claro con texto oscuro,** al revés que en claro. Por eso existe la variable `primary-foreground`: no escribas texto blanco fijo sobre el primario.
-- **El tema oscuro no tiene mockups.** La paleta oscura se derivó de la clara; el contraste de texto se calculó y cumple AA (4,5:1 o más) en todas las combinaciones de la tabla, pero nadie la ha visto aplicada. Revísala en pantalla durante la etapa 1 y ajusta los valores aquí si algo no se ve bien.
+- **Tres opciones:** claro, oscuro y "igual que el sistema", que es la opción por defecto. El selector está en Ajustes.
+- **Implementación:** `next-themes` con la clase `dark` en el elemento raíz. La elección se guarda en el dispositivo y se aplica antes de pintar.
+- **El riel es navy en los dos temas.**
+- **En oscuro, el botón primario es marfil con texto navy,** al revés que en claro. No escribas texto fijo sobre el primario: usa `primary-foreground`.
 - **PDF y correos:** siempre en claro.
 
 ## Tipografía
 
-- **Familia:** Figtree (Google Fonts), pesos 400, 500, 600 y 700.
+- **Inter** (400, 500, 600): interfaz, tablas, formularios.
+- **Red Hat Display** (700, 800, 900): títulos y cifras destacadas. Es la clase `font-heading`; todo `h1` la lleva.
 - **Cifras:** `font-variant-numeric: tabular-nums` en toda la aplicación.
 
-| Uso | Tamaño | Peso |
+| Clase | Tamaño | Uso |
 | --- | --- | --- |
-| Cifra principal del inicio | 34 px | 700 |
-| Título del alta guiada | 26 px | 700 |
-| Título de pantalla | 22 px | 700 |
-| Título con botón de volver | 18 px | 700 |
-| Texto de fila y de botón | 15 a 16 px | 600 |
-| Encabezado de sección | 15 px | 600 |
-| Texto de apoyo | 13 px | 400 |
-| Etiqueta de estado | 12 px | 600 |
+| `text-figure` | 34 px | Saldo de una cuenta |
+| `text-title-onboarding` | 26 px | Título del alta guiada |
+| `text-title` | 24 px | Título de sección |
+| `text-kpi` | 22 px | Cifra del resumen |
+| `text-title-back` | 18 px | Título de un detalle, nombre de un inmueble |
+| `text-body` | 16 px | Campos y botón principal |
+| `text-section` | 15 px | Filas, encabezados de sección |
+| `text-support` | 13 px | Texto de apoyo |
+| `text-badge` | 12 px | Etiqueta de estado, encabezado de columna |
 
 ## Medidas
 
-- Margen lateral de pantalla: 20 px.
-- Radio: 16 px en tarjetas, 12 a 14 px en botones y campos, 8 px en etiquetas, 22 px en botones redondos y filtros.
-- Altura de campos: 48 px. Botón principal: 52 px. Botón secundario: 44 a 48 px.
-- Objetivo táctil mínimo: 44 px.
+- Margen lateral: 16 px en celular, 24 px en tablet, 32 px en escritorio. Dentro del panel, 20 px.
+- Radio: 14 px en tarjetas y tablas, 10 px en botones y campos, completo en etiquetas.
+- Altura de campos y botón principal: 48 px. Botón secundario: 44 px.
+- Objetivo táctil mínimo: 44 px. La única excepción es el botón `sm` de una fila, que con ratón mide 36 px.
+
+## Estructura
+
+| Ancho | Navegación | Lista y detalle |
+| --- | --- | --- |
+| Celular (menos de 768 px) | Barra inferior navy con las cuatro secciones. Se oculta al abrir un detalle | El detalle ocupa toda la pantalla; "volver" regresa a la lista |
+| Tablet (768 px o más) | Riel navy de 68 px a la izquierda | Lista y panel de 360 px lado a lado |
+| Escritorio (1280 px o más) | Igual | El panel mide 408 px |
+
+- **Secciones:** Resumen (`/`), Cuentas, Inmuebles y Ajustes. La sección activa lleva una marca verde.
+- **Panel:** en Cuentas e Inmuebles, toda ruta que no sea la lista se dibuja en el panel: el detalle de una cuenta, registrar un pago, el contrato y todos los formularios. Las rutas no cambiaron; lo hace el `layout` de cada sección con `ListDetail`.
+- **Desde el resumen,** abrir una cuenta lleva a Cuentas con esa cuenta en el panel.
+- **Fuera de la estructura:** acceso, alta guiada y la pantalla sin conexión van en una columna centrada de 480 px (`Column`).
+- **Tablas que se adaptan solas:** una tabla acomoda sus filas según su propio ancho (consultas de contenedor), no el de la ventana. Por eso la misma tabla sirve a todo el ancho y apretada junto al panel: con menos de 600 px cada fila se apila en dos líneas.
 
 ## Componentes
 
-Los componentes se construyen sobre shadcn/ui (con Radix como librería base), ajustando sus variantes y medidas a este diseño. La columna "Base" indica de qué componente de shadcn/ui parte cada uno; "propio" significa que se arma con Tailwind.
+Se construyen sobre shadcn/ui (con Radix), ajustando variantes y medidas a este diseño. "Propio" significa que se arma con Tailwind.
 
-| Componente | Base en shadcn/ui | Descripción |
+| Componente | Base | Descripción |
 | --- | --- | --- |
-| `StatusBadge` | `Badge` | Pastilla con texto: Pagada, Parcial, Vencida, Al día, En mora, Activo, Anulada. `Badge` tiene cuatro tonos: `positive` (Pagada, Al día, Activo), `alert` (Vencida, En mora), `info` (Parcial) y `neutral` (Pendiente, Vacía, Terminado, Anulada) |
-| `Card` | `Card` | Superficie blanca con borde y radio de 16 px |
-| `BillRow` | propio | Unidad y arrendatario a la izquierda; valor y estado a la derecha; toda la fila es un enlace |
-| `SummaryCard` | `Card` y `Progress` | Bloque primario con recaudado, esperado, barra de avance y dos cifras |
-| `PrimaryButton` | `Button` | Fondo primario, 52 px de alto, ancho completo |
-| `SecondaryButton` | `Button`, variante `outline` | Borde, fondo blanco |
-| `DashedButton` | `Button`, variante propia | Borde punteado; para agregar o subir |
-| `FormField` | `Field`, `Label` e `Input` | Etiqueta arriba, campo de 48 px, ayuda opcional debajo |
-| `TextareaField` | `Field`, `Label` y `Textarea` | Como `FormField`, para un texto de varias líneas (datos de pago) |
-| `MoneyField` | `FormField` | Campo de pesos: muestra `$950.000` y solo acepta dígitos |
-| `SelectField` | `Field`, `Label` y `Select` | Etiqueta arriba y desplegable de 48 px |
-| Desplegables | `Select` | Unidad, uso, día de pago, día de envío |
-| Casillas e interruptores | `Checkbox` y `Switch` | Recordatorios, enviar recibo, envío automático |
-| `OptionPicker` | `ToggleGroup` | Cuadrícula de botones con uno seleccionado (tipo de inmueble, medio de pago) |
-| `FilterChips` | `ToggleGroup` | Pastillas de 44 px con una activa |
-| Confirmaciones | `AlertDialog` | Anular cuenta, terminar contrato, eliminar pago |
-| Avisos | `Sonner` | "Pago guardado", "Cuenta enviada", errores |
-| Carga | `Skeleton` | Mientras llegan los datos |
-| `BottomNav` | propio | Cuatro pestañas: Inicio, Cuentas, Inmuebles, Ajustes. Solo muestra las pantallas que ya existen: las cuatro desde la etapa 3 |
-| `Header` | propio | Título, con botón de volver o acción a la derecha |
-| `ActionFooter` | propio | Franja blanca inferior con la acción principal |
-| `FormScreen` | propio | Marco de una pantalla que edita una cosa: volver, el formulario y "guardar" en el pie |
-| `FormMessage` | propio | Mensaje sobre toda la pantalla, con tres tonos: `error`, `success` e `info` |
-| `OnboardingSteps` | propio | "Paso N de 3" y barra de tres segmentos |
+| `AppShell` | propio | Riel o barra inferior, y el contenido |
+| `ListDetail`, `ListMain` | propio | Lista y panel de detalle; el cuerpo de una lista |
+| `Column` | propio | Columna centrada de las pantallas fuera de la estructura |
+| `Brand`, `BrandMark` | propio | Isotipo, solo o con el nombre |
+| `Header` | propio | Título de sección con su acción, o título de un detalle con "volver" |
+| `BillTable`, `BillGroup`, `BillRow` | propio | Tabla de cuentas: encabezados, grupo por mes y fila con barra de estado. La fila abierta queda resaltada. Admite botones por fila |
+| `BillStatusBadge`, `UnitStatusBadge` | `Badge` | Estado con ícono y texto |
+| `Badge` | `Badge` | Pastilla con cinco tonos: `positive`, `warning`, `info`, `alert`, `neutral` |
+| `Button` | `Button` | Tamaños `default` (48 px), `md` (44 px), `sm` (44 px; 36 px con ratón) e `icon`. Variantes `default`, `outline`, `dashed`, `ghost`, `destructive` y `link` |
+| `FormField`, `TextareaField`, `MoneyField`, `SelectField` | `Field`, `Input`, `Select` | Etiqueta arriba, campo de 48 px, ayuda debajo |
+| `ToggleGroup` | `ToggleGroup` | Opciones con una elegida (tipo de inmueble, medio de pago). En Cuentas, como control segmentado para el filtro de estado |
+| `Switch` | `Switch` | Enviar recibo, envío automático |
+| `AlertDialog` | `AlertDialog` | Anular cuenta, terminar contrato, eliminar pago |
+| `FormScreen` | propio | Marco de un formulario: volver, el formulario y "guardar" en el pie |
+| `ActionFooter` | propio | Franja inferior fija con la acción principal de un detalle |
+| `FormMessage` | propio | Mensaje con tres tonos: `error`, `success` e `info` |
+| `Loading`, `LoadError` | propio | Carga y error de una pantalla |
 
-- Los nombres de los componentes de shadcn/ui cambian entre versiones. Antes de agregar uno, confirma en su documentación vigente que existe con ese nombre y cómo se instala.
-- Los tamaños por defecto de shadcn/ui son más pequeños que los de este diseño. Ajusta las variantes de `Button`, `Input` y `Select` a las alturas de la sección "Medidas", en lugar de sobrescribirlas en cada uso.
-- `Button` tiene los tamaños `default` (52 px, acción principal), `md` (48 px), `sm` (44 px) e `icon` (44 px, redondo), y las variantes `default`, `outline` (secundario), `dashed` (agregar o subir), `ghost`, `destructive` y `link`. No hay tamaños menores a 44 px.
-- Los tamaños de letra de la tabla de tipografía son clases de Tailwind: `text-figure`, `text-title-onboarding`, `text-title`, `text-title-back`, `text-body`, `text-section`, `text-support` y `text-badge`.
-- `cn` se importa siempre de `@/lib/utils`, que conoce esos tamaños de letra. Los componentes de shadcn/ui llegan importándolo del paquete `cn`: cámbialo al agregarlos (el lint lo exige).
-- `Select`, `ToggleGroup`, `AlertDialog`, `Badge` y `Switch` ya están adaptados: el desplegable mide 48 px como un campo, las opciones de `ToggleGroup` 48 px, el interruptor 48 por 28 px con área táctil de 44 px, y el diálogo pone la acción arriba y "Cancelar" debajo, a todo el ancho.
-- El dinero y las fechas se muestran con `formatPesos` y `formatDate` de `lib/format.ts`, nunca con `Intl` ni `toLocaleString` directo: su resultado para Colombia cambia entre navegadores.
-- Los formularios usan React Hook Form con Zod solo para la validación de forma en el navegador (campo vacío, correo mal escrito). Las reglas de negocio se validan en la API.
+- `cn` se importa siempre de `@/lib/utils`, que conoce los tamaños de letra propios.
+- El dinero y las fechas se muestran con `lib/format.ts`, nunca con `Intl` directo. `formatDateHour` da fecha y hora de Colombia: `5 oct 2026 · 3:42 p. m.`.
+- Los formularios usan React Hook Form con Zod solo para validar la forma; las reglas de negocio se validan en la API.
+- Los íconos son de Lucide, de trazo, sin relleno.
+- Antes de agregar un componente de shadcn/ui, confirma en su documentación vigente que existe con ese nombre.
 
-Los íconos son de Lucide, que es la librería que usa shadcn/ui: de trazo, de 2 px, sin relleno.
+### Gráficas
+
+Solo en el resumen, hechas con Tailwind, sin librería.
+
+- **Cómo va el mes:** una barra con lo esperado repartido en recaudado, saldo de abonos, por vencer y vencido. Debajo, la leyenda con etiqueta, valor y porcentaje de cada tramo.
+- **Recaudo por mes:** hasta seis meses; la pista es lo esperado y la barra, lo recaudado, con su valor encima. Se calcula del listado de cuentas.
+- Un solo eje, sin doble escala. Los colores de estado no se usan para otra cosa.
+
+### Historial de una cuenta
+
+Línea de tiempo, de lo más antiguo a lo más reciente: generada, cada correo, cada pago y la anulación. Cada evento lleva ícono, texto, y fecha y hora. Un correo que falló o rebotó se marca en tono `alert`.
 
 ## Mapa de pantallas
 
-| Ruta | Pantalla | Mockup |
+| Ruta | Pantalla | Dónde se dibuja |
 | --- | --- | --- |
-| `/login`, `/signup`, `/reset-password` | Acceso | Sin diseñar |
-| `/update-password` | Contraseña nueva, al llegar desde el correo de recuperación | Sin diseñar |
-| `/onboarding/property` | Alta 1 | `Alta1.dc.html` |
-| `/onboarding/units` | Alta 2 | `Alta2.dc.html` |
-| `/onboarding/lease` | Alta 3 | `Alta3.dc.html` |
-| `/` | Inicio | `Main.dc.html` |
-| `/bills` | Listado de cuentas | `Cuentas.dc.html` |
-| `/bills/new` | Cuenta manual | Sin diseñar |
-| `/bills/[id]` | Detalle de cuenta | `Cuenta.dc.html` |
-| `/bills/[id]/payment` | Registrar pago | `Pago.dc.html` |
-| `/properties` | Inmuebles y unidades | `Inmuebles.dc.html` |
-| `/properties/new`, `/properties/[id]/edit` | Crear y editar un inmueble | Sin diseñar; sigue a Alta 1 |
-| `/properties/[id]/units/new`, `/units/[id]/edit` | Agregar y editar una unidad | Sin diseñar |
-| `/leases/new?unit=...` | Crear el contrato de una unidad vacía | Sin diseñar; sigue a Alta 3 |
-| `/leases/[id]` | Contrato | `Contrato.dc.html` |
-| `/leases/[id]/edit` | Editar contrato | Sin diseñar; sigue a Alta 3 |
-| `/settings` | Configuración | `Ajustes.dc.html` |
-| `/settings/email` | Texto del correo | Sin diseñar |
+| `/login`, `/signup`, `/reset-password`, `/update-password` | Acceso | Columna |
+| `/onboarding/property`, `/onboarding/units`, `/onboarding/lease` | Alta guiada | Columna |
+| `/` | Resumen | Sección |
+| `/bills` | Cuentas | Sección (lista) |
+| `/bills/new` | Cuenta manual | Panel de Cuentas |
+| `/bills/[id]` | Detalle de cuenta | Panel de Cuentas |
+| `/bills/[id]/payment` | Registrar pago | Panel de Cuentas |
+| `/properties` | Inmuebles | Sección (lista) |
+| `/properties/new`, `/properties/[id]/edit` | Crear y editar un inmueble | Panel de Inmuebles |
+| `/properties/[id]/units/new`, `/units/[id]/edit` | Agregar y editar una unidad | Panel de Inmuebles |
+| `/leases/new?unit=...` | Crear el contrato de una unidad vacía | Panel de Inmuebles |
+| `/leases/[id]` | Contrato | Panel de Inmuebles |
+| `/leases/[id]/edit` | Editar contrato | Panel de Inmuebles |
+| `/settings` | Ajustes | Sección |
 
-## Diferencias entre los mockups y lo que se construye
+## Diferencias entre el mock y lo que se construye
 
-- Los nombres, valores y fechas de los mockups son datos de ejemplo.
-- En configuración, el desplegable "Enviar las cuentas" del mockup ofrece tres opciones. En el MVP es un selector del día del mes (1 a 28); la aprobación previa se controla por contrato con "Enviar cuentas automáticamente".
-- En el escritorio, el contenido se centra en una columna de 480 px como máximo. No hay diseño de escritorio propio en el MVP.
-- Los mockups solo muestran el tema claro.
-- El selector de tema en configuración no aparece en el mockup; va como una sección más, "Apariencia".
-- En el contrato, "Próximo incremento" no se construye: el incremento anual está fuera del MVP.
-- En inmuebles, cada fila de unidad tiene además un botón de lápiz para editarla, que el mockup no trae. Una unidad vacía dice "Crear contrato" y lleva a crearlo.
-- En el listado de cuentas, las pastillas de estado no llevan contador y hay una más, "Anuladas".
-- En el detalle de cuenta hay una sección "Pagos" con el saldo, el comprobante de cada pago y un botón para eliminarlo. La actividad lista cada correo y dice si falló o rebotó. Bajo "Registrar pago" van "Enviar" o "Reenviar", "Recordar", "Descargar PDF" y "Anular".
-- En el contrato, la sección "Cuentas de cobro" tiene además el botón "Generar cuenta del mes".
-- En configuración, "Tus datos" y "Datos de pago" se editan en la misma pantalla, sin botón "Editar", y hay un selector de tipo de documento (cédula o NIT).
-- En el inicio no hay selector de inmueble ni campana: el resumen es de todos los inmuebles del propietario y las notificaciones push están fuera del MVP. Cada cuenta por cobrar trae "Registrar pago", y las vencidas además "Enviar recordatorio". Una línea dice cuánto se debe de meses anteriores, y los correos rebotados salen como un aviso.
-- En registrar pago, "Enviar recibo" es un interruptor en vez de una casilla.
-- El cierre de sesión está al final de configuración.
-- Al crear o editar un contrato fuera del alta se puede poner el documento del arrendatario, con su tipo (cédula o NIT). El alta guiada no lo pide, para no alargarla.
-- La marca visible es el nombre "Arrendi" en texto, en el acceso y en el pie del PDF. No hay logo todavía. El ícono de la aplicación instalada es provisional: una "A" blanca sobre el verde primario.
+- Los nombres, valores y fechas del mock son datos de ejemplo.
+- El mock abre la cuenta en un panel sobre cualquier pantalla. En la aplicación el panel pertenece a su sección: desde el resumen, la cuenta se abre en Cuentas.
+- El panel de la unidad del mock es, en la aplicación, la pantalla del contrato. Una unidad vacía abre directamente "Crear contrato".
+- Cada fila de unidad tiene además un lápiz para editarla; "Editar unidad" también está al final del contrato, entre "Editar contrato" y "Terminar contrato".
+- El detalle de cuenta conserva lo que el mock no trae: la vista previa del documento, la sección "Pagos" con comprobante y eliminar, y los botones "Enviar" o "Reenviar", "Recordar", "Descargar PDF" y "Anular" en el pie.
+- El contrato conserva "Generar cuenta del mes", "Cobrar otro concepto" y el depósito.
+- En Cuentas, el filtro de estado no lleva contador y tiene "Anuladas" en lugar de "Vencidas".
+- En el resumen, una línea dice cuánto se debe de meses anteriores y los correos rebotados salen como aviso. En celular, los botones de cada cuenta por cobrar van bajo la fila, para registrar un pago en dos toques.
+- El PDF sigue en Helvetica, que trae todo lector de PDF: así no viaja ningún archivo de fuente con la API. Lleva la paleta de la marca, una franja navy arriba y el isotipo en el pie.
+- Los correos llevan una cabecera navy con el nombre, sin imagen.
