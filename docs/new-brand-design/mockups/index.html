@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arrendi · Tres propuestas de UI/UX</title>
+<link rel="icon" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ---------- Primitive tokens: brand (docs/new-brand-design/brand-design.md) ---------- */
+:root {
+  --brand-navy: #14264C;
+  --brand-green: #28B779;
+  --brand-yellow: #FFC857;
+  --brand-ivory: #F4F1E8;
+
+  /* Primitive tokens: derived from the brand */
+  --navy-950: #0A1122;
+  --navy-900: #0C1528;
+  --navy-800: #14203B;
+  --navy-700: #1B2A4B;
+  --navy-600: #2A3A60;
+  --navy-400: #55607A;
+  --navy-300: #A9B3CC;
+  --ivory-50: #FBF9F3;
+  --ivory-200: #EDE8DA;
+  --ivory-300: #DDD6C3;
+  --brick: #BC3D28;
+
+  --font-display: "Red Hat Display", Inter, system-ui, sans-serif;
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Semantic tokens: bill status. fill = marks, ink = text, bg = tinted surface */
+  --st-paid: #1FA36C;      --st-paid-ink: #14734B;     --st-paid-bg: #DDF3E8;
+  --st-partial: #D4951A;   --st-partial-ink: #7A5200;  --st-partial-bg: #FFEFC9;
+  --st-pending: #4C6FC4;   --st-pending-ink: #2F4A94;  --st-pending-bg: #E1E8F8;
+  --st-overdue: #D2513A;   --st-overdue-ink: #A3321E;  --st-overdue-bg: #FADFD8;
+  --st-voided: #8A90A0;    --st-voided-ink: #565D70;   --st-voided-bg: #E7E8EC;
+  --focus: #2F4A94;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --st-paid: #25A870;      --st-paid-ink: #6BDDAA;     --st-paid-bg: rgba(37, 168, 112, .18);
+  --st-partial: #C08618;   --st-partial-ink: #FFC857;  --st-partial-bg: rgba(255, 200, 87, .15);
+  --st-pending: #6485DA;   --st-pending-ink: #A9BEF5;  --st-pending-bg: rgba(100, 133, 218, .2);
+  --st-overdue: #E05F47;   --st-overdue-ink: #FF9D88;  --st-overdue-bg: rgba(224, 95, 71, .2);
+  --st-voided: #7C87A3;    --st-voided-ink: #A9B3CC;   --st-voided-bg: rgba(255, 255, 255, .08);
+  --focus: #FFC857;
+  color-scheme: dark;
+}
+.st-paid    { --st: var(--st-paid);    --st-ink: var(--st-paid-ink);    --st-bg: var(--st-paid-bg); }
+.st-partial { --st: var(--st-partial); --st-ink: var(--st-partial-ink); --st-bg: var(--st-partial-bg); }
+.st-pending { --st: var(--st-pending); --st-ink: var(--st-pending-ink); --st-bg: var(--st-pending-bg); }
+.st-overdue { --st: var(--st-overdue); --st-ink: var(--st-overdue-ink); --st-bg: var(--st-overdue-bg); }
+.st-voided  { --st: var(--st-voided);  --st-ink: var(--st-voided-ink);  --st-bg: var(--st-voided-bg); }
+
+/* ---------- Reset ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-family: var(--font-sans); font-size: 16px; line-height: 1.5; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+h1, h2, h3, p, ul, ol, dl, dd, figure { margin: 0; padding: 0; }
+ul, ol { list-style: none; }
+a { color: inherit; text-decoration: none; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a[href], label, select { cursor: pointer; }
+svg { display: block; flex: none; }
+.num { font-variant-numeric: tabular-nums; }
+.display { font-family: var(--font-display); letter-spacing: -.02em; }
+:focus { outline: none; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[hidden] { display: none !important; }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 6px; border-radius: 999px; font-size: 12px; line-height: 18px; font-weight: 600; white-space: nowrap; background: var(--st-bg); color: var(--st-ink); }
+
+#toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translate(-50%, 16px); z-index: 90; max-width: calc(100vw - 32px); padding: 12px 16px; border-radius: 12px; background: var(--toast-bg, var(--brand-navy)); color: var(--toast-ink, var(--brand-ivory)); font-size: 14px; font-weight: 500; box-shadow: 0 8px 24px rgba(10, 17, 34, .28); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
+#toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+
+:root { --bg: var(--brand-ivory); --surface: var(--ivory-50); --surface-2: var(--ivory-200); --line: var(--ivory-300); --ink: var(--brand-navy); --ink-2: var(--navy-400); --solid: var(--brand-navy); --on-solid: var(--brand-ivory); --bezel: var(--brand-navy); }
+:root[data-theme="dark"] { --bg: var(--navy-950); --surface: var(--navy-800); --surface-2: var(--navy-700); --line: var(--navy-600); --ink: var(--brand-ivory); --ink-2: var(--navy-300); --solid: var(--brand-ivory); --on-solid: var(--brand-navy); --bezel: var(--navy-600); }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 0 20px; }
+header.top { padding: 28px 0 8px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 900; font-size: 24px; letter-spacing: -.03em; }
+h1 { font-family: var(--font-display); font-weight: 900; font-size: clamp(34px, 6vw, 60px); line-height: 1.04; letter-spacing: -.03em; margin: 36px 0 14px; max-width: 16ch; }
+.lead { font-size: 18px; color: var(--ink-2); max-width: 62ch; }
+.controls { position: sticky; top: 0; z-index: 10; background: var(--bg); padding: 14px 0; margin-top: 28px; border-bottom: 1px solid var(--line); }
+.controls .wrap { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.segs { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.segs button { min-height: 40px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+.segs button[aria-pressed="true"] { background: var(--solid); color: var(--on-solid); }
+.controls .lbl { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.proposal { padding: 56px 0 24px; border-bottom: 1px solid var(--line); }
+.p-head { display: grid; gap: 20px; margin-bottom: 30px; }
+@media (min-width: 900px) { .p-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 48px; align-items: end; } }
+.letter { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: var(--solid); color: var(--on-solid); font-family: var(--font-display); font-weight: 900; font-size: 22px; margin-bottom: 14px; }
+h2 { font-family: var(--font-display); font-weight: 900; font-size: clamp(28px, 4vw, 40px); line-height: 1.08; letter-spacing: -.03em; }
+h2 span { color: var(--ink-2); font-weight: 700; }
+.idea { margin-top: 10px; font-size: 17px; max-width: 46ch; }
+.facts { display: grid; gap: 10px; }
+.facts li { display: grid; grid-template-columns: 116px 1fr; gap: 12px; font-size: 15px; padding-top: 10px; border-top: 1px solid var(--line); }
+.facts b { font-weight: 600; color: var(--ink-2); }
+.open { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 999px; background: var(--brand-yellow); color: var(--brand-navy); font-weight: 700; margin-top: 18px; }
+.open:hover { opacity: .88; }
+.devices { display: flex; gap: 28px; align-items: flex-end; overflow-x: auto; padding: 8px 4px 28px; scrollbar-width: thin; }
+.device { flex: none; }
+.device figcaption { margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.screen { width: calc(var(--w) * var(--s) * 1px); height: calc(var(--h) * var(--s) * 1px); border: 8px solid var(--bezel); border-radius: var(--r, 18px); overflow: hidden; background: var(--surface); box-sizing: content-box; box-shadow: 0 24px 50px -24px rgba(10, 17, 34, .45); }
+.screen iframe { width: calc(var(--w) * 1px); height: calc(var(--h) * 1px); border: 0; transform: scale(var(--s)); transform-origin: 0 0; display: block; }
+.phone { --w: 390; --h: 800; --s: .72; --r: 34px; }
+.tablet { --w: 820; --h: 1080; --s: .5; --r: 24px; }
+.desktop { --w: 1360; --h: 850; --s: .5; --r: 14px; }
+.compare { padding: 56px 0 80px; }
+.compare h2 { margin-bottom: 20px; }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); }
+table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; vertical-align: top; padding: 14px 18px; border-top: 1px solid var(--line); }
+thead th { border-top: 0; font-family: var(--font-display); font-weight: 800; font-size: 17px; }
+tbody th { font-weight: 600; color: var(--ink-2); width: 150px; }
+.note { margin-top: 18px; font-size: 14px; color: var(--ink-2); max-width: 80ch; }
+.icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; margin-left: auto; }
+.icon-btn:hover { background: var(--surface-2); }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand"><span id="mark"></span>Arrendi</div>
+  <h1>Tres propuestas con la marca nueva</h1>
+  <p class="lead">Las mismas cinco pantallas y los mismos datos, con tres ideas distintas de cómo debe sentirse cobrar un arriendo. Cada marco es la propuesta real, en vivo: puedes tocarla aquí o abrirla completa y cambiar el ancho de la ventana.</p>
+</div></header>
+
+<div class="controls"><div class="wrap">
+  <span class="lbl">Pantalla</span>
+  <div class="segs" role="group" aria-label="Pantalla que se muestra" id="screens"></div>
+  <button class="icon-btn" data-act="theme"><span data-icon></span></button>
+</div></div>
+
+<main id="list"></main>
+
+<section class="compare"><div class="wrap">
+  <h2>Lado a lado</h2>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>A · Ventanas</th><th>B · Libro</th><th>C · Hoy</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Idea</th><td>Ves tu casa: cada unidad es una ventana que se enciende según su estado.</td><td>Un libro de cobro moderno: lista y detalle siempre a la vista.</td><td>La app te dice qué hacer hoy, en orden, con la acción a un toque.</td></tr>
+      <tr><th scope="row">Carácter</th><td>Cálida y tranquila</td><td>Sobria, densa y precisa</td><td>Audaz y directa</td></tr>
+      <tr><th scope="row">Color</th><td>Marfil dominante; el color vive en las ventanas</td><td>Superficies claras; navy en el riel; color solo en estados</td><td>Navy inmersivo con amarillo como resalte</td></tr>
+      <tr><th scope="row">Navegación</th><td>Barra inferior → barra lateral</td><td>Barra inferior → riel + panel de detalle</td><td>Barra flotante con «Cobrar» → barra superior</td></tr>
+      <tr><th scope="row">Registrar pago</th><td>Hoja inferior; diálogo en escritorio</td><td>En el panel lateral, sin salir de la lista</td><td>Pantalla completa con teclado y cierre de éxito</td></tr>
+      <tr><th scope="row">Brilla en</th><td>Celular y tablet, vistazo rápido</td><td>Escritorio, muchas cuentas</td><td>Celular, uso a ratos</td></tr>
+      <tr><th scope="row">Riesgo</th><td>Con más de 10 unidades por inmueble la casa crece mucho</td><td>Es la menos «llamativa»; en celular pierde su ventaja</td><td>Menos densidad: pide más desplazamiento con muchas cuentas</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Se pueden mezclar. Por ejemplo: el Inicio por acciones de C, las ventanas de A en Inmuebles y la lista con panel de B para Cuentas en escritorio. Todo usa solo datos que la API ya entrega; las acciones fuera de las cinco pantallas (crear cuenta, ajustes, contratos) responden con un aviso.</p>
+</div></section>
+
+<script>
+/* ---------- Sample data: same in the three proposals. Shapes follow the API (SummaryResponse, BillResponse, PropertyResponse). ---------- */
+const TODAY = '2026-10-11';
+const PERIOD = '2026-10';
+const OWNER = { name: 'Carolina Vélez Ruiz', first: 'Carolina', doc: 'C.C. 52.418.907', bank: 'Bancolombia · Ahorros 123-456789-01', nequi: 'Nequi 310 555 0142' };
+const PROPERTIES = [
+  { id: 'p1', name: 'Casa La Soledad', address: 'Cra 24 # 39-18', city: 'Bogotá', type: 'Casa' },
+  { id: 'p2', name: 'Edificio Chapinero', address: 'Cl 57 # 9-40', city: 'Bogotá', type: 'Edificio' },
+];
+const UNITS = [
+  { id: 'u1', p: 'p1', name: 'Apto 101', use: 'Vivienda', tenant: 'Marta Ríos', short: 'Marta', doc: 'C.C. 39.781.220', rent: 1450000, day: 5 },
+  { id: 'u2', p: 'p1', name: 'Apto 201', use: 'Vivienda', tenant: 'Julián Pardo', short: 'Julián', doc: 'C.C. 1.018.442.731', rent: 1300000, day: 15 },
+  { id: 'u3', p: 'p1', name: 'Local 1', use: 'Comercial', tenant: 'Panadería El Trigal SAS', short: 'El Trigal', doc: 'NIT 901.234.567-8', rent: 2100000, day: 5 },
+  { id: 'u4', p: 'p2', name: 'Apto 302', use: 'Vivienda', tenant: 'Laura Gómez', short: 'Laura', doc: 'C.C. 52.990.114', rent: 1800000, day: 5 },
+  { id: 'u5', p: 'p2', name: 'Apto 303', use: 'Vivienda', tenant: null },
+  { id: 'u6', p: 'p2', name: 'Apto 401', use: 'Vivienda', tenant: 'Andrés Molina', short: 'Andrés', doc: 'C.C. 80.214.667', rent: 1650000, day: 20 },
+];
+/* The active lease of each rented unit: what the contract screen shows. */
+const LEASES = {
+  u1: { email: 'marta.rios@correo.co', start: '2025-03-01', end: '2027-02-28', auto: true, doc: 'Contrato Apto 101.pdf' },
+  u2: { email: 'julian.pardo@correo.co', start: '2026-01-15', end: '2027-01-14', auto: true, doc: 'Contrato Apto 201.pdf' },
+  u3: { email: 'pagos@eltrigal.co', start: '2024-08-01', end: '2027-07-31', auto: true, doc: 'Contrato Local 1.pdf' },
+  u4: { email: 'laura.gomez@correo.co', start: '2025-11-01', end: '2026-10-31', auto: true, doc: null },
+  u6: { email: 'andres.molina@correo', start: '2026-06-20', end: '2027-06-19', auto: false, doc: 'Contrato Apto 401.pdf' },
+};
+const METHODS = { transfer: 'Transferencia', nequi: 'Nequi', cash: 'Efectivo', other: 'Otro' };
+const STATUS = {
+  pending: { label: 'Pendiente', icon: 'clock' },
+  partial: { label: 'Parcial', icon: 'half' },
+  paid: { label: 'Pagada', icon: 'check' },
+  overdue: { label: 'Vencida', icon: 'alert' },
+  voided: { label: 'Anulada', icon: 'ban' },
+};
+const UNIT_STATUS = {
+  up_to_date: { label: 'Al día', icon: 'check', st: 'paid' },
+  partial: { label: 'Pago parcial', icon: 'half', st: 'partial' },
+  overdue: { label: 'En mora', icon: 'alert', st: 'overdue' },
+  vacant: { label: 'Disponible', icon: 'key', st: 'voided' },
+};
+
+const pad = (n) => String(n).padStart(2, '0');
+const unitById = (id) => UNITS.find((u) => u.id === id);
+const propById = (id) => PROPERTIES.find((p) => p.id === id);
+const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const pesos = (n) => '$' + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const dayMonth = (d) => `${+d.slice(8)} ${MONTHS[+d.slice(5, 7) - 1].slice(0, 3)}`;
+const fullDate = (d) => `${dayMonth(d)} ${d.slice(0, 4)}`;
+const monthName = (p) => MONTHS[+p.slice(5, 7) - 1];
+const monthTitle = (p) => `${monthName(p)[0].toUpperCase()}${monthName(p).slice(1)} ${p.slice(0, 4)}`;
+const billNo = (n) => 'N.º ' + String(n).padStart(4, '0');
+const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 864e5);
+const addDays = (d, n) => new Date(new Date(d).getTime() + n * 864e5).toISOString().slice(0, 10);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function recompute(b) {
+  const paid = b.payments.reduce((s, p) => s + p.amount, 0);
+  b.balance = b.total - paid;
+  if (b.status === 'voided') return b;
+  b.status = b.balance <= 0 ? 'paid' : b.due < TODAY ? 'overdue' : paid > 0 ? 'partial' : 'pending';
+  return b;
+}
+function makeBill(number, unitId, period, payments, opts = {}) {
+  const u = unitById(unitId);
+  const due = `${period}-${pad(u.day)}`;
+  const items = unitId === 'u3'
+    ? [{ desc: `Canon de arrendamiento · ${monthName(period)} ${period.slice(0, 4)}`, amount: 1950000 }, { desc: 'Administración', amount: 150000 }]
+    : [{ desc: `Canon de arrendamiento · ${monthName(period)} ${period.slice(0, 4)}`, amount: u.rent }];
+  return recompute({ id: number, number, unit: unitId, period, issue: `${period}-01`, due, total: u.rent, items, payments, bounced: !!opts.bounced, status: 'pending' });
+}
+const BILLS = [];
+(() => {
+  const plan = { u1: ['04', 'transfer'], u2: ['14', 'nequi'], u3: ['05', 'transfer'], u4: ['05', 'nequi'], u6: ['19', 'cash'] };
+  let n = 31;
+  for (const period of ['2026-08', '2026-09']) {
+    for (const u of UNITS.filter((x) => x.tenant)) {
+      const [d, method] = plan[u.id];
+      BILLS.push(makeBill(n++, u.id, period, [{ date: `${period}-${d}`, amount: u.rent, method, proof: method !== 'cash' }]));
+    }
+  }
+  BILLS.push(makeBill(41, 'u1', PERIOD, [{ date: '2026-10-03', amount: 1450000, method: 'transfer', proof: true }]));
+  BILLS.push(makeBill(42, 'u2', PERIOD, [{ date: '2026-10-08', amount: 600000, method: 'nequi', proof: true }]));
+  BILLS.push(makeBill(43, 'u3', PERIOD, []));
+  BILLS.push(makeBill(44, 'u4', PERIOD, [{ date: '2026-10-05', amount: 1800000, method: 'nequi', proof: true }]));
+  BILLS.push(makeBill(45, 'u6', PERIOD, [], { bounced: true }));
+})();
+const billById = (id) => BILLS.find((b) => b.id === +id);
+const billUnit = (b) => unitById(b.unit);
+const lastPayment = (b) => b.payments[b.payments.length - 1];
+const PERIODS = () => [...new Set(BILLS.map((b) => b.period))].sort().reverse();
+const isOpen = (b) => ['pending', 'partial', 'overdue'].includes(b.status);
+const URGENCY = { overdue: 0, partial: 1, pending: 2, paid: 3, voided: 4 };
+const byUrgency = (a, b) => URGENCY[a.status] - URGENCY[b.status] || a.due.localeCompare(b.due);
+
+function unitStatus(u) {
+  if (!u.tenant) return 'vacant';
+  const mine = BILLS.filter((b) => b.unit === u.id);
+  if (mine.some((b) => b.status === 'overdue')) return 'overdue';
+  if (mine.some((b) => b.status === 'partial')) return 'partial';
+  return 'up_to_date';
+}
+const currentBill = (u) => BILLS.find((b) => b.unit === u.id && b.period === PERIOD);
+
+/** The month at a glance, like GET /summary. `segments` splits `expected` by what happened to each peso. */
+function summary(period = PERIOD) {
+  const bills = BILLS.filter((b) => b.period === period && b.status !== 'voided');
+  const sum = (list, f) => list.reduce((s, b) => s + f(b), 0);
+  const expected = sum(bills, (b) => b.total);
+  const collected = sum(bills, (b) => b.total - b.balance);
+  const of = (st) => sum(bills.filter((b) => b.status === st), (b) => b.balance);
+  return {
+    period, expected, collected, pending: expected - collected,
+    percent: expected ? Math.round((collected / expected) * 100) : 0,
+    segments: [
+      { key: 'paid', label: 'Recaudado', value: collected },
+      { key: 'partial', label: 'Saldo de abonos', value: of('partial') },
+      { key: 'pending', label: 'Por vencer', value: of('pending') },
+      { key: 'overdue', label: 'Vencido', value: of('overdue') },
+    ],
+    unitsTotal: UNITS.length,
+    unitsOverdue: UNITS.filter((u) => unitStatus(u) === 'overdue').length,
+    receivable: bills.filter(isOpen).sort(byUrgency),
+    paid: bills.filter((b) => b.status === 'paid'),
+    bounced: bills.filter((b) => b.bounced && isOpen(b)),
+  };
+}
+function owedDetail(b) {
+  if (b.status === 'overdue') { const d = daysBetween(b.due, TODAY); return d === 1 ? 'hace 1 día' : `hace ${d} días`; }
+  if (b.status === 'partial') return `abonó ${pesos(b.total - b.balance)}`;
+  return `vence el ${dayMonth(b.due)}`;
+}
+/* Hours as 'HH:MM' in America/Bogota. The daily task sends at 7:00; a payment carries the hour it was registered. */
+const SEND_TIME = '07:00';
+const sampleTime = (amount) => `${pad(8 + (Math.floor(amount / 50000) % 10))}:${pad(Math.floor(amount / 1000) % 60)}`;
+const clock = (t) => { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${pad(m)} ${h < 12 ? 'a. m.' : 'p. m.'}`; };
+const nowTime = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit' });
+/** Sends and payments of a bill, oldest first. */
+function timeline(b) {
+  const u = billUnit(b);
+  const ev = [{ date: b.issue, time: SEND_TIME, icon: b.bounced ? 'alert' : 'mail', text: b.bounced ? 'El correo de la cuenta rebotó' : 'Cuenta enviada por correo', tone: b.bounced ? 'overdue' : '' }];
+  const lateBy = daysBetween(b.due, TODAY);
+  const paidOn = b.balance <= 0 ? lastPayment(b).date : null;
+  if (lateBy >= 1 && (!paidOn || paidOn > b.due)) ev.push({ date: addDays(b.due, 1), time: SEND_TIME, icon: 'bell', text: 'Primer recordatorio enviado', tone: '' });
+  if (lateBy >= 7 && (!paidOn || paidOn > addDays(b.due, 6))) ev.push({ date: addDays(b.due, 7), time: SEND_TIME, icon: 'bell', text: 'Segundo recordatorio enviado', tone: '' });
+  for (const p of b.payments) ev.push({ date: p.date, time: p.time || sampleTime(p.amount), icon: 'check', text: `Pago de ${pesos(p.amount)} · ${METHODS[p.method].toLowerCase()}`, sub: `Recibo enviado a ${u.short}`, tone: 'paid' });
+  return ev.sort((a, c) => (a.date + a.time).localeCompare(c.date + c.time));
+}
+function registerPayment(id, amount, method, date = TODAY) {
+  const b = billById(id);
+  b.payments.push({ date, time: nowTime(), amount: Math.min(amount, b.balance), method, proof: false });
+  return recompute(b);
+}
+const parsePesos = (s) => +String(s).replace(/\D/g, '') || 0;
+
+/* ---------- Icons (Lucide) and brand mark ---------- */
+const ICONS = {
+  home: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  bills: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+  building: '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/>',
+  settings: '<path d="M21 4h-7"/><path d="M10 4H3"/><path d="M21 12h-9"/><path d="M8 12H3"/><path d="M21 20h-5"/><path d="M12 20H3"/><path d="M14 2v4"/><path d="M8 10v4"/><path d="M16 18v4"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  ban: '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
+  half: '<circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor" stroke="none"/>',
+  key: '<path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/>',
+  send: '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+  upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  back: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  chevron: '<path d="m9 18 6-6-6-6"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+  moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  mail: '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  bell: '<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>',
+  cash: '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+  erase: '<path d="M10 5a2 2 0 0 0-1.344.519l-6.328 5.74a1 1 0 0 0 0 1.481l6.328 5.741A2 2 0 0 0 10 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="m12 9 6 6"/><path d="m18 9-6 6"/>',
+  pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+  clip: '<path d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551"/>',
+};
+const ic = (name, size = 20, sw = 2) => `<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
+/** The isotipo, from arrendi-logo.svg. The house takes `currentColor`; the windows stay brand green. */
+const mark = (size = 32) => `<svg aria-hidden="true" width="${size}" height="${Math.round(size * 0.83)}" viewBox="18 6 172 142"><g fill="currentColor"><rect x="137" y="12" width="28" height="50" rx="6"/><path d="M159.5 130.5V81.72L103.56 39.46 48.5 81.66V130.5a13.5 13.5 0 0 1-27 0V75a13.5 13.5 0 0 1 5.29-10.71l68.5-52.5.46-.34a13.5 13.5 0 0 1 15.89.28l69.5 52.5A13.5 13.5 0 0 1 186.5 75v55.5a13.5 13.5 0 0 1-27 0Z"/></g><g fill="#28B779"><rect x="77" y="85" width="25" height="25" rx="5.5"/><rect x="106" y="85" width="25" height="25" rx="5.5"/><rect x="77" y="114" width="25" height="25" rx="5.5"/><rect x="106" y="114" width="25" height="25" rx="5.5"/></g></svg>`;
+const badge = (status) => `<span class="badge st-${status}">${ic(STATUS[status].icon, 13, 2.5)}${STATUS[status].label}</span>`;
+
+/* ---------- Theme, toast, routing ---------- */
+const QUERY = new URLSearchParams(location.search);
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem('arrendi-mock-theme', theme); } catch (e) { /* private mode */ }
+  document.querySelectorAll('[data-act="theme"]').forEach((b) => {
+    b.setAttribute('aria-label', theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro');
+    const slot = b.querySelector('[data-icon]');
+    if (slot) slot.innerHTML = ic(theme === 'dark' ? 'sun' : 'moon', 20);
+  });
+}
+function initTheme() {
+  let stored = null;
+  try { stored = localStorage.getItem('arrendi-mock-theme'); } catch (e) { /* private mode */ }
+  setTheme(QUERY.get('theme') || stored || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+}
+let toastTimer;
+function toast(message) {
+  let el = document.getElementById('toast');
+  if (!el) { el = document.createElement('div'); el.id = 'toast'; el.setAttribute('role', 'status'); document.body.append(el); }
+  el.textContent = message;
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), 2800);
+}
+const parseHash = (h) => { const [name, arg] = (h.replace(/^#/, '') || 'home').split('/'); return { name, arg, hash: `${name}${arg ? '/' + arg : ''}` }; };
+let ROUTE = parseHash(location.hash);
+let PREV = null;
+/** Each proposal defines `render()` and may define `onAct(action, element)`. */
+function start() {
+  initTheme();
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-act]');
+    if (!t) return;
+    const act = t.dataset.act;
+    if (act === 'theme') { setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); return; }
+    if (act === 'toast') { toast(t.dataset.msg); return; }
+    if (act === 'remind') { toast(`Recordatorio enviado a ${billUnit(billById(t.dataset.id)).short}`); return; }
+    if (typeof onAct === 'function') onAct(act, t, e);
+  });
+  window.addEventListener('hashchange', () => {
+    PREV = ROUTE; ROUTE = parseHash(location.hash);
+    render();
+    setTheme(document.documentElement.dataset.theme);
+  });
+  render();
+  setTheme(document.documentElement.dataset.theme);
+}
+
+
+const PROPOSALS = [
+  { key: 'a', file: 'propuesta-a-ventanas.html', name: 'Ventanas', tag: 'cálida y de un vistazo', idea: 'La casa del logo se vuelve la interfaz. Abres la app y ves tu casa: cada unidad es una ventana encendida en verde, amarillo o ladrillo.',
+    facts: [['Color', 'Marfil dominante y navy; el color vive en las ventanas'], ['Navegación', 'Barra inferior en el celular, barra lateral desde tablet'], ['Pago', 'Hoja inferior; diálogo centrado en escritorio'], ['Para quién', 'Quien quiere tranquilidad y entender todo sin leer']] },
+  { key: 'b', file: 'propuesta-b-libro.html', name: 'Libro', tag: 'precisa y productiva', idea: 'Un libro de cobro moderno. Todo es lista y detalle: eliges una cuenta y se abre al lado, sin perder de vista las demás.',
+    facts: [['Color', 'Superficies claras, navy en el riel, color solo en los estados'], ['Navegación', 'Riel de íconos, lista y panel de detalle lado a lado'], ['Pago', 'En el mismo panel lateral, sin cambiar de pantalla'], ['Para quién', 'Quien administra desde el computador y quiere control']] },
+  { key: 'c', file: 'propuesta-c-hoy.html', name: 'Hoy', tag: 'audaz y guiada por la acción', idea: 'La app te dice qué hacer hoy. El inicio es una lista priorizada —«Cobra a El Trigal»— y cobrar siempre está a un toque.',
+    facts: [['Color', 'Navy inmersivo, amarillo como resalte, tarjetas marfil'], ['Navegación', 'Barra flotante con botón «Cobrar»; barra superior desde tablet'], ['Pago', 'Pantalla completa con teclado grande y cierre de éxito'], ['Para quién', 'Quien usa el celular a ratos y quiere resolver y cerrar']] },
+];
+const VIEWS = [['home', 'Inicio'], ['bills', 'Cuentas'], ['bill/43', 'Detalle de cuenta'], ['pay/43', 'Registrar pago'], ['properties', 'Inmuebles']];
+const DEVICES = [['phone', 'Celular · 390 px'], ['tablet', 'Tablet · 820 px'], ['desktop', 'Escritorio · 1360 px']];
+let VIEW = 'home';
+
+const src = (p) => `${p.file}?theme=${document.documentElement.dataset.theme}#${VIEW}`;
+function draw() {
+  document.getElementById('screens').innerHTML = VIEWS.map(([k, l]) => `<button data-act="view" data-v="${k}" aria-pressed="${VIEW === k}">${l}</button>`).join('');
+  document.getElementById('list').innerHTML = PROPOSALS.map((p) => `<section class="proposal" id="${p.key}"><div class="wrap">
+    <div class="p-head">
+      <div><span class="letter">${p.key.toUpperCase()}</span><h2>${p.name} <span>· ${p.tag}</span></h2><p class="idea">${p.idea}</p>
+        <a class="open" href="${p.file}" target="_blank" rel="noopener">Abrir completa ${ic('chevron', 18, 2.5)}</a></div>
+      <ul class="facts">${p.facts.map(([k, v]) => `<li><b>${k}</b><span>${v}</span></li>`).join('')}</ul>
+    </div>
+    <div class="devices">${DEVICES.map(([d, label]) => `<figure class="device"><div class="screen ${d}"><iframe loading="lazy" title="Propuesta ${p.key.toUpperCase()}, ${label}" src="${src(p)}"></iframe></div><figcaption>${label}</figcaption></figure>`).join('')}</div>
+  </div></section>`).join('');
+}
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  if (t.dataset.act === 'view') VIEW = t.dataset.v;
+  if (t.dataset.act === 'theme') setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  draw();
+});
+document.getElementById('mark').outerHTML = mark(40);
+initTheme();
+draw();
+</script>
+</body>
+</html>
