@@ -33,7 +33,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* On a phone the brand heads each section; from tablet up it is on the rail. */}
         {topLevel && (
           <div className="flex h-13 items-center border-b border-border bg-card px-4 md:hidden">
-            <Brand />
+            <Brand className="h-6" />
           </div>
         )}
         {children}
@@ -50,7 +50,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           aria-label="Arrendi, resumen"
           className="mb-4 hidden rounded-lg p-1 text-rail-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring md:block"
         >
-          <BrandMark className="h-7" />
+          <BrandMark tone="white" className="h-7" />
         </Link>
         {SECTIONS.map(({ href, label, Icon, under }) => {
           const current = [href, ...under].some((path) => within(pathname, path));

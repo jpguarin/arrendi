@@ -3,6 +3,7 @@
 Nothing here reads the database or storage: it turns what it is given into bytes.
 """
 
+import re
 from dataclasses import dataclass
 from datetime import date
 from io import BytesIO
@@ -10,9 +11,10 @@ from io import BytesIO
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import simpleSplit
-from reportlab.pdfgen.canvas import Canvas
+from reportlab.pdfgen.canvas import FILL_NON_ZERO, Canvas
 
 from app.pdf.format import format_long_date, format_number, format_pesos
+from app.pdf.logo import BOX, GREEN_PATHS, INK_PATHS
 
 # The light palette of docs/diseno.md, on the brand of docs/new-brand-design.
 FOREGROUND = HexColor("#14264C")
@@ -72,35 +74,48 @@ def _rule(canvas: Canvas, y: float) -> None:
     canvas.line(MARGIN, y, RIGHT, y)
 
 
-def _brand_mark(canvas: Canvas, x: float, y: float, height: float) -> float:
-    """The isotipo, drawn from the measures of arrendi-logo.svg. Returns its width.
+_COMMAND = re.compile(r"([MLHVCZ])([^MLHVCZ]*)")
 
-    `x` and `y` are its bottom left corner. The house is one thick line with round
-    ends, as in the logo: wall, roof and wall; then the chimney and the four windows.
-    """
-    scale = height / 142
+
+def _trace(canvas: Canvas, data: str):
+    """An SVG path made only of absolute M, L, H, V, C and Z, as a path of the canvas."""
+    path = canvas.beginPath()
+    x = y = 0.0
+    for command, arguments in _COMMAND.findall(data):
+        numbers = [float(number) for number in arguments.replace(",", " ").split()]
+        if command == "M":
+            x, y = numbers
+            path.moveTo(x, y)
+        elif command == "L":
+            x, y = numbers
+            path.lineTo(x, y)
+        elif command == "H":
+            (x,) = numbers
+            path.lineTo(x, y)
+        elif command == "V":
+            (y,) = numbers
+            path.lineTo(x, y)
+        elif command == "C":
+            path.curveTo(*numbers)
+            x, y = numbers[4:]
+        else:
+            path.close()
+    return path
+
+
+def _logo(canvas: Canvas, x: float, y: float, height: float) -> None:
+    """The logo of the brand, with its bottom left corner at `x`, `y`."""
+    left, top, _, box_height = BOX
+    scale = height / box_height
     canvas.saveState()
     # The logo measures from its top left corner, with `y` growing downwards.
-    canvas.translate(x - 18 * scale, y + 148 * scale)
+    canvas.translate(x - left * scale, y + (top + box_height) * scale)
     canvas.scale(scale, -scale)
-    canvas.setStrokeColor(FOREGROUND)
-    canvas.setFillColor(FOREGROUND)
-    canvas.setLineWidth(27)
-    canvas.setLineCap(1)
-    canvas.setLineJoin(1)
-    house = canvas.beginPath()
-    house.moveTo(35, 130.5)
-    house.lineTo(35, 75)
-    house.lineTo(103.5, 22.5)
-    house.lineTo(173, 75)
-    house.lineTo(173, 130.5)
-    canvas.drawPath(house, stroke=1, fill=0)
-    canvas.roundRect(137, 12, 28, 50, 6, stroke=0, fill=1)
-    canvas.setFillColor(BRAND_GREEN)
-    for left, top in ((77, 85), (106, 85), (77, 114), (106, 114)):
-        canvas.roundRect(left, top, 25, 25, 5.5, stroke=0, fill=1)
+    for color, paths in ((FOREGROUND, INK_PATHS), (BRAND_GREEN, GREEN_PATHS)):
+        canvas.setFillColor(color)
+        for data in paths:
+            canvas.drawPath(_trace(canvas, data), stroke=0, fill=1, fillMode=FILL_NON_ZERO)
     canvas.restoreState()
-    return 172 * scale
 
 
 def _wrapped(text: str, font: str, size: float, width: float) -> list[str]:
@@ -117,6 +132,8 @@ def render_bill(bill: BillDocument) -> bytes:
     canvas = Canvas(buffer, pagesize=letter, pageCompression=0)
     canvas.setTitle(f"Cuenta de cobro {format_number(bill.number)}")
     canvas.setAuthor(bill.owner_name)
+    # The name of the brand is drawn, not written: this keeps it in the file as text.
+    canvas.setCreator("Arrendi")
 
     # A band of the brand color across the top edge.
     canvas.setFillColor(FOREGROUND)
@@ -193,14 +210,9 @@ def render_bill(bill: BillDocument) -> bytes:
         text_y -= 16
 
     # The brand, small at the foot: the bill is the owner's, Arrendi only issues it.
-    canvas.setFont(BOLD, 10)
-    name_width = canvas.stringWidth("Arrendi", BOLD, 10)
-    mark_height = 12
-    mark_width = 172 * mark_height / 142
-    left = (WIDTH - mark_width - 5 - name_width) / 2
-    _brand_mark(canvas, left, MARGIN / 2 - 2, mark_height)
-    canvas.setFillColor(FOREGROUND)
-    canvas.drawString(left + mark_width + 5, MARGIN / 2, "Arrendi")
+    logo_height = 14
+    logo_width = BOX[2] * logo_height / BOX[3]
+    _logo(canvas, (WIDTH - logo_width) / 2, MARGIN / 2 - 2, logo_height)
 
     if bill.voided:
         # Across the page, so no copy of it passes for a bill still owed.

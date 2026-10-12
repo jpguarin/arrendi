@@ -42,6 +42,7 @@
   --rail-muted: #a9b3cc;
   --rail-active: rgb(244 241 232 / 0.12);
   --brand-green: #28b779;
+  --brand-navy: #14264c;
 
   /*
    * Status. The bare name fills a mark (bar, dot, chart), `-ink` is text and `-tint` its
@@ -137,6 +138,7 @@
   --color-rail-muted: var(--rail-muted);
   --color-rail-active: var(--rail-active);
   --color-brand-green: var(--brand-green);
+  --color-brand-navy: var(--brand-navy);
   --color-positive: var(--positive);
   --color-positive-ink: var(--positive-ink);
   --color-positive-tint: var(--positive-tint);
