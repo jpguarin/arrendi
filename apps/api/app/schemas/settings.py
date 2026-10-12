@@ -1,18 +1,14 @@
-from typing import Annotated, Literal
+from typing import Annotated
 
 from pydantic import BaseModel, BeforeValidator, Field, StringConstraints
 
-from app.schemas.common import Name, OptionalText, PatchModel, blank_to_none
+from app.schemas.common import DocumentType, Name, OptionalText, PatchModel, blank_to_none
 
 # Free text printed on every bill: bank, account, Nequi. It may have several lines.
 PaymentDetails = Annotated[
     Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] | None,
     BeforeValidator(blank_to_none),
 ]
-
-
-# What the owner's document is: a cédula de ciudadanía or a NIT.
-DocumentType = Literal["cc", "nit"]
 
 
 # The day of the month the bills go out. Up to 28, so it exists in every month.

@@ -44,7 +44,7 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 
 | Ruta | Qué hace |
 | --- | --- |
-| `POST /api/leases` | Crea el contrato de una unidad. Recibe `tenant` (arrendatario nuevo) o `tenant_id` (uno existente), nunca los dos. 409 `unit_has_active_lease` si la unidad ya tiene contrato activo; 422 `invalid_lease_dates` si la fecha de fin no es posterior a la de inicio |
+| `POST /api/leases` | Crea el contrato de una unidad. Recibe `tenant` (arrendatario nuevo, con `document_type` `cc` o `nit` y `document_number` opcionales) o `tenant_id` (uno existente), nunca los dos. 409 `unit_has_active_lease` si la unidad ya tiene contrato activo; 422 `invalid_lease_dates` si la fecha de fin no es posterior a la de inicio |
 | `GET /api/leases/{id}` | Devuelve contrato, arrendatario, unidad con su inmueble y el nombre del documento. También sus últimas cuentas, en `recent_bills` (hasta 6, de la más nueva a la más vieja, incluidas las anuladas) |
 | `PATCH /api/leases/{id}` | Edita canon, día de pago, fechas, depósito, envío automático y datos del arrendatario (en `tenant`). Solo cambian los campos enviados. También se puede editar un contrato terminado, para corregir el correo del arrendatario si quedó con saldo |
 | `POST /api/leases/{id}/end` | Pasa el contrato a terminado. 400 `lease_already_ended` si ya lo estaba |

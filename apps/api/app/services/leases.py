@@ -63,6 +63,7 @@ def lease_response(session: Session, lease: Lease) -> LeaseResponse:
             id=tenant.id,
             name=tenant.name,
             email=tenant.email,
+            document_type=tenant.document_type,
             document_number=tenant.document_number,
             phone=tenant.phone,
         ),

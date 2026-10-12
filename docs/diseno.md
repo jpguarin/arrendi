@@ -157,4 +157,5 @@ Los íconos son de Lucide, que es la librería que usa shadcn/ui: de trazo, de 2
 - En el inicio no hay selector de inmueble ni campana: el resumen es de todos los inmuebles del propietario y las notificaciones push están fuera del MVP. Cada cuenta por cobrar trae "Registrar pago", y las vencidas además "Enviar recordatorio". Una línea dice cuánto se debe de meses anteriores, y los correos rebotados salen como un aviso.
 - En registrar pago, "Enviar recibo" es un interruptor en vez de una casilla.
 - El cierre de sesión está al final de configuración.
+- Al crear o editar un contrato fuera del alta se puede poner el documento del arrendatario, con su tipo (cédula o NIT). El alta guiada no lo pide, para no alargarla.
 - La marca visible es el nombre "Arrendi" en texto, en el acceso y en el pie del PDF. No hay logo todavía. El ícono de la aplicación instalada es provisional: una "A" blanca sobre el verde primario.

@@ -46,10 +46,11 @@ class BillDocument:
     issue_date: date
     due_date: date
     owner_name: str
-    # "cc" or "nit": what the owner's document is.
+    # "cc" or "nit": what each document is.
     owner_document_type: str
     owner_document: str | None
     tenant_name: str
+    tenant_document_type: str
     tenant_document: str | None
     lines: list[BillLine]
     total: int
@@ -57,12 +58,11 @@ class BillDocument:
     voided: bool = False
 
 
-OWNER_DOCUMENT_LABELS = {"cc": "C.C.", "nit": "NIT"}
+DOCUMENT_LABELS = {"cc": "C.C.", "nit": "NIT"}
 
 
-def _with_document(name: str, document: str | None) -> str:
-    # The tenant's document has no type yet: it may be either.
-    return f"{name} · C.C./NIT {document}" if document else name
+def _with_document(name: str, document_type: str, document: str | None) -> str:
+    return f"{name} · {DOCUMENT_LABELS[document_type]} {document}" if document else name
 
 
 def _rule(canvas: Canvas, y: float) -> None:
@@ -96,7 +96,7 @@ def render_bill(bill: BillDocument) -> bytes:
     canvas.setFillColor(MUTED)
     canvas.setFont(REGULAR, 11)
     if bill.owner_document:
-        label = OWNER_DOCUMENT_LABELS[bill.owner_document_type]
+        label = DOCUMENT_LABELS[bill.owner_document_type]
         canvas.drawRightString(RIGHT, y - 12, f"{label} {bill.owner_document}")
     y -= 20
     canvas.drawString(
@@ -113,7 +113,9 @@ def render_bill(bill: BillDocument) -> bytes:
     y -= 17
     canvas.setFillColor(FOREGROUND)
     canvas.setFont(BOLD, 12)
-    canvas.drawString(MARGIN, y, _with_document(bill.tenant_name, bill.tenant_document))
+    canvas.drawString(
+        MARGIN, y, _with_document(bill.tenant_name, bill.tenant_document_type, bill.tenant_document)
+    )
 
     # What for.
     y -= 34

@@ -5,7 +5,15 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from app.schemas.bill import BillSummary
-from app.schemas.common import Email, Name, OptionalText, PatchModel, Pesos, PositivePesos
+from app.schemas.common import (
+    DocumentType,
+    Email,
+    Name,
+    OptionalText,
+    PatchModel,
+    Pesos,
+    PositivePesos,
+)
 from app.schemas.property import UnitUse
 
 LeaseStatus = Literal["active", "ended"]
@@ -16,15 +24,17 @@ DueDay = Annotated[int, Field(strict=True, ge=1, le=28)]
 class TenantCreate(BaseModel):
     name: Name
     email: Email
+    document_type: DocumentType = "cc"
     document_number: OptionalText = None
     phone: OptionalText = None
 
 
 class TenantUpdate(PatchModel):
-    not_nullable = ("name", "email")
+    not_nullable = ("name", "email", "document_type")
 
     name: Name | None = None
     email: Email | None = None
+    document_type: DocumentType | None = None
     document_number: OptionalText = None
     phone: OptionalText = None
 
@@ -75,6 +85,7 @@ class TenantResponse(BaseModel):
     id: UUID
     name: str
     email: str
+    document_type: DocumentType
     document_number: str | None
     phone: str | None
 

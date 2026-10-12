@@ -96,6 +96,7 @@ En esta tabla, `owner_id` es la propia columna `id`.
 | `id` | uuid, PK | |
 | `owner_id` | uuid, FK | |
 | `name` | text | |
+| `document_type` | text, por defecto `cc` | `cc` (cédula) o `nit`: qué es `document_number` |
 | `document_number` | text, nulo | |
 | `email` | text | Obligatorio: es el canal de envío |
 | `phone` | text, nulo | |

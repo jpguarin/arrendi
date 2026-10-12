@@ -43,7 +43,7 @@ import {
   formatPesos,
   todayInBogota,
 } from "@/lib/format";
-import { BILL_STATUS } from "@/lib/labels";
+import { BILL_STATUS, DOCUMENT_TYPE_LABELS } from "@/lib/labels";
 
 type Lease = components["schemas"]["LeaseResponse"];
 
@@ -299,6 +299,11 @@ export function LeaseScreen({
           <p className="text-support text-muted-foreground">Arrendatario</p>
           <p className="text-body font-semibold">{lease.tenant.name}</p>
           <p className="truncate text-section text-foreground-soft">{lease.tenant.email}</p>
+          {lease.tenant.document_number && (
+            <p className="text-support text-muted-foreground">
+              {DOCUMENT_TYPE_LABELS[lease.tenant.document_type]} {lease.tenant.document_number}
+            </p>
+          )}
         </section>
 
         <dl className="grid grid-cols-2 gap-x-3 gap-y-4 rounded-xl border border-border bg-card p-4">

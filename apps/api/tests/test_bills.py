@@ -108,6 +108,7 @@ def test_monthly_bill_takes_its_terms_from_the_lease(
         "tenant_name": "Arrendatario ana",
         "items": [{"description": "Canon de arrendamiento", "amount": 950000}],
         "property_name": "Casa ana",
+        "tenant_document_type": "cc",
         "tenant_document_number": None,
         "issuer": {
             "name": "Ana",

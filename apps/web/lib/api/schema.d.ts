@@ -604,6 +604,11 @@ export interface components {
             items: components["schemas"]["BillItemResponse"][];
             /** Property Name */
             property_name: string;
+            /**
+             * Tenant Document Type
+             * @enum {string}
+             */
+            tenant_document_type: "cc" | "nit";
             /** Tenant Document Number */
             tenant_document_number: string | null;
             issuer: components["schemas"]["BillIssuer"];
@@ -1082,6 +1087,12 @@ export interface components {
             name: string;
             /** Email */
             email: string;
+            /**
+             * Document Type
+             * @default cc
+             * @enum {string}
+             */
+            document_type: "cc" | "nit";
             /** Document Number */
             document_number?: string | null;
             /** Phone */
@@ -1098,6 +1109,11 @@ export interface components {
             name: string;
             /** Email */
             email: string;
+            /**
+             * Document Type
+             * @enum {string}
+             */
+            document_type: "cc" | "nit";
             /** Document Number */
             document_number: string | null;
             /** Phone */
@@ -1109,6 +1125,8 @@ export interface components {
             name?: string | null;
             /** Email */
             email?: string | null;
+            /** Document Type */
+            document_type?: ("cc" | "nit") | null;
             /** Document Number */
             document_number?: string | null;
             /** Phone */

@@ -1,20 +1,24 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 import { FormField } from "@/components/FormField";
 import { MoneyField } from "@/components/MoneyField";
 import { SelectField } from "@/components/SelectField";
-import { DUE_DAY_OPTIONS } from "@/lib/labels";
-import { email, requiredText } from "@/lib/validation";
+import { FieldLegend, FieldSet } from "@/components/ui/field";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { DOCUMENT_TYPE_OPTIONS, type DocumentType, DUE_DAY_OPTIONS } from "@/lib/labels";
+import { email, optionalText, requiredText } from "@/lib/validation";
 
 const schema = z
   .object({
     unit: z.string().min(1, "Elige una unidad."),
     tenant_name: requiredText("Escribe el nombre del arrendatario."),
     tenant_email: email,
+    tenant_document_type: z.enum(["cc", "nit"]),
+    tenant_document_number: optionalText,
     rent: z
       .number()
       .nullable()
@@ -30,6 +34,16 @@ const schema = z
     message: "Debe ser posterior a la fecha de inicio.",
   });
 export type LeaseValues = z.infer<typeof schema>;
+
+/** The tenant of the form, in the shape the API takes them. */
+export function leaseTenant(values: LeaseValues) {
+  return {
+    name: values.tenant_name,
+    email: values.tenant_email,
+    document_type: values.tenant_document_type,
+    document_number: values.tenant_document_number || null,
+  };
+}
 
 /** The terms of the form, in the shape the API takes them. */
 export function leaseTerms(values: LeaseValues) {
@@ -49,6 +63,8 @@ type LeaseFormProps = {
   units?: readonly { value: string; label: string }[];
   defaultValues?: Partial<LeaseValues>;
   showDeposit?: boolean;
+  /** The tenant's document, which the bill shows. The onboarding leaves it for later. */
+  showTenantDocument?: boolean;
   onSubmit: (values: LeaseValues) => void | Promise<void>;
   /** Shown after the fields, inside the form: the document picker. */
   children?: React.ReactNode;
@@ -60,6 +76,7 @@ export function LeaseForm({
   units,
   defaultValues,
   showDeposit = false,
+  showTenantDocument = false,
   onSubmit,
   children,
 }: LeaseFormProps) {
@@ -75,6 +92,8 @@ export function LeaseForm({
       unit: units ? (units[0]?.value ?? "") : "fixed",
       tenant_name: "",
       tenant_email: "",
+      tenant_document_type: "cc",
+      tenant_document_number: "",
       rent: null,
       due_day: "",
       start_date: "",
@@ -83,6 +102,8 @@ export function LeaseForm({
       ...defaultValues,
     },
   });
+
+  const isNit = useWatch({ control, name: "tenant_document_type" }) === "nit";
 
   return (
     <form id={id} onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
@@ -121,6 +142,42 @@ export function LeaseForm({
         error={errors.tenant_email?.message}
         {...register("tenant_email")}
       />
+      {showTenantDocument && (
+        <>
+          <FieldSet>
+            <FieldLegend variant="label">Documento del arrendatario</FieldLegend>
+            <Controller
+              control={control}
+              name="tenant_document_type"
+              render={({ field }) => (
+                <ToggleGroup
+                  type="single"
+                  className="grid-cols-2"
+                  value={field.value}
+                  // Tapping the selected option again would clear it; keep it selected.
+                  onValueChange={(value) => value && field.onChange(value as DocumentType)}
+                >
+                  {DOCUMENT_TYPE_OPTIONS.map((option) => (
+                    <ToggleGroupItem key={option.value} value={option.value}>
+                      {option.label}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              )}
+            />
+          </FieldSet>
+          <FormField
+            id="tenant_document_number"
+            label={isNit ? "Número de NIT (opcional)" : "Número de cédula (opcional)"}
+            description="Aparece en cada cuenta de cobro, junto al nombre."
+            // A NIT carries a dash before its check digit.
+            inputMode={isNit ? "text" : "numeric"}
+            autoComplete="off"
+            error={errors.tenant_document_number?.message}
+            {...register("tenant_document_number")}
+          />
+        </>
+      )}
       <div className="grid grid-cols-2 items-start gap-3">
         <Controller
           control={control}

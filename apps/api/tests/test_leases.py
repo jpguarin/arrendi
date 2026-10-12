@@ -57,7 +57,8 @@ def test_create_a_lease_with_a_new_tenant(
         json=TERMS
         | {
             "unit_id": vacant_unit["id"],
-            "tenant": LUISA | {"document_number": " 52.123.456 ", "phone": ""},
+            "tenant": LUISA
+            | {"document_type": "nit", "document_number": " 900.123.456-7 ", "phone": ""},
             "end_date": "2026-12-31",
             "deposit": 950000,
         },
@@ -88,7 +89,8 @@ def test_create_a_lease_with_a_new_tenant(
             "id": body["tenant"]["id"],
             "name": "Luisa Gómez",
             "email": "luisa.gomez@example.com",
-            "document_number": "52.123.456",
+            "document_type": "nit",
+            "document_number": "900.123.456-7",
             "phone": None,
         },
         "recent_bills": [],
@@ -487,3 +489,23 @@ def test_every_route_requires_a_token(api: TestClient, method: str, path: str) -
 
     assert response.status_code == 401
     assert response.json()["code"] == "unauthorized"
+
+
+def test_tenant_document_and_its_type_are_edited_with_the_lease(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+    url = f"/api/leases/{anas.lease_id}"
+    assert api.get(url, headers=ana).json()["tenant"]["document_type"] == "cc"
+
+    changed = api.patch(
+        url,
+        headers=ana,
+        json={"tenant": {"document_type": "nit", "document_number": "901.555.111-2"}},
+    )
+
+    assert changed.status_code == 200
+    tenant = changed.json()["tenant"]
+    assert (tenant["document_type"], tenant["document_number"]) == ("nit", "901.555.111-2")
+    for bad in ({"document_type": None}, {"document_type": "passport"}):
+        assert api.patch(url, headers=ana, json={"tenant": bad}).status_code == 422

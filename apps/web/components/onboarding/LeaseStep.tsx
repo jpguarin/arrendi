@@ -5,7 +5,12 @@ import { useEffect, useState } from "react";
 
 import { FormMessage } from "@/components/FormMessage";
 import { DocumentPicker } from "@/components/leases/DocumentPicker";
-import { LeaseForm, leaseTerms, type LeaseValues } from "@/components/leases/LeaseForm";
+import {
+  LeaseForm,
+  leaseTenant,
+  leaseTerms,
+  type LeaseValues,
+} from "@/components/leases/LeaseForm";
 import { OnboardingScreen } from "@/components/onboarding/OnboardingScreen";
 import { Button } from "@/components/ui/button";
 import { uploadLeaseDocument } from "@/lib/api/documents";
@@ -54,7 +59,7 @@ export function LeaseStep() {
             ...leaseTerms(values),
             auto_send: true,
             unit_index: Number(values.unit),
-            tenant: { name: values.tenant_name, email: values.tenant_email },
+            tenant: leaseTenant(values),
           },
         },
       });

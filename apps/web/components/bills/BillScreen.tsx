@@ -44,6 +44,7 @@ import {
   BILL_STATUS,
   DELIVERY_PROBLEMS,
   DOCUMENT_TYPE_LABELS,
+  type DocumentType,
   NOTIFICATION_LABELS,
   PAYMENT_METHOD_LABELS,
 } from "@/lib/labels";
@@ -55,8 +56,8 @@ const BACK = "/bills";
 const PROOF_FAILED =
   "El pago quedó guardado, pero no pudimos subir el comprobante. Elimina el pago y regístralo de nuevo si lo necesitas.";
 
-const withDocument = (name: string, document: string | null) =>
-  document ? `${name} · C.C./NIT ${document}` : name;
+const withDocument = (name: string, type: DocumentType, document: string | null) =>
+  document ? `${name} · ${DOCUMENT_TYPE_LABELS[type]} ${document}` : name;
 
 /** The bill as the tenant reads it. The stored PDF is the one that counts. */
 function DocumentPreview({ bill }: { bill: Bill }) {
@@ -88,7 +89,7 @@ function DocumentPreview({ bill }: { bill: Bill }) {
       <div className="flex flex-col gap-0.5">
         <p className="text-badge font-normal text-muted-foreground">Debe</p>
         <p className="text-section font-semibold">
-          {withDocument(bill.tenant_name, bill.tenant_document_number)}
+          {withDocument(bill.tenant_name, bill.tenant_document_type, bill.tenant_document_number)}
         </p>
       </div>
       {bill.items.map((item, index) => (

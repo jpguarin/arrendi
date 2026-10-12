@@ -1,4 +1,4 @@
-from typing import Annotated, Any, ClassVar, Self
+from typing import Annotated, Any, ClassVar, Literal, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, model_validator
 
@@ -11,6 +11,9 @@ Email = Annotated[
     str,
     StringConstraints(strip_whitespace=True, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$"),
 ]
+
+# What a person's document is: a cédula de ciudadanía or a NIT.
+DocumentType = Literal["cc", "nit"]
 
 # Money is whole pesos. `strict` rejects decimals and numbers sent as text.
 Pesos = Annotated[int, Field(strict=True, ge=0, le=10**12)]

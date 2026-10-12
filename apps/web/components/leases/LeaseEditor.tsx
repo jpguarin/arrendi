@@ -5,7 +5,12 @@ import { useEffect, useState } from "react";
 
 import { FormScreen, FormScreenFallback } from "@/components/FormScreen";
 import { DocumentPicker } from "@/components/leases/DocumentPicker";
-import { LeaseForm, leaseTerms, type LeaseValues } from "@/components/leases/LeaseForm";
+import {
+  LeaseForm,
+  leaseTenant,
+  leaseTerms,
+  type LeaseValues,
+} from "@/components/leases/LeaseForm";
 import { LoadError, Loading } from "@/components/LoadState";
 import { uploadLeaseDocument } from "@/lib/api/documents";
 import { errorMessage } from "@/lib/api/errors";
@@ -57,7 +62,7 @@ export function NewLeaseScreen({ unitId }: { unitId: string | undefined }) {
           ...leaseTerms(values),
           auto_send: true,
           unit_id: unitId,
-          tenant: { name: values.tenant_name, email: values.tenant_email },
+          tenant: leaseTenant(values),
         },
       });
     } catch {
@@ -80,7 +85,7 @@ export function NewLeaseScreen({ unitId }: { unitId: string | undefined }) {
       saving={leaving}
       error={create.error ? errorMessage(create.error) : undefined}
     >
-      <LeaseForm id={FORM_ID} showDeposit onSubmit={onSubmit}>
+      <LeaseForm id={FORM_ID} showDeposit showTenantDocument onSubmit={onSubmit}>
         <DocumentPicker file={file} onChange={setFile} />
       </LeaseForm>
     </FormScreen>
@@ -118,9 +123,12 @@ export function EditLeaseScreen({ leaseId }: { leaseId: string }) {
       <LeaseForm
         id={FORM_ID}
         showDeposit
+        showTenantDocument
         defaultValues={{
           tenant_name: lease.tenant.name,
           tenant_email: lease.tenant.email,
+          tenant_document_type: lease.tenant.document_type,
+          tenant_document_number: lease.tenant.document_number ?? "",
           rent: lease.rent,
           due_day: String(lease.due_day),
           start_date: lease.start_date,
@@ -133,7 +141,7 @@ export function EditLeaseScreen({ leaseId }: { leaseId: string }) {
               params: { path: { lease_id: leaseId } },
               body: {
                 ...leaseTerms(values),
-                tenant: { name: values.tenant_name, email: values.tenant_email },
+                tenant: leaseTenant(values),
               },
             },
             { onSuccess: () => router.replace(back) },

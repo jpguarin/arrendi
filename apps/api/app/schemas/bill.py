@@ -4,9 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, StringConstraints
 
-from app.schemas.common import PositivePesos
+from app.schemas.common import DocumentType, PositivePesos
 from app.schemas.payment import PaymentMethod, PaymentResponse
-from app.schemas.settings import DocumentType
 
 BillStatus = Literal["pending", "partial", "paid", "overdue", "voided"]
 BillOrigin = Literal["monthly", "manual"]
@@ -79,6 +78,7 @@ class NotificationResponse(BaseModel):
 class BillResponse(BillSummary):
     items: list[BillItemResponse]
     property_name: str
+    tenant_document_type: DocumentType
     tenant_document_number: str | None
     issuer: BillIssuer
     created_at: datetime

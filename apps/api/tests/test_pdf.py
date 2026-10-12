@@ -12,6 +12,7 @@ BILL = BillDocument(
     owner_document_type="cc",
     owner_document="52.123.456",
     tenant_name="Carlos Rojas",
+    tenant_document_type="cc",
     tenant_document="80.111.222",
     lines=[BillLine("Canon de arrendamiento", "Octubre 2026 - Apto 2", 1_000_000)],
     total=1_000_000,
@@ -46,7 +47,7 @@ def test_pdf_shows_everything_the_tenant_needs() -> None:
         b"1 de octubre de 2026",
         b"Ana Gomez",
         b"C.C. 52.123.456",
-        b"C.C./NIT 80.111.222",
+        b"C.C. 80.111.222",
         b"Carlos Rojas",
         b"80.111.222",
         b"Canon de arrendamiento",
@@ -77,6 +78,13 @@ def test_pdf_says_whether_the_owners_document_is_a_cedula_or_a_nit() -> None:
 
     assert b"NIT 900.123.456-7" in pdf
     assert b"C.C. 900" not in pdf
+
+
+def test_pdf_says_whether_the_tenants_document_is_a_cedula_or_a_nit() -> None:
+    pdf = render_bill(replace(BILL, tenant_document_type="nit", tenant_document="901.555.111-2"))
+
+    assert b"NIT 901.555.111-2" in pdf
+    assert b"C.C./NIT" not in pdf
 
 
 def test_voided_bill_is_marked() -> None:

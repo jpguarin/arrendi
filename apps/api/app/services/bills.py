@@ -85,6 +85,7 @@ def _document(session: Session, bill: Bill, voided: bool = False) -> BillDocumen
         owner_document_type=owner.document_type,
         owner_document=owner.document_number,
         tenant_name=tenant.name,
+        tenant_document_type=tenant.document_type,
         tenant_document=tenant.document_number,
         lines=[BillLine(item.description, detail, item.amount) for item in items],
         total=bill.total,
@@ -323,6 +324,7 @@ def bill_response(session: Session, bill: Bill) -> BillResponse:
         **summary.model_dump(),
         items=[BillItemResponse(description=i.description, amount=i.amount) for i in items],
         property_name=session.get_one(Property, unit.property_id).name,
+        tenant_document_type=tenant.document_type,
         tenant_document_number=tenant.document_number,
         issuer=BillIssuer(
             name=owner.name,
