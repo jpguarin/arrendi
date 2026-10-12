@@ -2,11 +2,13 @@
 
 import base64
 import json
+from dataclasses import replace
 
 import httpx2
 import pytest
 
 from app.config import Settings
+from app.email.content import BRAND_MARK, BRAND_MARK_CID
 from app.email.sender import (
     Attachment,
     EmailError,
@@ -46,6 +48,23 @@ def settings(**overrides: str) -> Settings:
         "email_test_inbox": "",
     } | overrides
     return Settings(_env_file=None, **values)
+
+
+def test_the_isotipo_travels_inline_when_the_html_shows_it() -> None:
+    transport, requests = recording(httpx2.Response(200, json={"id": "abc-123"}))
+    message = replace(MESSAGE, html=f'<img src="cid:{BRAND_MARK_CID}">', attachments=[])
+
+    ResendSender("re_test", "cuentas@arrendi.test", transport).send(message)
+
+    (request,) = requests
+    assert json.loads(request.content)["attachments"] == [
+        {
+            "filename": "arrendi.png",
+            "content": base64.b64encode(BRAND_MARK).decode(),
+            "content_type": "image/png",
+            "content_id": BRAND_MARK_CID,
+        }
+    ]
 
 
 def test_resend_gets_the_whole_message() -> None:

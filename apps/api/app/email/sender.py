@@ -12,6 +12,7 @@ from typing import Protocol
 import httpx2
 
 from app.config import Settings
+from app.email.content import BRAND_MARK, BRAND_MARK_CID
 
 RESEND_URL = "https://api.resend.com/emails"
 TIMEOUT_SECONDS = 15
@@ -76,15 +77,26 @@ class ResendSender:
         }
         if message.bcc:
             body["bcc"] = [message.bcc]
-        if message.attachments:
-            body["attachments"] = [
+        attachments = [
+            {
+                "filename": attachment.filename,
+                "content": base64.b64encode(attachment.content).decode(),
+                "content_type": attachment.content_type,
+            }
+            for attachment in message.attachments
+        ]
+        if f"cid:{BRAND_MARK_CID}" in message.html:
+            # The image the HTML shows at its foot, inline: not a file for the tenant.
+            attachments.append(
                 {
-                    "filename": attachment.filename,
-                    "content": base64.b64encode(attachment.content).decode(),
-                    "content_type": attachment.content_type,
+                    "filename": "arrendi.png",
+                    "content": base64.b64encode(BRAND_MARK).decode(),
+                    "content_type": "image/png",
+                    "content_id": BRAND_MARK_CID,
                 }
-                for attachment in message.attachments
-            ]
+            )
+        if attachments:
+            body["attachments"] = attachments
         headers = {"Idempotency-Key": message.idempotency_key} if message.idempotency_key else {}
         try:
             response = self.client.post(RESEND_URL, json=body, headers=headers)

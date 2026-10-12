@@ -11,6 +11,12 @@ from app.pdf.format import format_long_date, format_number, format_pesos
 # The receipt has no notification of its own kind of bill: it is about a payment.
 KINDS = ("bill", "reminder_1", "reminder_2", "manual_reminder", "receipt")
 
+# The isotipo at the foot of every email travels inside it, and the HTML points to it
+# by this id. Mail readers do not draw SVG, so it is a PNG of
+# docs/new-brand-design/isotype.svg.
+BRAND_MARK_CID = "arrendi-isotype"
+BRAND_MARK = (Path(__file__).parent / "assets" / "isotype.png").read_bytes()
+
 _environment = Environment(
     loader=FileSystemLoader(Path(__file__).parent / "templates"),
     # What the owner and the tenant typed is text, never markup. Plain text stays as is.
@@ -68,6 +74,7 @@ def render_email(kind: str, email: BillEmail, today: date) -> RenderedEmail:
     due = format_long_date(email.due_date)
     context = asdict(email) | {
         "subject": subject,
+        "brand_mark_cid": BRAND_MARK_CID,
         "number": number,
         # Mid-sentence: "la cuenta de cobro de canon de arrendamiento · …".
         "concept_lower": email.concept[:1].lower() + email.concept[1:],

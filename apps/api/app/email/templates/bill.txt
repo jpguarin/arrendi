@@ -15,5 +15,3 @@ La cuenta de cobro va adjunta en PDF.
 Si tienes alguna duda, responde a este correo.
 
 {{ owner_name }}
-
-Enviado con Arrendi en nombre de {{ owner_name }}.

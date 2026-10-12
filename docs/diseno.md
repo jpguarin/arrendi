@@ -181,4 +181,4 @@ Línea de tiempo, de lo más antiguo a lo más reciente: generada, cada correo, 
 - En Cuentas, el filtro de estado no lleva contador y tiene "Anuladas" en lugar de "Vencidas".
 - En el resumen, una línea dice cuánto se debe de meses anteriores y los correos rebotados salen como aviso. En celular, los botones de cada cuenta por cobrar van bajo la fila, para registrar un pago en dos toques.
 - El PDF sigue en Helvetica, que trae todo lector de PDF: así no viaja ningún archivo de fuente con la API. Lleva la paleta de la marca, una franja navy arriba y el logo en el pie.
-- Los correos llevan la paleta de la marca, sin cabecera ni logo: son del arrendador. El nombre de Arrendi solo aparece en la línea del pie.
+- Los correos llevan la paleta de la marca, sin cabecera: son del arrendador. Al pie va el isotipo, centrado. Viaja dentro del correo como imagen incrustada (PNG de `isotype.svg`, en `app/email/assets/`), porque los lectores de correo no dibujan SVG. La versión de texto plano no nombra a Arrendi.

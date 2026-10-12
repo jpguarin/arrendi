@@ -107,7 +107,9 @@ def test_what_people_typed_is_escaped_in_the_html() -> None:
 
     email = render_email("bill", hostile, TODAY)
 
-    assert "<script>" not in email.html and "<img" not in email.html and "<b>" not in email.html
+    # The layout has an image of its own, the isotipo: only the one typed must not get in.
+    assert "<script>" not in email.html and "<img src=x" not in email.html
+    assert 'onerror="x"' not in email.html and "<b>" not in email.html
     assert "&lt;script&gt;" in email.html
     # Plain text is shown as typed.
     assert "<b>Nequi</b>" in email.text

@@ -12,7 +12,7 @@ from datetime import date
 from html import escape
 from pathlib import Path
 
-from app.email.content import KINDS, BillEmail, render_email
+from app.email.content import BRAND_MARK, BRAND_MARK_CID, KINDS, BillEmail, render_email
 
 TODAY = date(2026, 10, 12)
 SAMPLE = BillEmail(
@@ -45,10 +45,13 @@ SAMPLES = {
 def write_previews(folder: Path) -> Path:
     """One HTML and one text file per email, and an index that shows them all."""
     folder.mkdir(parents=True, exist_ok=True)
+    (folder / "isotype.png").write_bytes(BRAND_MARK)
     sections = []
     for kind in KINDS:
         email = render_email(kind, SAMPLES[kind], TODAY)
-        (folder / f"{kind}.html").write_text(email.html, encoding="utf-8")
+        # In a real email the image travels inside it; here it is a file next to the page.
+        html = email.html.replace(f"cid:{BRAND_MARK_CID}", "isotype.png")
+        (folder / f"{kind}.html").write_text(html, encoding="utf-8")
         (folder / f"{kind}.txt").write_text(email.text, encoding="utf-8")
         sections.append(
             f"<h2>{kind}</h2><p>Asunto: {escape(email.subject)}</p>"
