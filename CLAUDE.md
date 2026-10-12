@@ -99,6 +99,7 @@ pnpm gen:api         # regenera apps/web/lib/api desde el OpenAPI de la API
 # Una sola aplicación
 pnpm --filter web dev
 pnpm --filter api test
+pnpm --filter api preview:email   # abre en el navegador los correos con datos de ejemplo
 
 # Migraciones (desde apps/api, con el entorno activado)
 alembic upgrade head
