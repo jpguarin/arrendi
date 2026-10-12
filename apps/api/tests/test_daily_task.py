@@ -90,6 +90,41 @@ def test_generates_and_sends_the_bill_of_every_active_lease(
     assert len(storage.objects) == 2
 
 
+def test_bill_carries_the_leases_payment_details_and_keeps_them(
+    run, admin_engine: Engine, two_owners: tuple[UUID, UUID], trees, mailer, storage
+) -> None:
+    ana, beto = two_owners
+    execute(admin_engine, "update owners set payment_details = 'Nequi de Ajustes'")
+    execute(
+        admin_engine,
+        "update leases set payment_details = 'Daviplata del contrato' where id = :id",
+        id=trees[0].lease_id,
+    )
+
+    run(date(2026, 10, 1))
+
+    assert rows(admin_engine, "select payment_details from bills where owner_id = :id", id=ana) == [
+        ("Daviplata del contrato",)
+    ]
+    assert rows(
+        admin_engine, "select payment_details from bills where owner_id = :id", id=beto
+    ) == [("Nequi de Ajustes",)]
+    by_recipient = {message.to: message.text for message in mailer.sent}
+    assert "Daviplata del contrato" in by_recipient["ana@example.com"]
+    assert "Nequi de Ajustes" in by_recipient["beto@example.com"]
+
+    # The reminder says what the bill was issued with, whatever changed since.
+    execute(admin_engine, "update owners set payment_details = 'Otro banco'")
+    execute(admin_engine, "update leases set payment_details = null")
+    mailer.sent.clear()
+    run(date(2026, 10, 6))
+
+    by_recipient = {message.to: message.text for message in mailer.sent}
+    assert "Daviplata del contrato" in by_recipient["ana@example.com"]
+    assert "Nequi de Ajustes" in by_recipient["beto@example.com"]
+    assert all("Otro banco" not in message.text for message in mailer.sent)
+
+
 def test_running_twice_the_same_day_changes_nothing(
     run, admin_engine: Engine, two_owners: tuple[UUID, UUID], trees, mailer
 ) -> None:

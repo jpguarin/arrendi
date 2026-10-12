@@ -11,6 +11,7 @@ from app.schemas.common import (
     Name,
     OptionalText,
     PatchModel,
+    PaymentDetails,
     Pesos,
     PositivePesos,
 )
@@ -46,6 +47,8 @@ class LeaseTerms(BaseModel):
     end_date: date | None = None
     deposit: Pesos | None = None
     auto_send: bool = True
+    # How to pay the bills of this lease. Left out, they take the owner's.
+    payment_details: PaymentDetails = None
 
 
 class LeaseCreate(LeaseTerms):
@@ -70,6 +73,7 @@ class LeaseUpdate(PatchModel):
     end_date: date | None = None
     deposit: Pesos | None = None
     auto_send: bool | None = None
+    payment_details: PaymentDetails = None
     tenant: TenantUpdate | None = None
 
 
@@ -99,6 +103,8 @@ class LeaseResponse(BaseModel):
     end_date: date | None
     deposit: int | None
     auto_send: bool
+    # The lease's own, if it has them; null means its bills take the owner's.
+    payment_details: str | None
     # The signed lease, if the owner uploaded it. The file itself is behind its own route.
     document_name: str | None
     document_uploaded_at: datetime | None

@@ -387,6 +387,108 @@ def test_manual_bill_is_validated(
     assert response.json()["code"] == "validation_error"
 
 
+# Payment details: the bill's own, else the lease's, else the owner's. Kept on the bill.
+
+
+def set_details(api: TestClient, headers: dict[str, str], lease_id: UUID | None, details) -> None:
+    """Sets the owner's payment details, or the lease's when one is given."""
+    path = f"/api/leases/{lease_id}" if lease_id else "/api/settings"
+    assert api.patch(path, headers=headers, json={"payment_details": details}).status_code == 200
+
+
+def test_bill_without_its_own_details_takes_the_leases(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], storage: FakeStorage
+) -> None:
+    anas, _ = trees
+    set_details(api, ana, None, "Nequi de Ajustes")
+    set_details(api, ana, anas.lease_id, "Daviplata del contrato")
+
+    month = monthly(api, ana, anas.lease_id).json()
+    manual = api.post("/api/bills", headers=ana, json=manual_payload(anas.lease_id)).json()
+
+    for bill in (month, manual):
+        assert bill["issuer"]["payment_details"] == "Daviplata del contrato"
+    for pdf in storage.objects.values():
+        assert b"Pagar a: Daviplata del contrato" in pdf and b"Nequi de Ajustes" not in pdf
+
+
+def test_manual_bill_can_carry_its_own_details(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], storage: FakeStorage
+) -> None:
+    anas, _ = trees
+    set_details(api, ana, None, "Nequi de Ajustes")
+    set_details(api, ana, anas.lease_id, "Daviplata del contrato")
+
+    response = api.post(
+        "/api/bills",
+        headers=ana,
+        json=manual_payload(anas.lease_id, payment_details="  En efectivo al plomero  "),
+    )
+
+    assert response.status_code == 201
+    assert response.json()["issuer"]["payment_details"] == "En efectivo al plomero"
+    (pdf,) = storage.objects.values()
+    assert b"Pagar a: En efectivo al plomero" in pdf and b"Daviplata" not in pdf
+
+
+@pytest.mark.parametrize("blank", [None, "", "   "])
+def test_blank_details_on_a_manual_bill_fall_back(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], blank: str | None
+) -> None:
+    anas, _ = trees
+    set_details(api, ana, None, "Nequi de Ajustes")
+
+    bill = api.post(
+        "/api/bills", headers=ana, json=manual_payload(anas.lease_id, payment_details=blank)
+    ).json()
+
+    assert bill["issuer"]["payment_details"] == "Nequi de Ajustes"
+
+
+def test_clearing_the_leases_details_goes_back_to_the_owners(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+    set_details(api, ana, None, "Nequi de Ajustes")
+    set_details(api, ana, anas.lease_id, "Daviplata del contrato")
+    set_details(api, ana, anas.lease_id, " ")
+
+    bill = monthly(api, ana, anas.lease_id).json()
+
+    assert bill["issuer"]["payment_details"] == "Nequi de Ajustes"
+
+
+def test_changing_the_details_later_does_not_touch_the_bill(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], storage: FakeStorage
+) -> None:
+    anas, _ = trees
+    set_details(api, ana, None, "Nequi de Ajustes")
+    bill = monthly(api, ana, anas.lease_id).json()
+
+    set_details(api, ana, None, "Otro banco")
+    set_details(api, ana, anas.lease_id, "Daviplata del contrato")
+
+    after = api.get(f"/api/bills/{bill['id']}", headers=ana).json()
+    assert after["issuer"]["payment_details"] == "Nequi de Ajustes"
+    # Voiding draws the PDF again, with what the bill was issued with.
+    api.post(f"/api/bills/{bill['id']}/void", headers=ana)
+    (pdf,) = storage.objects.values()
+    assert b"ANULADA" in pdf and b"Pagar a: Nequi de Ajustes" in pdf
+
+
+def test_manual_bill_details_are_validated(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+
+    response = api.post(
+        "/api/bills", headers=ana, json=manual_payload(anas.lease_id, payment_details="x" * 501)
+    )
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "validation_error"
+
+
 # Reading
 
 

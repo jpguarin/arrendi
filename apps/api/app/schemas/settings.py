@@ -1,15 +1,8 @@
 from typing import Annotated
 
-from pydantic import BaseModel, BeforeValidator, Field, StringConstraints
+from pydantic import BaseModel, Field
 
-from app.schemas.common import DocumentType, Name, OptionalText, PatchModel, blank_to_none
-
-# Free text printed on every bill: bank, account, Nequi. It may have several lines.
-PaymentDetails = Annotated[
-    Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] | None,
-    BeforeValidator(blank_to_none),
-]
-
+from app.schemas.common import DocumentType, Name, OptionalText, PatchModel, PaymentDetails
 
 # The day of the month the bills go out. Up to 28, so it exists in every month.
 SendDay = Annotated[int, Field(strict=True, ge=1, le=28)]
@@ -21,6 +14,7 @@ class SettingsUpdate(PatchModel):
     name: Name | None = None
     document_type: DocumentType | None = None
     document_number: OptionalText = None
+    # The default: a lease or a bill may carry its own.
     payment_details: PaymentDetails = None
     send_day: SendDay | None = None
     reminder_1: bool | None = None

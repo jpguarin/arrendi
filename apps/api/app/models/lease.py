@@ -56,6 +56,8 @@ class Lease(Base):
     deposit: Mapped[int | None] = mapped_column(BigInteger)
     status: Mapped[str] = mapped_column(Text, server_default=text("'active'"))
     auto_send: Mapped[bool] = mapped_column(server_default=text("true"))
+    # How to pay the bills of this lease; null means the owner's.
+    payment_details: Mapped[str | None] = mapped_column(Text)
     # Path in the private storage bucket.
     document_path: Mapped[str | None] = mapped_column(Text)
     document_uploaded_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))

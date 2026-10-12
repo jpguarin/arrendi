@@ -66,6 +66,8 @@ class Bill(Base):
     # Money is whole pesos.
     total: Mapped[int] = mapped_column(BigInteger)
     status: Mapped[str] = mapped_column(Text, server_default=text("'pending'"))
+    # How to pay, as it was when the bill was issued: its own, the lease's or the owner's.
+    payment_details: Mapped[str | None] = mapped_column(Text)
     # Path in the private storage bucket.
     pdf_path: Mapped[str] = mapped_column(Text)
     voided_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))

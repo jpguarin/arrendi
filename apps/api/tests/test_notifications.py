@@ -123,6 +123,25 @@ def test_manual_reminder_says_the_balance(
     assert kinds(detail(api, ana, bill)) == [("manual_reminder", "sent")]
 
 
+def test_emails_carry_the_payment_details_the_bill_was_issued_with(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], mailer: FakeEmailSender
+) -> None:
+    lease = f"/api/leases/{trees[0].lease_id}"
+    api.patch("/api/settings", headers=ana, json={"payment_details": "Nequi de Ajustes"})
+    api.patch(lease, headers=ana, json={"payment_details": "Daviplata del contrato"})
+    bill = api.post(f"{lease}/bills", headers=ana).json()
+    api.patch("/api/settings", headers=ana, json={"payment_details": "Otro banco"})
+    api.patch(lease, headers=ana, json={"payment_details": None})
+
+    api.post(f"/api/bills/{bill['id']}/send", headers=ana)
+    api.post(f"/api/bills/{bill['id']}/remind", headers=ana)
+
+    assert len(mailer.sent) == 2
+    for message in mailer.sent:
+        assert "Daviplata del contrato" in message.text
+        assert "Otro banco" not in message.text and "Nequi de Ajustes" not in message.text
+
+
 def test_provider_failure_leaves_the_notification_failed(
     api: TestClient, ana: dict[str, str], bill: dict, mailer: FakeEmailSender
 ) -> None:

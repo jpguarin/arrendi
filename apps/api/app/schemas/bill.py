@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, StringConstraints
 
-from app.schemas.common import DocumentType, PositivePesos
+from app.schemas.common import DocumentType, PaymentDetails, PositivePesos
 from app.schemas.payment import PaymentMethod, PaymentResponse
 
 BillStatus = Literal["pending", "partial", "paid", "overdue", "voided"]
@@ -22,6 +22,8 @@ class BillCreate(BaseModel):
     description: Description
     amount: PositivePesos
     due_date: date
+    # Only for this bill. Left out, it takes the lease's, and then the owner's.
+    payment_details: PaymentDetails = None
 
 
 class BillSummary(BaseModel):
@@ -56,6 +58,7 @@ class BillIssuer(BaseModel):
     name: str
     document_type: DocumentType
     document_number: str | None
+    # The ones the bill was issued with, not the owner's as they are now.
     payment_details: str | None
 
 

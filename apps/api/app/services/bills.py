@@ -89,7 +89,7 @@ def _document(session: Session, bill: Bill, voided: bool = False) -> BillDocumen
         tenant_document=tenant.document_number,
         lines=[BillLine(item.description, detail, item.amount) for item in items],
         total=bill.total,
-        payment_details=owner.payment_details,
+        payment_details=bill.payment_details,
         voided=voided,
     )
 
@@ -105,6 +105,7 @@ def _issue(
     due_date: date,
     description: str,
     amount: int,
+    payment_details: str | None = None,
 ) -> Bill:
     """Creates a bill with the owner's next number and its PDF, all or nothing."""
     # The lock on the owner's row makes issuing one at a time per owner: whoever comes
@@ -130,6 +131,9 @@ def _issue(
         issue_date=today,
         due_date=due_date,
         total=amount,
+        # The bill's own, else the lease's, else the owner's. Kept here, so changing any
+        # of them later does not touch this bill.
+        payment_details=payment_details or lease.payment_details or owner.payment_details,
         # Already past its due date: the same thing the daily task would do tomorrow.
         status="overdue" if due_date < today else "pending",
     )
@@ -188,6 +192,7 @@ def issue_manual_bill(session: Session, storage: Storage, today: date, data: Bil
         due_date=data.due_date,
         description=data.description,
         amount=data.amount,
+        payment_details=data.payment_details,
     )
 
 
@@ -330,7 +335,7 @@ def bill_response(session: Session, bill: Bill) -> BillResponse:
             name=owner.name,
             document_type=owner.document_type,
             document_number=owner.document_number,
-            payment_details=owner.payment_details,
+            payment_details=bill.payment_details,
         ),
         created_at=bill.created_at,
         voided_at=bill.voided_at,

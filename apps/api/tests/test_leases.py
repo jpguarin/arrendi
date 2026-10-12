@@ -76,6 +76,7 @@ def test_create_a_lease_with_a_new_tenant(
         "end_date": "2026-12-31",
         "deposit": 950000,
         "auto_send": True,
+        "payment_details": None,
         "document_name": None,
         "document_uploaded_at": None,
         "unit": {
@@ -509,3 +510,67 @@ def test_tenant_document_and_its_type_are_edited_with_the_lease(
     assert (tenant["document_type"], tenant["document_number"]) == ("nit", "901.555.111-2")
     for bad in ({"document_type": None}, {"document_type": "passport"}):
         assert api.patch(url, headers=ana, json={"tenant": bad}).status_code == 422
+
+
+# Payment details of the lease: they replace the owner's on its bills.
+
+
+def test_lease_can_have_its_own_payment_details(
+    api: TestClient, ana: dict[str, str], vacant_unit: dict
+) -> None:
+    created = api.post(
+        "/api/leases",
+        json=TERMS
+        | {"unit_id": vacant_unit["id"], "tenant": LUISA, "payment_details": "  Daviplata 300  "},
+        headers=ana,
+    )
+
+    assert created.status_code == 201, created.text
+    lease = created.json()
+    assert lease["payment_details"] == "Daviplata 300"
+
+    changed = api.patch(
+        f"/api/leases/{lease['id']}", json={"payment_details": "Nequi\n310"}, headers=ana
+    )
+    assert changed.json()["payment_details"] == "Nequi\n310"
+    # Leaving it out keeps it; sending it blank clears it.
+    kept = api.patch(f"/api/leases/{lease['id']}", json={"rent": 1000000}, headers=ana)
+    assert kept.json()["payment_details"] == "Nequi\n310"
+    cleared = api.patch(f"/api/leases/{lease['id']}", json={"payment_details": ""}, headers=ana)
+    assert cleared.json()["payment_details"] is None
+
+
+def test_lease_payment_details_are_validated(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+
+    response = api.patch(
+        f"/api/leases/{anas.lease_id}", json={"payment_details": "x" * 501}, headers=ana
+    )
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "validation_error"
+
+
+def test_owner_cannot_read_or_change_another_owners_payment_details(
+    api: TestClient,
+    ana: dict[str, str],
+    beto: dict[str, str],
+    trees: tuple[Tree, Tree],
+    admin_engine: Engine,
+) -> None:
+    anas, _ = trees
+    api.patch(f"/api/leases/{anas.lease_id}", json={"payment_details": "de Ana"}, headers=ana)
+
+    assert api.get(f"/api/leases/{anas.lease_id}", headers=beto).status_code == 404
+    response = api.patch(
+        f"/api/leases/{anas.lease_id}", json={"payment_details": "de Beto"}, headers=beto
+    )
+
+    assert response.status_code == 404
+    with admin_engine.connect() as connection:
+        stored = connection.execute(
+            text("select payment_details from leases where id = :id"), {"id": anas.lease_id}
+        ).scalar_one()
+    assert stored == "de Ana"

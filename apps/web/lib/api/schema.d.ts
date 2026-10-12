@@ -522,6 +522,8 @@ export interface components {
              * Format: date
              */
             due_date: string;
+            /** Payment Details */
+            payment_details?: string | null;
         };
         /**
          * BillIssuer
@@ -759,6 +761,8 @@ export interface components {
              * @default true
              */
             auto_send: boolean;
+            /** Payment Details */
+            payment_details?: string | null;
             /**
              * Unit Id
              * Format: uuid
@@ -795,6 +799,8 @@ export interface components {
             deposit: number | null;
             /** Auto Send */
             auto_send: boolean;
+            /** Payment Details */
+            payment_details: string | null;
             /** Document Name */
             document_name: string | null;
             /** Document Uploaded At */
@@ -840,6 +846,8 @@ export interface components {
             deposit?: number | null;
             /** Auto Send */
             auto_send?: boolean | null;
+            /** Payment Details */
+            payment_details?: string | null;
             tenant?: components["schemas"]["TenantUpdate"] | null;
         };
         /** MeResponse */
@@ -903,6 +911,8 @@ export interface components {
              * @default true
              */
             auto_send: boolean;
+            /** Payment Details */
+            payment_details?: string | null;
             /** Unit Index */
             unit_index: number;
             tenant: components["schemas"]["TenantCreate"];

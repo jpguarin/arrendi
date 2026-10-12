@@ -109,7 +109,7 @@ def _message(
             total=bill.total,
             balance=bill.total - paid,
             due_date=bill.due_date,
-            payment_details=owner.payment_details,
+            payment_details=bill.payment_details,
             payment_amount=receipt.amount if receipt else None,
             payment_date=receipt.payment_date if receipt else None,
             payment_method=METHOD_LABELS[receipt.method] if receipt else None,

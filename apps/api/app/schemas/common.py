@@ -32,6 +32,12 @@ OptionalText = Annotated[
     BeforeValidator(blank_to_none),
 ]
 
+# Free text printed on a bill: bank, account, Nequi. It may have several lines.
+PaymentDetails = Annotated[
+    Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] | None,
+    BeforeValidator(blank_to_none),
+]
+
 
 class PatchModel(BaseModel):
     """Body of a PATCH: only the fields that were sent change.
