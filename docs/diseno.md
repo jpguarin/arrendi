@@ -21,7 +21,7 @@ Los mockups anteriores (`docs/mockups/`) quedan como registro y ya no guían el 
 | Amarillo | `#FFC857` | Foco en tema oscuro. Nunca como texto |
 | Marfil | `#F4F1E8` | Texto sobre navy, texto del tema oscuro |
 
-El logo tiene dos archivos en `docs/new-brand-design/`: `arrendi-logo.svg` (navy, para fondo claro) y `arriendi-logo-blanco.svg` (blanco, para fondo oscuro). Solo cambian de color; el trazo es el mismo. `components/Brand.tsx` dibuja ese trazo: `Brand` es el logo completo y `BrandMark` el isotipo solo. Por defecto siguen al tema (navy en claro, blanco en oscuro); con `tone="white"` quedan blancos, como en el riel. El PDF dibuja el logo navy con el mismo trazo (`app/pdf/logo.py`).
+El logo tiene dos archivos en `docs/new-brand-design/`: `arrendi-logo.svg` (navy, para fondo claro) y `arrendi-logo-blanco.svg` (blanco, para fondo oscuro). Solo cambian de color; el trazo es el mismo. `components/Brand.tsx` dibuja ese trazo: `Brand` es el logo completo y `BrandMark` el isotipo solo. Por defecto siguen al tema (navy en claro, blanco en oscuro); con `tone="white"` quedan blancos, como en el riel. El PDF dibuja el logo navy con el mismo trazo (`app/pdf/logo.py`).
 
 ## Colores
 
