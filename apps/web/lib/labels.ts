@@ -21,14 +21,16 @@ export const UNIT_USE_LABELS: Record<UnitUse, string> = {
 
 // How a bill names the owner's document, and how Ajustes offers the choice.
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = { cc: "C.C.", nit: "NIT" };
-// What a form starts on while no document number has been saved. The API's own default
-// is the cédula; this is only the choice the owner sees first.
-export const DEFAULT_DOCUMENT_TYPE: DocumentType = "nit";
 
 export const DOCUMENT_TYPE_OPTIONS: { value: DocumentType; label: string }[] = [
   { value: "cc", label: "Cédula" },
   { value: "nit", label: "NIT" },
 ];
+
+// For a tenant the NIT comes first and is what the form starts on, while no document
+// number has been saved. The API's own default is the cédula.
+export const TENANT_DOCUMENT_TYPE: DocumentType = "nit";
+export const TENANT_DOCUMENT_TYPE_OPTIONS = [...DOCUMENT_TYPE_OPTIONS].reverse();
 
 // The status is always said with text; the tone only supports it (docs/diseno.md).
 export const BILL_STATUS: Record<

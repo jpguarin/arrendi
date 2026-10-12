@@ -10,10 +10,10 @@ import { SelectField } from "@/components/SelectField";
 import { FieldLegend, FieldSet } from "@/components/ui/field";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
-  DEFAULT_DOCUMENT_TYPE,
-  DOCUMENT_TYPE_OPTIONS,
   type DocumentType,
   DUE_DAY_OPTIONS,
+  TENANT_DOCUMENT_TYPE,
+  TENANT_DOCUMENT_TYPE_OPTIONS,
 } from "@/lib/labels";
 import { email, optionalText, requiredText } from "@/lib/validation";
 
@@ -97,7 +97,7 @@ export function LeaseForm({
       unit: units ? (units[0]?.value ?? "") : "fixed",
       tenant_name: "",
       tenant_email: "",
-      tenant_document_type: DEFAULT_DOCUMENT_TYPE,
+      tenant_document_type: TENANT_DOCUMENT_TYPE,
       tenant_document_number: "",
       rent: null,
       due_day: "",
@@ -162,7 +162,7 @@ export function LeaseForm({
                   // Tapping the selected option again would clear it; keep it selected.
                   onValueChange={(value) => value && field.onChange(value as DocumentType)}
                 >
-                  {DOCUMENT_TYPE_OPTIONS.map((option) => (
+                  {TENANT_DOCUMENT_TYPE_OPTIONS.map((option) => (
                     <ToggleGroupItem key={option.value} value={option.value}>
                       {option.label}
                     </ToggleGroupItem>
