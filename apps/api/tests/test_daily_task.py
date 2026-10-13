@@ -196,7 +196,7 @@ def test_deposit_is_charged_on_the_first_bill_only_and_the_email_says_so(
         (2, "Canon de arrendamiento", 950000),
     ]
     first = next(m for m in mailer.sent if m.to == "ana@example.com")
-    assert "Canon de arrendamiento y depósito · Octubre 2026 · Apto ana" in first.text
+    assert "Canon de arrendamiento y 1 concepto más · Octubre 2026 · Apto ana" in first.text
     assert "$1.450.000" in first.text
 
 
@@ -232,10 +232,7 @@ def test_bills_carry_the_items_of_their_lease(
     ]
     assert rows(admin_engine, items, id=beto) == [("Canon de arrendamiento", 950000)]
     (first,) = [m for m in mailer.sent if m.to == "ana@example.com"]
-    assert (
-        "Canon de arrendamiento, administración y parqueadero · Octubre 2026 · Apto ana"
-        in first.text
-    )
+    assert "Canon de arrendamiento y 2 conceptos más · Octubre 2026 · Apto ana" in first.text
     assert "$1.230.000" in first.text
 
 

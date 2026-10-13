@@ -1,7 +1,7 @@
 from datetime import date
 from uuid import UUID
 
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -40,6 +40,9 @@ def _check_dates(start_date: date, end_date: date | None) -> None:
 
 
 def _replace_items(session: Session, lease: Lease, items: list[dict]) -> None:
+    # One at a time per lease: whoever comes next waits here and then sees the rows this
+    # transaction leaves, instead of adding its own next to them.
+    session.execute(select(Lease.id).where(Lease.id == lease.id).with_for_update())
     # Out with the old ones first: the positions are unique within the lease.
     session.execute(delete(LeaseItem).where(LeaseItem.lease_id == lease.id))
     session.add_all(

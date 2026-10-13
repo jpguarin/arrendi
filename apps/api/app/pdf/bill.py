@@ -139,6 +139,20 @@ def _open_page(canvas: Canvas) -> float:
     return HEIGHT - MARGIN - 8
 
 
+def _next_page(canvas: Canvas, bill: BillDocument) -> float:
+    """Closes the page and opens another, which says on its own which bill it is part of."""
+    _close_page(canvas, bill)
+    y = _open_page(canvas)
+    canvas.setFillColor(MUTED)
+    canvas.setFont(REGULAR, 10)
+    canvas.drawRightString(RIGHT, y, f"Página {canvas.getPageNumber()}")
+    whose = f"Cuenta de cobro {format_number(bill.number)} · {bill.owner_name}"
+    canvas.drawString(MARGIN, y, _wrapped(whose, REGULAR, 10, CONTENT - 70)[0])
+    y -= 14
+    _rule(canvas, y)
+    return y - 28
+
+
 def _close_page(canvas: Canvas, bill: BillDocument) -> None:
     # The brand, small at the foot: the bill is the owner's, Arrendi only issues it.
     mark_height = 16
@@ -162,8 +176,7 @@ def _room(canvas: Canvas, bill: BillDocument, y: float, height: float) -> float:
     """Where to draw something `height` tall: here, or on a new page if it does not fit."""
     if y - height >= BOTTOM:
         return y
-    _close_page(canvas, bill)
-    return _open_page(canvas)
+    return _next_page(canvas, bill)
 
 
 def render_bill(bill: BillDocument) -> bytes:
@@ -256,17 +269,26 @@ def render_bill(bill: BillDocument) -> bytes:
     notes = [f"Vence el {format_long_date(bill.due_date)}"]
     if bill.payment_details:
         notes.extend(_wrapped(f"Pagar a: {bill.payment_details}", REGULAR, 11, CONTENT - 28))
-    box_height = 24 + 16 * len(notes)
-    y = _room(canvas, bill, y, 26 + box_height)
-    y -= 26 + box_height
-    canvas.setFillColor(BACKGROUND)
-    canvas.roundRect(MARGIN, y, CONTENT, box_height, 6, stroke=0, fill=1)
-    canvas.setFillColor(SOFT)
-    canvas.setFont(REGULAR, 11)
-    text_y = y + box_height - 24
-    for note in notes:
-        canvas.drawString(MARGIN + 14, text_y, note)
-        text_y -= 16
+    # In a box, or in one on each page when they are more than the page has room for.
+    while notes:
+        fit = int((y - 26 - 24 - BOTTOM) // 16)
+        if fit < min(len(notes), 2):
+            # Not even a couple of lines: better to start the box on a fresh page.
+            y = _next_page(canvas, bill)
+            continue
+        here, notes = notes[:fit], notes[fit:]
+        box_height = 24 + 16 * len(here)
+        y -= 26 + box_height
+        canvas.setFillColor(BACKGROUND)
+        canvas.roundRect(MARGIN, y, CONTENT, box_height, 6, stroke=0, fill=1)
+        canvas.setFillColor(SOFT)
+        canvas.setFont(REGULAR, 11)
+        text_y = y + box_height - 24
+        for note in here:
+            canvas.drawString(MARGIN + 14, text_y, note)
+            text_y -= 16
+        if notes:
+            y = _next_page(canvas, bill) + 26
 
     _close_page(canvas, bill)
     canvas.save()

@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
+import { useState } from "react";
 import type { FieldErrors } from "react-hook-form";
 
 import { FormField } from "@/components/FormField";
@@ -52,8 +53,26 @@ export function ItemsField({
   placeholder,
   addLabel = "Agregar concepto",
 }: ItemsFieldProps) {
+  // The items carry no id, so each row gets one here: taking a row out of the middle must
+  // not hand its fields, and the focus in them, to the row that follows.
+  const [rows, setRows] = useState<{ keys: (number | string)[]; next: number }>(() => ({
+    keys: value.map((_, index) => index),
+    next: value.length,
+  }));
+  // If the form replaced the list on its own, the ids no longer match it: go by position.
+  const keyOf = (index: number) =>
+    rows.keys.length === value.length ? rows.keys[index] : `at-${index}`;
+
   const change = (index: number, changes: Partial<ItemValue>) =>
     onChange(value.map((item, at) => (at === index ? { ...item, ...changes } : item)));
+  const add = () => {
+    setRows({ keys: [...value.map((_, index) => keyOf(index)), rows.next], next: rows.next + 1 });
+    onChange([...value, EMPTY_ITEM]);
+  };
+  const remove = (index: number) => {
+    setRows({ ...rows, keys: value.map((_, at) => keyOf(at)).filter((_, at) => at !== index) });
+    onChange(value.filter((_, at) => at !== index));
+  };
   // One row needs no number; with several, the number tells their labels apart.
   const numbered = value.length > 1;
 
@@ -62,9 +81,8 @@ export function ItemsField({
       {value.map((item, index) => {
         const suffix = numbered ? ` ${index + 1}` : "";
         return (
-          // The rows have no id of their own; they are only ever added at the end.
           <div
-            key={index}
+            key={keyOf(index)}
             className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3"
           >
             <FormField
@@ -95,7 +113,7 @@ export function ItemsField({
                   // Level with the field, below its label.
                   className="mt-7 -mr-1 text-muted-foreground"
                   aria-label={`Quitar concepto${suffix}`}
-                  onClick={() => onChange(value.filter((_, at) => at !== index))}
+                  onClick={() => remove(index)}
                 >
                   <X aria-hidden />
                 </Button>
@@ -109,7 +127,7 @@ export function ItemsField({
           type="button"
           variant="dashed"
           size="md"
-          onClick={() => onChange([...value, EMPTY_ITEM])}
+          onClick={add}
         >
           <Plus aria-hidden />
           {addLabel}

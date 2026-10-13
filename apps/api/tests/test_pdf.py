@@ -200,3 +200,26 @@ def test_long_names_take_the_lines_they_need_instead_of_running_over_the_title()
     for word in (*owner.split(), *tenant.split()):
         assert word.encode() in pdf, word
     assert pages(pdf) == 1
+
+
+def test_every_page_after_the_first_says_which_bill_it_belongs_to() -> None:
+    lines = [BillLine(f"Concepto {n} " + "muy largo " * 18, 1_000 * n) for n in range(1, 13)]
+
+    pdf = render_bill(replace(BILL, lines=lines, total=78_000))
+
+    assert pages(pdf) == 2
+    # The number and the owner, once in the heading of each page.
+    assert pdf.count(b"0031") >= 2
+    assert b"Cuenta de cobro N.\\272 0031 \\267 Ana Gomez" in pdf
+    assert b"(P\\341gina 2) Tj" in pdf
+
+
+def test_payment_details_too_long_for_what_is_left_of_the_page_go_on_to_the_next() -> None:
+    # As many lines as 500 characters allow: far more than a page has room for.
+    details = "\n".join(f"Cuenta {n:03d}" for n in range(1, 46))
+
+    pdf = render_bill(replace(BILL, payment_details=details))
+
+    assert pages(pdf) == 2
+    for n in range(1, 46):
+        assert f"Cuenta {n:03d}".encode() in pdf

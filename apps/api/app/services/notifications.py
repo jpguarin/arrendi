@@ -93,12 +93,11 @@ def _message(
         .where(BillItem.bill_id == bill.id)
         .order_by(BillItem.position, BillItem.created_at)
     ).all()
-    # "Canon de arrendamiento, administración y depósito": everything charged, as one phrase.
-    charged = [
-        item if index == 0 else item[:1].lower() + item[1:] for index, item in enumerate(items)
-    ]
-    listed = " y ".join([", ".join(charged[:-1]), charged[-1]] if len(charged) > 1 else charged)
-    concept = [listed or "Cuenta de cobro"]
+    # The first thing charged, exactly as it was typed, and how many more there are: the
+    # phrase goes mid-sentence in every email, and the PDF attached lists them all.
+    more = len(items) - 1
+    others = f" y {more} concepto{'s' if more > 1 else ''} más" if more > 0 else ""
+    concept = [f"{items[0]}{others}" if items else "Cuenta de cobro"]
     if bill.period:
         concept.append(format_month(bill.period))
     concept.append(unit.name)

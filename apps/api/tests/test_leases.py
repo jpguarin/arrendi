@@ -713,3 +713,23 @@ def test_owner_cannot_read_or_replace_another_owners_items(
         (anas.lease_id, "Administración"),
         (betos.lease_id, "Parqueadero"),
     ]
+
+
+def test_replacing_the_items_at_once_leaves_one_whole_list(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    path = f"/api/leases/{trees[0].lease_id}"
+    api.patch(path, json={"items": [FEE, PARKING]}, headers=ana)
+    lists = [[{"description": f"Lista {n}", "amount": 1000 * n}] * 3 for n in range(1, 7)]
+
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        codes = list(
+            pool.map(
+                lambda items: api.patch(path, json={"items": items}, headers=ana).status_code,
+                lists,
+            )
+        )
+
+    # Each one waits for the one before it; none trips over another's rows.
+    assert codes == [200] * 6
+    assert api.get(path, headers=ana).json()["items"] in lists

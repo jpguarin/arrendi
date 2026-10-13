@@ -73,12 +73,21 @@ test("the items of a lease and of a manual bill, each with its amount, and their
     await page.getByLabel("Concepto", { exact: true }).fill("Arreglo de la chapa");
     await page.getByLabel("Valor", { exact: true }).fill("80000");
     await page.getByRole("button", { name: "Agregar otro concepto" }).click();
-    await page.getByRole("textbox", { name: "Concepto 2", exact: true }).fill("Pintura");
-    await page.getByLabel("Valor 2").fill("45000");
     await page.getByRole("button", { name: "Agregar otro concepto" }).click();
-    await page.getByRole("textbox", { name: "Concepto 3", exact: true }).fill("Sobra");
-    await page.getByRole("button", { name: "Quitar concepto 3" }).click();
+    await page.getByRole("textbox", { name: "Concepto 3", exact: true }).fill("Pintura");
+    await page.getByLabel("Valor 3").fill("45000");
+    // Taking a row out of the middle leaves the others as they were, each with its amount.
+    await page.getByRole("textbox", { name: "Concepto 2", exact: true }).fill("Sobra");
+    await page.getByLabel("Valor 2").fill("999");
+    await page.getByRole("button", { name: "Quitar concepto 2" }).click();
     await expect(page.getByRole("textbox", { name: "Concepto 3", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("textbox", { name: "Concepto 1", exact: true })).toHaveValue(
+      "Arreglo de la chapa",
+    );
+    await expect(page.getByRole("textbox", { name: "Concepto 2", exact: true })).toHaveValue(
+      "Pintura",
+    );
+    await expect(page.getByLabel("Valor 2")).toHaveValue("$45.000");
     await expect(page.getByText("Total a pagar")).toBeVisible();
     await expect(page.getByText("$125.000")).toBeVisible();
     await page.getByLabel("Vence el").fill("2026-12-20");
