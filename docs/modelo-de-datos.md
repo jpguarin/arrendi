@@ -31,7 +31,7 @@ La cuenta de cobro se llama `bill` y no `invoice` a propósito: no es una factur
 
 ```
 owners ─┬─ properties ── units ──┐
-        │                        ├── leases ── bills ─┬─ bill_items
+        │                        ├── leases ─┬─ bills ─┬─ bill_items
         └─ tenants ──────────────┘                    ├─ payments
                                                       └─ notifications
 ```
@@ -123,6 +123,23 @@ En esta tabla, `owner_id` es la propia columna `id`.
 
 Restricción: índice único parcial sobre `unit_id` donde `status = 'active'`. Decide la base, no el código, cuál gana si dos peticiones crean a la vez un contrato para la misma unidad.
 
+### lease_items
+
+Lo que el contrato cobra cada mes además del canon, como la administración.
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| `id` | uuid, PK | |
+| `owner_id` | uuid, FK | |
+| `lease_id` | uuid, FK | |
+| `description` | text | |
+| `amount` | bigint | Mayor que cero |
+| `position` | smallint | Orden dentro de la cuenta, desde 0, después del canon. Único por contrato |
+
+Hasta 10 por contrato; el límite lo pone la API. Editar el contrato reemplaza la lista completa: la API borra e inserta, nunca modifica. Lo ya cobrado vive en `bill_items` y no cambia.
+
+Permisos: `arrendi_api` lee, crea y borra; `arrendi_tasks` solo lee, para generar la cuenta del mes.
+
 ### bills
 
 | Columna | Tipo | Notas |
@@ -164,7 +181,7 @@ Permisos: `arrendi_api` y `arrendi_tasks` leen, crean y modifican cuentas (la ta
 
 Los conceptos de una cuenta emitida no cambian: ningún rol puede modificarlos, solo leerlos y crearlos.
 
-Una cuenta tiene un solo concepto, salvo la primera cuenta mensual de un contrato que cobra su depósito: esa lleva dos, el canon y el depósito, y su `total` es la suma. La tabla existe para admitir después servicios, mora o reparaciones.
+Una cuenta tiene uno o más conceptos y su `total` es la suma. La mensual lleva el canon, los conceptos del contrato (`lease_items`) y, si es la primera y el contrato lo cobra, el depósito. La manual lleva los que el propietario le ponga, hasta 10.
 
 ### payments
 

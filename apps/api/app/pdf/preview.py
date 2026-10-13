@@ -24,20 +24,51 @@ SAMPLE = BillDocument(
     tenant_document_type="nit",
     tenant_document="901.234.567-8",
     lines=[
-        BillLine("Canon de arrendamiento", "Octubre 2026 · Local 1", 1_950_000),
-        BillLine("Administración", "Octubre 2026 · Local 1", 150_000),
+        BillLine("Canon de arrendamiento", 1_950_000, "Octubre 2026 · Local 1"),
+        BillLine("Administración", 150_000),
     ],
     total=2_100_000,
     payment_details="Bancolombia · Ahorros 123-456789-01\nNequi 310 555 0142",
 )
+# The most a monthly bill can carry: the rent, ten items of the lease and the deposit,
+# with payment details as long as they get.
+FULL = replace(
+    SAMPLE,
+    lines=[
+        SAMPLE.lines[0],
+        *(BillLine(f"Concepto fijo número {n} del contrato", 10_000 * n) for n in range(1, 11)),
+        BillLine("Depósito", 1_950_000),
+    ],
+    total=4_450_000,
+    payment_details="\n".join(
+        f"Banco de ejemplo número {n} · Cuenta de ahorros 123-456789-0{n} a nombre de Carolina"
+        for n in range(1, 7)
+    ),
+)
 # The cases the document has to hold: a usual bill, one with nothing optional filled
-# in, and a voided one.
+# in, a voided one, one as full as it gets and one that needs a second page.
 SAMPLES = {
     "cuenta": SAMPLE,
     "cuenta-minima": replace(
         SAMPLE, owner_document=None, tenant_document=None, payment_details=None
     ),
     "cuenta-anulada": replace(SAMPLE, voided=True),
+    "cuenta-llena": FULL,
+    # A manual bill: the unit goes in the heading, and no line says what month it is for.
+    "cuenta-manual": replace(
+        SAMPLE,
+        lines=[BillLine("Arreglo de la chapa", 80_000), BillLine("Pintura", 45_000)],
+        total=125_000,
+        unit_name="Local 1",
+    ),
+    "cuenta-de-dos-paginas": replace(
+        FULL,
+        voided=True,
+        lines=[
+            replace(line, description=f"{line.description}, con una descripción tan larga " * 3)
+            for line in FULL.lines
+        ],
+    ),
 }
 
 

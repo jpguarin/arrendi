@@ -67,6 +67,17 @@ def _subject(kind: str, number: str, days_overdue: int) -> str:
     }[kind]
 
 
+def _mid_sentence(concept: str) -> str:
+    """The concept as it reads after "la cuenta de cobro de": without its capital letter.
+
+    Unless its first word is written in capitals, like "IVA": that is how it is spelled.
+    """
+    first_word = concept.split(maxsplit=1)[0] if concept.strip() else ""
+    if first_word[1:] != first_word[1:].lower():
+        return concept
+    return concept[:1].lower() + concept[1:]
+
+
 def render_email(kind: str, email: BillEmail, today: date) -> RenderedEmail:
     days_overdue = max((today - email.due_date).days, 0)
     number = format_number(email.number)
@@ -76,8 +87,7 @@ def render_email(kind: str, email: BillEmail, today: date) -> RenderedEmail:
         "subject": subject,
         "brand_mark_cid": BRAND_MARK_CID,
         "number": number,
-        # Mid-sentence: "la cuenta de cobro de canon de arrendamiento · …".
-        "concept_lower": email.concept[:1].lower() + email.concept[1:],
+        "concept_lower": _mid_sentence(email.concept),
         "days_overdue": days_overdue,
         "due_line": f"Venció el {due}" if days_overdue else f"Vence el {due}",
     }

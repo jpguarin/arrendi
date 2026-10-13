@@ -77,6 +77,7 @@ def test_create_a_lease_with_a_new_tenant(
         "deposit": 950000,
         "auto_send": True,
         "charge_deposit": True,
+        "items": [],
         "payment_details": None,
         "document_name": None,
         "document_uploaded_at": None,
@@ -340,6 +341,11 @@ def test_update_can_clear_the_optional_fields(
         {"start_date": None},
         {"auto_send": None},
         {"charge_deposit": None},
+        {"items": None},
+        {"items": [{"description": "Administración", "amount": 0}]},
+        {"items": [{"description": " ", "amount": 200000}]},
+        {"items": [{"description": "Administración"}]},
+        {"items": [{"description": "Administración", "amount": 1}] * 11},
         {"charge_deposit": "sí"},
         {"tenant": {"email": "mal"}},
         {"tenant": {"name": None}},
@@ -621,3 +627,109 @@ def test_owner_cannot_make_another_owners_lease_charge_its_deposit(
             {"id": anas.lease_id},
         ).one()
     assert tuple(row) == (None, False)
+
+
+# The items of the lease: what it charges every month besides the rent.
+
+FEE = {"description": "Administración", "amount": 200000}
+PARKING = {"description": "Parqueadero", "amount": 80000}
+
+
+def test_lease_is_created_with_its_items_in_order(
+    api: TestClient, ana: dict[str, str], vacant_unit: dict
+) -> None:
+    created = api.post(
+        "/api/leases",
+        json=TERMS
+        | {
+            "unit_id": vacant_unit["id"],
+            "tenant": LUISA,
+            "items": [{"description": "  Administración ", "amount": 200000}, PARKING],
+        },
+        headers=ana,
+    )
+
+    assert created.status_code == 201, created.text
+    assert created.json()["items"] == [FEE, PARKING]
+    read = api.get(f"/api/leases/{created.json()['id']}", headers=ana).json()
+    assert read["items"] == [FEE, PARKING]
+
+
+def test_update_replaces_the_items_only_when_they_are_sent(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    path = f"/api/leases/{trees[0].lease_id}"
+    assert api.patch(path, json={"items": [FEE, PARKING]}, headers=ana).json()["items"] == [
+        FEE,
+        PARKING,
+    ]
+
+    # Leaving them out keeps them.
+    assert api.patch(path, json={"rent": 1000000}, headers=ana).json()["items"] == [FEE, PARKING]
+    # Sending them replaces the whole list, in the order sent.
+    swapped = api.patch(path, json={"items": [PARKING, FEE | {"amount": 250000}]}, headers=ana)
+    assert swapped.json()["items"] == [PARKING, FEE | {"amount": 250000}]
+    # An empty list removes them.
+    assert api.patch(path, json={"items": []}, headers=ana).json()["items"] == []
+    assert api.get(path, headers=ana).json()["items"] == []
+
+
+def test_create_rejects_invalid_items(
+    api: TestClient, ana: dict[str, str], vacant_unit: dict
+) -> None:
+    response = api.post(
+        "/api/leases",
+        json=TERMS
+        | {"unit_id": vacant_unit["id"], "tenant": LUISA, "items": [FEE | {"amount": 0.5}]},
+        headers=ana,
+    )
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "validation_error"
+
+
+def test_owner_cannot_read_or_replace_another_owners_items(
+    api: TestClient,
+    ana: dict[str, str],
+    beto: dict[str, str],
+    trees: tuple[Tree, Tree],
+    admin_engine: Engine,
+) -> None:
+    anas, betos = trees
+    api.patch(f"/api/leases/{anas.lease_id}", json={"items": [FEE]}, headers=ana)
+
+    assert api.get(f"/api/leases/{anas.lease_id}", headers=beto).status_code == 404
+    response = api.patch(f"/api/leases/{anas.lease_id}", json={"items": []}, headers=beto)
+
+    assert response.status_code == 404
+    # Beto's own lease shows nothing of Ana's, and replacing his list leaves hers alone.
+    assert api.get(f"/api/leases/{betos.lease_id}", headers=beto).json()["items"] == []
+    api.patch(f"/api/leases/{betos.lease_id}", json={"items": [PARKING]}, headers=beto)
+    with admin_engine.connect() as connection:
+        stored = connection.execute(
+            text("select lease_id, description from lease_items order by description")
+        ).all()
+    assert [tuple(row) for row in stored] == [
+        (anas.lease_id, "Administración"),
+        (betos.lease_id, "Parqueadero"),
+    ]
+
+
+def test_replacing_the_items_at_once_leaves_one_whole_list(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    path = f"/api/leases/{trees[0].lease_id}"
+    api.patch(path, json={"items": [FEE, PARKING]}, headers=ana)
+    lists = [[{"description": f"Lista {n}", "amount": 1000 * n}] * 3 for n in range(1, 7)]
+
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        codes = list(
+            pool.map(
+                lambda items: api.patch(path, json={"items": items}, headers=ana).status_code,
+                lists,
+            )
+        )
+
+    # Each one waits for the one before it; none trips over another's rows.
+    assert codes == [200] * 6
+    assert api.get(path, headers=ana).json()["items"] in lists

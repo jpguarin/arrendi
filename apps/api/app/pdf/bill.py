@@ -38,9 +38,9 @@ CONTENT = WIDTH - 2 * MARGIN
 @dataclass(frozen=True)
 class BillLine:
     description: str
-    # What the description is about, like "Octubre 2026 · Apto 2".
-    detail: str
     amount: int
+    # What it is for, like "Octubre 2026 · Apto 2": the rent of a monthly bill says it.
+    detail: str | None = None
 
 
 @dataclass(frozen=True)
@@ -59,13 +59,15 @@ class BillDocument:
     total: int
     payment_details: str | None
     voided: bool = False
+    # The unit, for the heading of a manual bill: none of its lines says where it is from.
+    unit_name: str | None = None
 
 
 DOCUMENT_LABELS = {"cc": "C.C.", "nit": "NIT"}
 
 
-def _with_document(name: str, document_type: str, document: str | None) -> str:
-    return f"{name} · {DOCUMENT_LABELS[document_type]} {document}" if document else name
+# Room for "Cobra" and "Debe", to the left of the names.
+PARTY_LABEL = 52
 
 
 def _rule(canvas: Canvas, y: float) -> None:
@@ -125,89 +127,33 @@ def _wrapped(text: str, font: str, size: float, width: float) -> list[str]:
     return lines
 
 
-def render_bill(bill: BillDocument) -> bytes:
-    buffer = BytesIO()
-    # Not compressed: the file is one small page, and its text can be found in it.
-    canvas = Canvas(buffer, pagesize=letter, pageCompression=0)
-    canvas.setTitle(f"Cuenta de cobro {format_number(bill.number)}")
-    canvas.setAuthor(bill.owner_name)
-    # The name of the brand is drawn, not written: this keeps it in the file as text.
-    canvas.setCreator("Arrendi")
+# Below this the page belongs to the brand mark at the foot.
+BOTTOM = MARGIN + 8
 
+
+def _open_page(canvas: Canvas) -> float:
+    """Draws what every page starts with and returns where its content begins."""
     # A band of the brand color across the top edge.
     canvas.setFillColor(FOREGROUND)
     canvas.rect(0, HEIGHT - 8, WIDTH, 8, stroke=0, fill=1)
+    return HEIGHT - MARGIN - 8
 
-    # Heading: what it is on the left, who issues it on the right.
-    y = HEIGHT - MARGIN - 8
-    canvas.setFillColor(FOREGROUND)
-    canvas.setFont(BOLD, 20)
-    canvas.drawString(MARGIN, y, "Cuenta de cobro")
-    canvas.setFont(BOLD, 11)
-    canvas.drawRightString(RIGHT, y + 4, bill.owner_name)
+
+def _next_page(canvas: Canvas, bill: BillDocument) -> float:
+    """Closes the page and opens another, which says on its own which bill it is part of."""
+    _close_page(canvas, bill)
+    y = _open_page(canvas)
     canvas.setFillColor(MUTED)
-    canvas.setFont(REGULAR, 11)
-    if bill.owner_document:
-        label = DOCUMENT_LABELS[bill.owner_document_type]
-        canvas.drawRightString(RIGHT, y - 12, f"{label} {bill.owner_document}")
-    y -= 20
-    canvas.drawString(
-        MARGIN, y, f"{format_number(bill.number)} · {format_long_date(bill.issue_date)}"
-    )
-
-    y -= 22
-    _rule(canvas, y)
-
-    # Who owes.
-    y -= 26
     canvas.setFont(REGULAR, 10)
-    canvas.drawString(MARGIN, y, "Debe")
-    y -= 17
-    canvas.setFillColor(FOREGROUND)
-    canvas.setFont(BOLD, 12)
-    canvas.drawString(
-        MARGIN, y, _with_document(bill.tenant_name, bill.tenant_document_type, bill.tenant_document)
-    )
-
-    # What for.
-    y -= 34
-    for line in bill.lines:
-        canvas.setFillColor(FOREGROUND)
-        canvas.setFont(BOLD, 12)
-        canvas.drawRightString(RIGHT, y, format_pesos(line.amount))
-        canvas.setFont(REGULAR, 12)
-        for text in _wrapped(line.description, REGULAR, 12, CONTENT - 120):
-            canvas.drawString(MARGIN, y, text)
-            y -= 16
-        canvas.setFillColor(MUTED)
-        canvas.setFont(REGULAR, 11)
-        canvas.drawString(MARGIN, y, line.detail)
-        y -= 24
-
+    canvas.drawRightString(RIGHT, y, f"Página {canvas.getPageNumber()}")
+    whose = f"Cuenta de cobro {format_number(bill.number)} · {bill.owner_name}"
+    canvas.drawString(MARGIN, y, _wrapped(whose, REGULAR, 10, CONTENT - 70)[0])
+    y -= 14
     _rule(canvas, y)
+    return y - 28
 
-    y -= 34
-    canvas.setFillColor(FOREGROUND)
-    canvas.setFont(BOLD, 12)
-    canvas.drawString(MARGIN, y, "Total a pagar")
-    canvas.setFont(BOLD, 22)
-    canvas.drawRightString(RIGHT, y - 2, format_pesos(bill.total))
 
-    # When and how to pay.
-    notes = [f"Vence el {format_long_date(bill.due_date)}"]
-    if bill.payment_details:
-        notes.extend(_wrapped(f"Pagar a: {bill.payment_details}", REGULAR, 11, CONTENT - 28))
-    box_height = 24 + 16 * len(notes)
-    y -= 26 + box_height
-    canvas.setFillColor(BACKGROUND)
-    canvas.roundRect(MARGIN, y, CONTENT, box_height, 6, stroke=0, fill=1)
-    canvas.setFillColor(SOFT)
-    canvas.setFont(REGULAR, 11)
-    text_y = y + box_height - 24
-    for note in notes:
-        canvas.drawString(MARGIN + 14, text_y, note)
-        text_y -= 16
-
+def _close_page(canvas: Canvas, bill: BillDocument) -> None:
     # The brand, small at the foot: the bill is the owner's, Arrendi only issues it.
     mark_height = 16
     mark_width = SIZE[0] * mark_height / SIZE[1]
@@ -224,5 +170,126 @@ def render_bill(bill: BillDocument) -> bytes:
         canvas.restoreState()
 
     canvas.showPage()
+
+
+def _room(canvas: Canvas, bill: BillDocument, y: float, height: float) -> float:
+    """Where to draw something `height` tall: here, or on a new page if it does not fit."""
+    if y - height >= BOTTOM:
+        return y
+    return _next_page(canvas, bill)
+
+
+def render_bill(bill: BillDocument) -> bytes:
+    buffer = BytesIO()
+    # Not compressed: the file is small, and its text can be found in it.
+    canvas = Canvas(buffer, pagesize=letter, pageCompression=0)
+    canvas.setTitle(f"Cuenta de cobro {format_number(bill.number)}")
+    canvas.setAuthor(bill.owner_name)
+    # The name of the brand is drawn, not written: this keeps it in the file as text.
+    canvas.setCreator("Arrendi")
+
+    # Heading: what it is on the left, who issues it on the right.
+    y = _open_page(canvas)
+    canvas.setFillColor(FOREGROUND)
+    canvas.setFont(BOLD, 20)
+    canvas.drawString(MARGIN, y, "Cuenta de cobro")
+    canvas.drawRightString(RIGHT, y, format_number(bill.number))
+    # Below the title: when it was issued and, in a manual bill, the unit it is for.
+    issued = format_long_date(bill.issue_date)
+    if bill.unit_name:
+        issued = f"{issued} · {bill.unit_name}"
+    canvas.setFillColor(MUTED)
+    canvas.setFont(REGULAR, 11)
+    y -= 5
+    for text in _wrapped(issued, REGULAR, 11, CONTENT):
+        y -= 15
+        canvas.drawString(MARGIN, y, text)
+
+    y -= 22
+    _rule(canvas, y)
+
+    # Who charges and who owes: a label, then the name across the page, on as many lines
+    # as it needs, and the document under it.
+    y -= 28
+    for label, name, document_type, document in (
+        ("Cobra", bill.owner_name, bill.owner_document_type, bill.owner_document),
+        ("Debe", bill.tenant_name, bill.tenant_document_type, bill.tenant_document),
+    ):
+        canvas.setFillColor(MUTED)
+        canvas.setFont(REGULAR, 10)
+        canvas.drawString(MARGIN, y, label)
+        canvas.setFillColor(FOREGROUND)
+        canvas.setFont(BOLD, 12)
+        for text in _wrapped(name, BOLD, 12, CONTENT - PARTY_LABEL):
+            canvas.drawString(MARGIN + PARTY_LABEL, y, text)
+            y -= 16
+        if document:
+            canvas.setFillColor(MUTED)
+            canvas.setFont(REGULAR, 11)
+            canvas.drawString(
+                MARGIN + PARTY_LABEL, y, f"{DOCUMENT_LABELS[document_type]} {document}"
+            )
+            y -= 16
+        y -= 8
+    y += 4
+    _rule(canvas, y)
+
+    # What for: each thing charged, with its own amount.
+    y -= 30
+    for line in bill.lines:
+        description = _wrapped(line.description, REGULAR, 12, CONTENT - 120)
+        # A line is never split between two pages.
+        y = _room(canvas, bill, y, 16 * len(description) + (11 if line.detail else 0))
+        canvas.setFillColor(FOREGROUND)
+        canvas.setFont(BOLD, 12)
+        canvas.drawRightString(RIGHT, y, format_pesos(line.amount))
+        canvas.setFont(REGULAR, 12)
+        for text in description:
+            canvas.drawString(MARGIN, y, text)
+            y -= 16
+        if line.detail:
+            canvas.setFillColor(MUTED)
+            canvas.setFont(REGULAR, 11)
+            canvas.drawString(MARGIN, y, line.detail)
+            y -= 16
+        y -= 8
+
+    # The total: the sum of the lines above. It stays with the rule that closes them.
+    y = _room(canvas, bill, y, 34 + 4)
+    _rule(canvas, y)
+
+    y -= 34
+    canvas.setFillColor(FOREGROUND)
+    canvas.setFont(BOLD, 12)
+    canvas.drawString(MARGIN, y, "Total a pagar")
+    canvas.setFont(BOLD, 22)
+    canvas.drawRightString(RIGHT, y - 2, format_pesos(bill.total))
+
+    # When and how to pay.
+    notes = [f"Vence el {format_long_date(bill.due_date)}"]
+    if bill.payment_details:
+        notes.extend(_wrapped(f"Pagar a: {bill.payment_details}", REGULAR, 11, CONTENT - 28))
+    # In a box, or in one on each page when they are more than the page has room for.
+    while notes:
+        fit = int((y - 26 - 24 - BOTTOM) // 16)
+        if fit < min(len(notes), 2):
+            # Not even a couple of lines: better to start the box on a fresh page.
+            y = _next_page(canvas, bill)
+            continue
+        here, notes = notes[:fit], notes[fit:]
+        box_height = 24 + 16 * len(here)
+        y -= 26 + box_height
+        canvas.setFillColor(BACKGROUND)
+        canvas.roundRect(MARGIN, y, CONTENT, box_height, 6, stroke=0, fill=1)
+        canvas.setFillColor(SOFT)
+        canvas.setFont(REGULAR, 11)
+        text_y = y + box_height - 24
+        for note in here:
+            canvas.drawString(MARGIN + 14, text_y, note)
+            text_y -= 16
+        if notes:
+            y = _next_page(canvas, bill) + 26
+
+    _close_page(canvas, bill)
     canvas.save()
     return buffer.getvalue()

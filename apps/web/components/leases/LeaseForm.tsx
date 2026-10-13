@@ -5,6 +5,7 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 import { FormField } from "@/components/FormField";
+import { itemErrors, ItemsField, itemsTotal, MAX_ITEMS } from "@/components/ItemsField";
 import { MoneyField } from "@/components/MoneyField";
 import { SelectField } from "@/components/SelectField";
 import { TextareaField } from "@/components/TextareaField";
@@ -17,7 +18,8 @@ import {
   TENANT_DOCUMENT_TYPE,
   TENANT_DOCUMENT_TYPE_OPTIONS,
 } from "@/lib/labels";
-import { email, optionalText, paymentDetails, requiredText } from "@/lib/validation";
+import { formatPesos } from "@/lib/format";
+import { email, item, optionalText, paymentDetails, requiredText } from "@/lib/validation";
 
 const schema = z
   .object({
@@ -35,6 +37,7 @@ const schema = z
     end_date: z.string(),
     deposit: z.number().nullable(),
     charge_deposit: z.boolean(),
+    items: z.array(item).max(MAX_ITEMS),
     payment_details: paymentDetails,
   })
   // ISO dates compare as text.
@@ -63,6 +66,7 @@ export function leaseTerms(values: LeaseValues) {
     end_date: values.end_date || null,
     deposit: values.deposit,
     charge_deposit: values.charge_deposit,
+    items: values.items.map((charged) => ({ ...charged, amount: charged.amount ?? 0 })),
     payment_details: values.payment_details || null,
   };
 }
@@ -76,6 +80,8 @@ type LeaseFormProps = {
   showDeposit?: boolean;
   /** Whether the first monthly bill charges the deposit. Pointless once that bill exists. */
   showChargeDeposit?: boolean;
+  /** What the lease charges every month besides the rent, like the building fee. */
+  showItems?: boolean;
   /** The tenant's document, which the bill shows. The onboarding leaves it for later. */
   showTenantDocument?: boolean;
   /** How to pay this lease's bills, when it is not as Ajustes says. */
@@ -92,6 +98,7 @@ export function LeaseForm({
   defaultValues,
   showDeposit = false,
   showChargeDeposit = false,
+  showItems = false,
   showTenantDocument = false,
   showPaymentDetails = false,
   onSubmit,
@@ -117,6 +124,7 @@ export function LeaseForm({
       end_date: "",
       deposit: null,
       charge_deposit: true,
+      items: [],
       payment_details: "",
       ...defaultValues,
     },
@@ -124,6 +132,8 @@ export function LeaseForm({
 
   const isNit = useWatch({ control, name: "tenant_document_type" }) === "nit";
   const hasDeposit = Boolean(useWatch({ control, name: "deposit" }));
+  const rent = useWatch({ control, name: "rent" });
+  const items = useWatch({ control, name: "items" });
 
   return (
     <form id={id} onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
@@ -279,6 +289,36 @@ export function LeaseForm({
             )}
           />
         </label>
+      )}
+      {showItems && (
+        <FieldSet>
+          <FieldLegend variant="label">Otros conceptos del mes (opcional)</FieldLegend>
+          <p className="text-support text-muted-foreground">
+            Lo que cobras cada mes además del canon, como la administración. Salen en cada
+            cuenta del mes, cada uno con su valor.
+          </p>
+          <Controller
+            control={control}
+            name="items"
+            render={({ field }) => (
+              <ItemsField
+                id="lease-item"
+                placeholder="Administración"
+                value={field.value}
+                onChange={field.onChange}
+                errors={itemErrors(errors.items)}
+              />
+            )}
+          />
+          {items.length > 0 && (
+            <div className="flex items-baseline justify-between gap-3 rounded-xl border border-border bg-card p-4">
+              <p className="text-section font-semibold">Total de cada mes</p>
+              <p className="text-title font-bold">
+                {formatPesos((rent ?? 0) + itemsTotal(items))}
+              </p>
+            </div>
+          )}
+        </FieldSet>
       )}
       {showPaymentDetails && (
         <TextareaField

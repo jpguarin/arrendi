@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 
 from app.schemas.common import DocumentType, PaymentDetails, PositivePesos
 from app.schemas.payment import PaymentMethod, PaymentResponse
@@ -15,12 +15,24 @@ BillStatusFilter = Literal["receivable", "paid", "voided"]
 Description = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 
 
-class BillCreate(BaseModel):
-    """A manual bill: an extra charge on a lease, apart from the monthly rent."""
+# A bill fits on one page; the monthly one adds the rent and the deposit to these.
+MAX_ITEMS = 10
 
-    lease_id: UUID
+
+class ItemInput(BaseModel):
+    """Something charged: what it is and how much. A bill is the sum of these."""
+
     description: Description
     amount: PositivePesos
+
+
+class BillCreate(BaseModel):
+    """A manual bill: one or more extra charges on a lease, apart from the monthly rent."""
+
+    lease_id: UUID
+    # In the order the bill shows them. The total is their sum.
+    items: Annotated[list[ItemInput], Field(min_length=1, max_length=MAX_ITEMS)]
+    # One for the whole bill, not one per item.
     due_date: date
     # Only for this bill. Left out, it takes the lease's, and then the owner's.
     payment_details: PaymentDetails = None

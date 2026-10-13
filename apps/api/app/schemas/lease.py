@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.schemas.bill import BillSummary
+from app.schemas.bill import MAX_ITEMS, BillItemResponse, BillSummary, ItemInput
 from app.schemas.common import (
     DocumentType,
     Email,
@@ -20,6 +20,10 @@ from app.schemas.property import UnitUse
 LeaseStatus = Literal["active", "ended"]
 # Provisional: 29 to 31 are left out so the day exists in every month.
 DueDay = Annotated[int, Field(strict=True, ge=1, le=28)]
+
+
+# What the lease charges every month besides the rent, like the building fee.
+LeaseItems = Annotated[list[ItemInput], Field(max_length=MAX_ITEMS)]
 
 
 class TenantCreate(BaseModel):
@@ -48,6 +52,8 @@ class LeaseTerms(BaseModel):
     deposit: Pesos | None = None
     # The first monthly bill charges the deposit, unless the tenant already paid it.
     charge_deposit: bool = True
+    # Every monthly bill charges these after the rent, in this order.
+    items: LeaseItems = []
     auto_send: bool = True
     # How to pay the bills of this lease. Left out, they take the owner's.
     payment_details: PaymentDetails = None
@@ -67,7 +73,15 @@ class LeaseCreate(LeaseTerms):
 
 
 class LeaseUpdate(PatchModel):
-    not_nullable = ("rent", "due_day", "start_date", "charge_deposit", "auto_send", "tenant")
+    not_nullable = (
+        "rent",
+        "due_day",
+        "start_date",
+        "charge_deposit",
+        "items",
+        "auto_send",
+        "tenant",
+    )
 
     rent: PositivePesos | None = None
     due_day: DueDay | None = None
@@ -75,6 +89,8 @@ class LeaseUpdate(PatchModel):
     end_date: date | None = None
     deposit: Pesos | None = None
     charge_deposit: bool | None = None
+    # Sent, it replaces the whole list; an empty one removes them all.
+    items: LeaseItems | None = None
     auto_send: bool | None = None
     payment_details: PaymentDetails = None
     tenant: TenantUpdate | None = None
@@ -107,6 +123,8 @@ class LeaseResponse(BaseModel):
     deposit: int | None
     # Only the first monthly bill charges it; after that this changes nothing.
     charge_deposit: bool
+    # What every monthly bill charges after the rent, in order.
+    items: list[BillItemResponse]
     auto_send: bool
     # The lease's own, if it has them; null means its bills take the owner's.
     payment_details: str | None

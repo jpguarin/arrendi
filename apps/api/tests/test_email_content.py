@@ -113,3 +113,12 @@ def test_what_people_typed_is_escaped_in_the_html() -> None:
     assert "&lt;script&gt;" in email.html
     # Plain text is shown as typed.
     assert "<b>Nequi</b>" in email.text
+
+
+def test_concept_starts_lowercase_mid_sentence_unless_it_starts_with_an_acronym() -> None:
+    usual = render_email("bill", EMAIL, TODAY)
+    acronym = render_email("bill", replace(EMAIL, concept="IVA del canon · Apto 2"), TODAY)
+
+    assert "la cuenta de cobro de canon de arrendamiento" in usual.text
+    assert "la cuenta de cobro de IVA del canon" in acronym.text
+    assert "iVA" not in acronym.text and "iVA" not in acronym.html

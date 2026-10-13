@@ -12,6 +12,7 @@ from app.models import (
     Bill,
     BillItem,
     Lease,
+    LeaseItem,
     Notification,
     Owner,
     Payment,
@@ -74,6 +75,15 @@ def _items(session: Session, bill_id: UUID) -> list[BillItem]:
     )
 
 
+def lease_items(session: Session, lease_id: UUID) -> list[LeaseItem]:
+    """What the lease charges every month besides the rent, in the order the bill shows it."""
+    return list(
+        session.scalars(
+            select(LeaseItem).where(LeaseItem.lease_id == lease_id).order_by(LeaseItem.position)
+        )
+    )
+
+
 def _pdf_path(bill: Bill) -> str:
     return f"{bill.owner_id}/bills/{bill.id}.pdf"
 
@@ -84,9 +94,9 @@ def _document(session: Session, bill: Bill, voided: bool = False) -> BillDocumen
     lease = session.get_one(Lease, bill.lease_id)
     tenant = session.get_one(Tenant, lease.tenant_id)
     unit = session.get_one(Unit, lease.unit_id)
-    # The month is what the rent is for, and the rent comes first; anything else charged
-    # with it, like the deposit, is only about the unit.
-    of_the_month = f"{format_month(bill.period)} · {unit.name}" if bill.period else unit.name
+    # A monthly bill says its month and its unit under the rent, its first line. A manual
+    # one has no line to say it under, so the unit goes in the heading.
+    of_the_rent = f"{format_month(bill.period)} · {unit.name}" if bill.period else None
     return BillDocument(
         number=bill.number,
         issue_date=bill.issue_date,
@@ -98,12 +108,13 @@ def _document(session: Session, bill: Bill, voided: bool = False) -> BillDocumen
         tenant_document_type=tenant.document_type,
         tenant_document=tenant.document_number,
         lines=[
-            BillLine(item.description, unit.name if index else of_the_month, item.amount)
+            BillLine(item.description, item.amount, None if index else of_the_rent)
             for index, item in enumerate(_items(session, bill.id))
         ],
         total=bill.total,
         payment_details=bill.payment_details,
         voided=voided,
+        unit_name=None if bill.period else unit.name,
     )
 
 
@@ -133,11 +144,14 @@ def _issue(
     origin: str,
     period: date | None,
     due_date: date,
-    description: str,
-    amount: int,
+    charges: list[tuple[str, int]],
     payment_details: str | None = None,
 ) -> Bill:
-    """Creates a bill with the owner's next number and its PDF, all or nothing."""
+    """Creates a bill with the owner's next number and its PDF, all or nothing.
+
+    `charges` are its items, description and amount, in the order the bill shows them.
+    The total is their sum.
+    """
     # The lock on the owner's row makes issuing one at a time per owner: whoever comes
     # next waits here and reads the number this transaction leaves. If anything below
     # fails, the whole transaction rolls back and the number is not used up.
@@ -150,10 +164,9 @@ def _issue(
     number = owner.next_number
     owner.next_number = number + 1
 
-    # What is charged, in the order the bill shows it.
-    charges = [(description, amount)]
+    # Decided here, under the lock, so two requests at once cannot both be the first bill.
     if origin == "monthly" and _owes_deposit(session, lease):
-        charges.append((DEPOSIT, lease.deposit))
+        charges = [*charges, (DEPOSIT, lease.deposit)]
 
     bill = Bill(
         # Made here, not by the database, because the path of the PDF carries it.
@@ -216,10 +229,12 @@ def issue_monthly_bill(session: Session, storage: Storage, today: date, lease_id
         period=period,
         # The due day goes from 1 to 28, so it exists in every month.
         due_date=period.replace(day=lease.due_day),
-        description=RENT,
-        # The rent as it is now; changing it later does not touch this bill. The first
-        # bill of the lease may also charge its deposit: `_issue` decides, under the lock.
-        amount=lease.rent,
+        # The rent and the items of the lease as they are now; changing them later does
+        # not touch this bill. The first bill of the lease may also charge its deposit.
+        charges=[
+            (RENT, lease.rent),
+            *((item.description, item.amount) for item in lease_items(session, lease.id)),
+        ],
     )
 
 
@@ -233,8 +248,7 @@ def issue_manual_bill(session: Session, storage: Storage, today: date, data: Bil
         origin="manual",
         period=None,
         due_date=data.due_date,
-        description=data.description,
-        amount=data.amount,
+        charges=[(item.description, item.amount) for item in data.items],
         payment_details=data.payment_details,
     )
 

@@ -142,6 +142,34 @@ def test_emails_carry_the_payment_details_the_bill_was_issued_with(
         assert "Otro banco" not in message.text and "Nequi de Ajustes" not in message.text
 
 
+def test_email_names_the_first_item_as_typed_and_counts_the_rest(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], mailer: FakeEmailSender
+) -> None:
+    manual = api.post(
+        "/api/bills",
+        headers=ana,
+        json={
+            "lease_id": str(trees[0].lease_id),
+            "items": [
+                {"description": "IVA del canon", "amount": 190000},
+                {"description": "EPM servicios", "amount": 80000},
+                {"description": "Parqueadero Juan", "amount": 50000},
+            ],
+            "due_date": "2026-10-20",
+        },
+    ).json()
+
+    api.post(f"/api/bills/{manual['id']}/send", headers=ana)
+
+    (message,) = mailer.sent
+    # Not a letter of what the owner typed changes, at the start of a line or mid-sentence.
+    assert "IVA del canon y 2 conceptos más · Apto ana" in message.text
+    assert "la cuenta de cobro de IVA del canon y 2 conceptos más" in message.text
+    for mangled in ("iVA", "ePM", "EPM", "Parqueadero Juan"):
+        assert mangled not in message.text
+    assert "$320.000" in message.text
+
+
 def test_provider_failure_leaves_the_notification_failed(
     api: TestClient, ana: dict[str, str], bill: dict, mailer: FakeEmailSender
 ) -> None:

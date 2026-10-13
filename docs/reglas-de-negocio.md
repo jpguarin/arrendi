@@ -9,7 +9,8 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 - **Periodo:** el mes que se cobra, guardado como el primer día de ese mes (`2026-10-01`).
 - **Emisión:** el día en que se genera.
 - **Vencimiento:** el `due_day` del contrato dentro del mes del periodo. El día de pago va de 1 a 28, así que siempre existe.
-- **Total:** la suma de sus conceptos. Casi siempre es solo el canon del contrato en el momento de generar. Un cambio posterior del canon no altera cuentas ya emitidas.
+- **Total:** la suma de sus conceptos, cada uno con su valor. Un cambio posterior del canon o de los conceptos del contrato no altera cuentas ya emitidas.
+- **Conceptos:** primero el canon del contrato en el momento de generar; después los conceptos fijos del contrato (por ejemplo, la administración), en su orden, que salen en todas las cuentas mensuales; al final el depósito, si aplica. Los conceptos no tienen fecha propia: el vencimiento es de la cuenta.
 - **Depósito:** si el contrato tiene depósito mayor que cero y `charge_deposit` encendido, su primera cuenta mensual lo cobra como un concepto aparte, después del canon. "Primera" quiere decir que el contrato no tiene otra cuenta mensual sin anular: si esa cuenta se anula, la que la reemplaza vuelve a cobrarlo. Las cuentas manuales no lo cobran ni cuentan como primera. Vale igual para la cuenta generada a mano y para la de la tarea diaria.
 
 ### Estados
@@ -43,6 +44,7 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 
 ### Reglas
 
+- **Cuenta manual:** lleva de 1 a 10 conceptos, los que el propietario escriba, y un solo vencimiento. No cobra los conceptos fijos del contrato ni el depósito.
 - **Inmutable:** una cuenta emitida no se edita. Si hay un error, se anula y se genera otra con consecutivo nuevo.
 - **Datos de pago:** al emitir, la cuenta toma los suyos si es manual y los trae; si no, los del contrato; si no, los de Ajustes. Quedan guardados en la cuenta: el PDF, la pantalla y todos sus correos muestran esos, aunque después cambien Ajustes o el contrato. La cuenta mensual, a mano o por la tarea diaria, empieza por los del contrato.
 - **Anulación:** solo si la cuenta no tiene pagos. La cuenta anulada conserva su consecutivo y su PDF.

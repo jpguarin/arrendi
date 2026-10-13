@@ -44,11 +44,11 @@ Las diez pantallas diseñadas están en `docs/mockups/` y descritas en `docs/dis
 | Pantalla | Para qué sirve | Acciones principales |
 | --- | --- | --- |
 | Inicio | Ver el mes de un vistazo: recaudado, pendiente y en mora | Enviar recordatorio, registrar pago, abrir una cuenta |
-| Listado de cuentas | Consultar todas las cuentas, agrupadas por mes | Filtrar por unidad y estado, crear cuenta manual |
+| Listado de cuentas | Consultar todas las cuentas, agrupadas por mes | Filtrar por unidad y estado, crear cuenta manual con uno o varios conceptos |
 | Detalle de cuenta | Ver el documento y su historial de envíos | Registrar pago, reenviar, descargar PDF, anular |
 | Registrar pago | Anotar un pago en pocos toques | Valor, fecha, medio, comprobante, enviar recibo |
 | Inmuebles y unidades | Ver cada inmueble con sus unidades y su estado | Agregar inmueble o unidad, abrir el contrato |
-| Contrato | Ver condiciones, documento y cuentas del contrato | Editar, terminar, ver o reemplazar el documento, activar envío automático |
+| Contrato | Ver condiciones, lo que se cobra cada mes, documento y cuentas del contrato | Editar (también los conceptos fijos del mes, como la administración), terminar, ver o reemplazar el documento, activar envío automático |
 | Configuración | Definir datos del propietario, de pago, de envío y el tema | Editar datos, elegir día de envío y recordatorios, cambiar entre tema claro, oscuro o el del sistema |
 | Alta 1: inmueble | Crear el primer inmueble | Nombre, dirección, ciudad, tipo |
 | Alta 2: unidades | Definir los espacios que se cobran por separado | Nombre y uso de cada unidad |
