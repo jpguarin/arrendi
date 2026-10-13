@@ -88,8 +88,18 @@ def _pdf_path(bill: Bill) -> str:
     return f"{bill.owner_id}/bills/{bill.id}.pdf"
 
 
-def _document(session: Session, bill: Bill, voided: bool = False) -> BillDocument:
+def _document(session: Session, storage: Storage, bill: Bill, voided: bool = False) -> BillDocument:
     """What the PDF shows, as it is right now. Called when issuing and when voiding."""
+    signature = None
+    if bill.signature_path:
+        try:
+            signature = storage.download(bill.signature_path)
+        except StorageError:
+            # A bill is not issued without the signature it should carry. A voided one is
+            # no longer owed: its PDF only has to say so.
+            if not voided:
+                raise
+            logger.exception("could not fetch the signature of a voided bill: %s", bill.id)
     owner = session.get_one(Owner, bill.owner_id)
     lease = session.get_one(Lease, bill.lease_id)
     tenant = session.get_one(Tenant, lease.tenant_id)
@@ -115,6 +125,7 @@ def _document(session: Session, bill: Bill, voided: bool = False) -> BillDocumen
         payment_details=bill.payment_details,
         voided=voided,
         unit_name=None if bill.period else unit.name,
+        signature=signature,
     )
 
 
@@ -212,7 +223,9 @@ def _issue(
     session.flush()
 
     try:
-        storage.upload(bill.pdf_path, render_bill(_document(session, bill)), "application/pdf")
+        storage.upload(
+            bill.pdf_path, render_bill(_document(session, storage, bill)), "application/pdf"
+        )
     except StorageError as error:
         raise storage_unavailable() from error
     return bill
@@ -394,6 +407,7 @@ def bill_response(session: Session, bill: Bill) -> BillResponse:
             document_number=owner.document_number,
             payment_details=bill.payment_details,
         ),
+        signed=bill.signature_path is not None,
         created_at=bill.created_at,
         voided_at=bill.voided_at,
         payments=[
@@ -467,6 +481,6 @@ def void_bill(
 
     # After the response, which is after the commit: if saving fails, the bill is still
     # owed and its PDF must not say otherwise.
-    pdf = render_bill(_document(session, bill, voided=True))
+    pdf = render_bill(_document(session, storage, bill, voided=True))
     background.add_task(_replace_pdf, storage, bill.pdf_path, pdf)
     return bill_response(session, bill)

@@ -648,6 +648,8 @@ export interface components {
             /** Tenant Document Number */
             tenant_document_number: string | null;
             issuer: components["schemas"]["BillIssuer"];
+            /** Signed */
+            signed: boolean;
             /**
              * Created At
              * Format: date-time

@@ -3,6 +3,7 @@
 Nothing here reads the database or storage: it turns what it is given into bytes.
 """
 
+import logging
 import re
 from dataclasses import dataclass
 from datetime import date
@@ -10,11 +11,13 @@ from io import BytesIO
 
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import letter
-from reportlab.lib.utils import simpleSplit
+from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen.canvas import FILL_NON_ZERO, Canvas
 
 from app.pdf.format import format_long_date, format_number, format_pesos
 from app.pdf.logo import GREEN_PATHS, INK_PATHS, SIZE
+
+logger = logging.getLogger(__name__)
 
 # The light palette of docs/diseno.md, on the brand of docs/new-brand-design.
 FOREGROUND = HexColor("#14264C")
@@ -61,6 +64,9 @@ class BillDocument:
     voided: bool = False
     # The unit, for the heading of a manual bill: none of its lines says where it is from.
     unit_name: str | None = None
+    # The image the owner signs with, as a PNG or a JPG. Without it the bill leaves a
+    # line to sign by hand.
+    signature: bytes | None = None
 
 
 DOCUMENT_LABELS = {"cc": "C.C.", "nit": "NIT"}
@@ -170,6 +176,58 @@ def _close_page(canvas: Canvas, bill: BillDocument) -> None:
         canvas.restoreState()
 
     canvas.showPage()
+
+
+# The signature: no larger than this, and the line to sign on when there is none.
+SIGNATURE_WIDTH = 180
+SIGNATURE_HEIGHT = 60
+
+
+def _signature(canvas: Canvas, bill: BillDocument, y: float) -> None:
+    """Closes the bill at the foot of the page: the signature, the name and the document.
+
+    `y` is where the content above ends. If it reaches the foot, the block gets a page
+    of its own.
+    """
+    name = _wrapped(bill.owner_name, BOLD, 11, CONTENT)
+    document = (
+        f"{DOCUMENT_LABELS[bill.owner_document_type]} {bill.owner_document}"
+        if bill.owner_document
+        else None
+    )
+    # From the foot up: the document, the name, and the signature over them.
+    text_height = 14 * len(name) + (14 if document else 0)
+    signature_y = BOTTOM + text_height + 8
+    if y - 24 < signature_y + SIGNATURE_HEIGHT:
+        _next_page(canvas, bill)
+
+    drawn = False
+    if bill.signature:
+        try:
+            image = ImageReader(BytesIO(bill.signature))
+            width, height = image.getSize()
+            # As large as fits, and never more than a point per pixel.
+            scale = min(SIGNATURE_WIDTH / width, SIGNATURE_HEIGHT / height, 1)
+            canvas.drawImage(image, MARGIN, signature_y, width * scale, height * scale, mask="auto")
+            drawn = True
+        except Exception:
+            # The bill goes out all the same, with the line to sign by hand.
+            logger.exception("could not draw the signature of bill %s", bill.number)
+    if not drawn:
+        canvas.setStrokeColor(MUTED)
+        canvas.setLineWidth(0.75)
+        canvas.line(MARGIN, signature_y, MARGIN + SIGNATURE_WIDTH, signature_y)
+
+    text_y = signature_y - 16
+    canvas.setFillColor(FOREGROUND)
+    canvas.setFont(BOLD, 11)
+    for text in name:
+        canvas.drawString(MARGIN, text_y, text)
+        text_y -= 14
+    if document:
+        canvas.setFillColor(MUTED)
+        canvas.setFont(REGULAR, 11)
+        canvas.drawString(MARGIN, text_y, document)
 
 
 def _room(canvas: Canvas, bill: BillDocument, y: float, height: float) -> float:
@@ -290,6 +348,7 @@ def render_bill(bill: BillDocument) -> bytes:
         if notes:
             y = _next_page(canvas, bill) + 26
 
+    _signature(canvas, bill, y)
     _close_page(canvas, bill)
     canvas.save()
     return buffer.getvalue()
