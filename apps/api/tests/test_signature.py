@@ -144,7 +144,8 @@ def test_signature_is_stored_as_a_small_png_cut_to_its_strokes(
     assert response.status_code == 200, response.text
     assert response.json()["has_signature"] is True
     path = stored_path(admin_engine, two_owners[0])
-    assert path.startswith(f"{two_owners[0]}/signature/") and path.endswith("/firma.png")
+    # Apart from the uploads, where a link could reach it.
+    assert path.startswith(f"{two_owners[0]}/signatures/") and path.endswith("/firma.png")
     # Only the signature is left: what the browser sent is gone.
     assert list(storage.objects) == [path]
     with Image.open(BytesIO(storage.objects[path])) as stored:
@@ -152,6 +153,123 @@ def test_signature_is_stored_as_a_small_png_cut_to_its_strokes(
         assert stored.width <= 600 and stored.height <= 200
         # The empty margin around the strokes went away: they reach the edges.
         assert stored.width > stored.height * 1.2
+
+
+def photo(paper: object = None, strokes: bool = True, kind: str = "JPEG") -> bytes:
+    """A signature photographed on a sheet: grey paper, lit unevenly, with or without ink."""
+    width, height = 1600, 1200
+    image = Image.new("RGB", (width, height))
+    # Darker on one side, as under a lamp.
+    shade = paper or (lambda x: 150 + 70 * x // width)
+    for x in range(width):
+        level = shade(x)
+        ImageDraw.Draw(image).line([(x, 0), (x, height)], fill=(level, level, level - 5))
+    if strokes:
+        points = [(600, 700), (700, 520), (780, 720), (880, 540), (1000, 660)]
+        ImageDraw.Draw(image).line(points, fill=(25, 30, 60), width=9)
+    out = BytesIO()
+    image.save(out, kind, quality=85)
+    return out.getvalue()
+
+
+def test_photo_of_a_signature_on_paper_keeps_the_ink_and_drops_the_paper(
+    api: TestClient, ana: dict[str, str], storage: FakeStorage
+) -> None:
+    content = photo()
+
+    response = upload(
+        api,
+        storage,
+        ana,
+        content,
+        filename="foto.jpg",
+        content_type="image/jpeg",
+        size=len(content),
+    )
+
+    assert response.status_code == 200, response.text
+    (stored,) = storage.objects.values()
+    with Image.open(BytesIO(stored)) as image:
+        image = image.convert("RGBA")
+        # Cut to the strokes, which are wider than tall, not the whole sheet.
+        assert image.width > image.height * 1.5
+        alpha = image.getchannel("A")
+        # The paper is gone, in the corners and in most of the picture; the ink is there.
+        corners = [(0, 0), (image.width - 1, 0), (0, image.height - 1)]
+        assert all(alpha.getpixel(corner) == 0 for corner in corners)
+        histogram = alpha.histogram()
+        assert histogram[0] > image.width * image.height * 0.6
+        assert sum(histogram[200:]) > 50
+
+
+def test_photo_of_an_empty_sheet_is_not_a_signature(
+    api: TestClient, ana: dict[str, str], storage: FakeStorage
+) -> None:
+    content = photo(strokes=False)
+
+    response = upload(
+        api,
+        storage,
+        ana,
+        content,
+        filename="foto.jpg",
+        content_type="image/jpeg",
+        size=len(content),
+    )
+
+    assert (response.status_code, response.json()["code"]) == (422, "invalid_image")
+    assert storage.objects == {}
+
+
+def test_jpg_with_several_pictures_inside_is_still_a_jpg(
+    api: TestClient, ana: dict[str, str], storage: FakeStorage
+) -> None:
+    # What recent phones save: Pillow calls it MPO, and it starts like any JPG.
+    first = Image.open(BytesIO(JPG))
+    content = BytesIO()
+    first.save(content, "MPO", save_all=True, append_images=[first.copy()])
+    assert Image.open(BytesIO(content.getvalue())).format == "MPO"
+
+    response = upload(
+        api,
+        storage,
+        ana,
+        content.getvalue(),
+        filename="foto.jpg",
+        content_type="image/jpeg",
+        size=content.tell(),
+    )
+
+    assert response.status_code == 200, response.text
+
+
+def test_image_pillow_chokes_on_is_refused_and_removed(
+    api: TestClient, ana: dict[str, str], storage: FakeStorage, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Pillow fails in more ways than it documents: a broken chunk raises SyntaxError.
+    def broken(*args: object, **kwargs: object) -> None:
+        raise SyntaxError("broken PNG file")
+
+    monkeypatch.setattr("PIL.ImageOps.exif_transpose", broken)
+
+    response = upload(api, storage, ana)
+
+    assert (response.status_code, response.json()["code"]) == (422, "invalid_image")
+    assert storage.objects == {}
+
+
+def test_huge_image_is_refused_before_it_is_decoded(
+    api: TestClient, ana: dict[str, str], storage: FakeStorage
+) -> None:
+    # Small as a file, enormous once open: one flat colour compresses to almost nothing.
+    flat = BytesIO()
+    Image.new("L", (9000, 6000), 255).save(flat, "PNG")
+    assert flat.tell() < 2 * MB
+
+    response = upload(api, storage, ana, flat.getvalue(), size=flat.tell())
+
+    assert (response.status_code, response.json()["code"]) == (422, "invalid_image")
+    assert storage.objects == {}
 
 
 def test_small_signature_is_not_blown_up(
@@ -243,7 +361,7 @@ def test_signature_has_a_temporary_link(
 
     assert response.status_code == 200
     body = response.json()
-    assert f"/download/{two_owners[0]}/signature/" in body["url"]
+    assert f"/download/{two_owners[0]}/signatures/" in body["url"]
     assert (body["name"], body["expires_in"]) == ("firma.png", 300)
 
 
@@ -295,6 +413,30 @@ def test_signature_a_bill_was_issued_with_stays_in_storage(
     # The owner has none now, but the bill still needs its own to be drawn again.
     assert has_signature(api, ana) is False
     assert signed_with in storage.objects
+
+
+def test_stored_signature_cannot_be_confirmed_again_as_if_it_were_an_upload(
+    api: TestClient,
+    ana: dict[str, str],
+    two_owners: tuple[UUID, UUID],
+    trees: tuple[Tree, Tree],
+    storage: FakeStorage,
+    admin_engine: Engine,
+) -> None:
+    upload(api, storage, ana)
+    of_the_bill = stored_path(admin_engine, two_owners[0])
+    api.post(f"/api/leases/{trees[0].lease_id}/bills", headers=ana)
+    upload(api, storage, ana)
+    current = stored_path(admin_engine, two_owners[0])
+
+    # The path of a signature is no secret to its owner: it is in the link to see it.
+    for path in (of_the_bill, current):
+        response = api.post("/api/settings/signature", json={"path": path}, headers=ana)
+        assert response.status_code == 404
+
+    # Neither was read as an upload and thrown away: the bill still has its own.
+    assert of_the_bill in storage.objects and current in storage.objects
+    assert stored_path(admin_engine, two_owners[0]) == current
 
 
 # Isolation

@@ -1,4 +1,5 @@
 import logging
+from dataclasses import replace
 from datetime import date
 from uuid import UUID, uuid4
 
@@ -20,7 +21,7 @@ from app.models import (
     Tenant,
     Unit,
 )
-from app.pdf.bill import BillDocument, BillLine, render_bill
+from app.pdf.bill import BillDocument, BillLine, SignatureError, render_bill
 from app.pdf.format import format_month
 from app.schemas.bill import (
     BillCreate,
@@ -228,6 +229,12 @@ def _issue(
         )
     except StorageError as error:
         raise storage_unavailable() from error
+    except SignatureError as error:
+        # Better no bill than one kept as signed that is not. Everything above rolls back.
+        raise conflict(
+            "No pudimos poner tu firma en la cuenta. Súbela de nuevo en Ajustes.",
+            "signature_unreadable",
+        ) from error
     return bill
 
 
@@ -481,6 +488,12 @@ def void_bill(
 
     # After the response, which is after the commit: if saving fails, the bill is still
     # owed and its PDF must not say otherwise.
-    pdf = render_bill(_document(session, storage, bill, voided=True))
+    document = _document(session, storage, bill, voided=True)
+    try:
+        pdf = render_bill(document)
+    except SignatureError:
+        # A voided bill is no longer owed: its PDF only has to say so.
+        logger.exception("could not draw the signature of a voided bill: %s", bill.id)
+        pdf = render_bill(replace(document, signature=None))
     background.add_task(_replace_pdf, storage, bill.pdf_path, pdf)
     return bill_response(session, bill)

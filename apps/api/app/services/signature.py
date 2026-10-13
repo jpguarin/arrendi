@@ -3,7 +3,7 @@ from io import BytesIO
 from uuid import uuid4
 
 from fastapi import BackgroundTasks
-from PIL import Image, ImageChops, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageChops, ImageFilter, ImageOps
 from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
@@ -26,10 +26,20 @@ logger = logging.getLogger(__name__)
 # whatever they upload is cut down to its strokes and stored as a PNG of this size at most.
 TYPES = ("image/png", "image/jpeg")
 MAX_SIZE = 2 * 1024 * 1024
-MAX_PIXELS = 40_000_000
+# A phone saves a JPG with several pictures inside, which Pillow calls MPO.
+FORMATS = ("PNG", "JPEG", "MPO")
+# How many pixels are worth opening. A photo from a phone has dozens of millions, but a
+# JPG can be decoded smaller from the start; a PNG cannot, and every one of its pixels
+# takes four bytes of memory.
+MAX_PIXELS = {"PNG": 16_000_000, "JPEG": 60_000_000, "MPO": 60_000_000}
+# The size it is worked on: plenty for a signature that ends up no larger than `BOX`.
+WORKING = (1600, 1600)
 BOX = (600, 200)
-# How far from white a pixel has to be to count as a stroke, from 0 to 255.
-INK = 40
+# The paper is found on a copy this small, where the strokes are thin enough to wipe out.
+PAPER = (400, 400)
+# How much darker than the paper around it a pixel has to be to count as ink, from 0 to
+# 255: below the first it is paper, above the second it is solid ink.
+FAINT, SOLID = 25, 70
 MARGIN = 8
 
 
@@ -54,42 +64,80 @@ def _invalid_image() -> AppError:
 
 
 def _folder(owner: Owner) -> str:
+    """Where the browser sends what the owner picked or drew. Nothing stays here."""
     return f"{owner.id}/signature"
 
 
+def _stored_folder(owner: Owner) -> str:
+    """Where the signatures themselves are kept, the owner's and those of their bills.
+
+    Apart from the uploads on purpose: no path in here can be confirmed as a new upload,
+    which would read it as a source and delete it.
+    """
+    return f"{owner.id}/signatures"
+
+
+def _ink(image: Image.Image) -> Image.Image:
+    """How much ink there is at each point of the picture: 0 for paper, 255 for a stroke.
+
+    A drawing has its strokes on nothing at all, but a photo has them on a sheet that is
+    never white: it is grey, and darker towards one side. So the paper is worked out
+    first, by wiping the strokes off a small copy, and ink is what is darker than it.
+    """
+    grey = image.convert("L")
+    small = grey.copy()
+    small.thumbnail(PAPER)
+    paper = small.filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.GaussianBlur(4))
+    darker = ImageChops.subtract(paper.resize(grey.size, Image.Resampling.BILINEAR), grey)
+    span = SOLID - FAINT
+    return darker.point(lambda value: max(0, min(255, (value - FAINT) * 255 // span)))
+
+
 def normalize(raw: bytes) -> bytes:
-    """The signature as it is stored: a PNG cut down to its strokes, no larger than `BOX`."""
+    """The signature as it is stored: its ink on nothing, cut to it, no larger than `BOX`."""
     try:
         with Image.open(BytesIO(raw)) as opened:
-            if opened.format not in ("PNG", "JPEG") or opened.width * opened.height > MAX_PIXELS:
+            # Read from the header, before any pixel is decoded.
+            if opened.format not in FORMATS:
                 raise InvalidImage
+            if opened.width * opened.height > MAX_PIXELS[opened.format]:
+                raise InvalidImage
+            # A JPG can come out of the decoder already smaller, at a fraction of the memory.
+            opened.draft("RGB", WORKING)
             # A photo from a phone says which way is up apart from its pixels.
             image = ImageOps.exif_transpose(opened).convert("RGBA")
-    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError) as error:
-        raise InvalidImage from error
+        image.thumbnail(WORKING, Image.Resampling.LANCZOS)
 
-    # The strokes are what differs from a white sheet. Around them there is usually a lot
-    # of empty paper or canvas, which would leave the signature tiny on the bill.
-    white = Image.new("RGBA", image.size, (255, 255, 255, 255))
-    on_paper = Image.alpha_composite(white, image).convert("L")
-    strokes = ImageChops.invert(on_paper).point(lambda value: 255 if value > INK else 0)
-    box = strokes.getbbox()
-    if box is None:
-        raise InvalidImage
-    left, top, right, bottom = box
-    image = image.crop(
-        (
-            max(left - MARGIN, 0),
-            max(top - MARGIN, 0),
-            min(right + MARGIN, image.width),
-            min(bottom + MARGIN, image.height),
+        # On a white sheet, so what was transparent counts as paper.
+        white = Image.new("RGBA", image.size, (255, 255, 255, 255))
+        on_paper = Image.alpha_composite(white, image).convert("RGB")
+        ink = _ink(on_paper)
+        box = ink.point(lambda value: 255 if value > 127 else 0).getbbox()
+        if box is None:
+            # Nothing but paper.
+            raise InvalidImage
+        left, top, right, bottom = box
+        signature = on_paper.convert("RGBA")
+        signature.putalpha(ink)
+        signature = signature.crop(
+            (
+                max(left - MARGIN, 0),
+                max(top - MARGIN, 0),
+                min(right + MARGIN, signature.width),
+                min(bottom + MARGIN, signature.height),
+            )
         )
-    )
-    # Only ever smaller: a small signature is not blown up.
-    image.thumbnail(BOX, Image.Resampling.LANCZOS)
-    out = BytesIO()
-    image.save(out, "PNG", optimize=True)
-    return out.getvalue()
+        # Only ever smaller: a small signature is not blown up.
+        signature.thumbnail(BOX, Image.Resampling.LANCZOS)
+        out = BytesIO()
+        signature.save(out, "PNG", optimize=True)
+        return out.getvalue()
+    except InvalidImage:
+        raise
+    except Exception as error:
+        # Pillow fails in more ways than it documents: OSError, SyntaxError, struct.error…
+        # Whatever it is, the file is not an image we can sign with.
+        raise InvalidImage from error
 
 
 def create_upload_url(storage: Storage, owner: Owner, data: UploadUrlRequest) -> UploadUrlResponse:
@@ -122,8 +170,6 @@ def confirm_signature(
     # Before touching storage: a path from anywhere else is not ours to read or delete.
     if not documents.is_upload_of(folder, data.path) or data.path.endswith(".pdf"):
         raise not_found()
-    if data.path == owner.signature_path:
-        return settings_response(owner)
     documents.check_upload(storage, data.path)
 
     try:
@@ -140,7 +186,7 @@ def confirm_signature(
             raise _too_large()
         if signature is None:
             raise _invalid_image()
-        path = f"{folder}/{uuid4()}/firma.png"
+        path = f"{_stored_folder(owner)}/{uuid4()}/firma.png"
         storage.upload(path, signature, "image/png")
     except StorageError as error:
         raise storage_unavailable() from error

@@ -15,14 +15,18 @@ export function SignatureSection({ hasSignature }: { hasSignature: boolean }) {
   const input = useRef<HTMLInputElement>(null);
   const [drawing, setDrawing] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Set at once, before the screen is drawn again: two taps in a row send one signature.
+  const sending = useRef(false);
   const [problem, setProblem] = useState<string>();
   const { data: link } = useSignatureUrl(hasSignature);
   const refresh = useRefreshSignature();
   const remove = useDeleteSignature();
 
   async function save(file: File) {
+    if (sending.current) return;
+    sending.current = true;
     setSaving(true);
-    setProblem(undefined);
+    clearProblems();
     const failed = await uploadSignature(file);
     if (!failed) {
       await refresh();
@@ -30,6 +34,13 @@ export function SignatureSection({ hasSignature }: { hasSignature: boolean }) {
     }
     setProblem(failed);
     setSaving(false);
+    sending.current = false;
+  }
+
+  /** What went wrong before says nothing about what is tried next. */
+  function clearProblems() {
+    setProblem(undefined);
+    remove.reset();
   }
 
   function pick(event: React.ChangeEvent<HTMLInputElement>) {
@@ -95,7 +106,7 @@ export function SignatureSection({ hasSignature }: { hasSignature: boolean }) {
               size="md"
               disabled={busy}
               onClick={() => {
-                setProblem(undefined);
+                clearProblems();
                 setDrawing(true);
               }}
             >
@@ -110,7 +121,10 @@ export function SignatureSection({ hasSignature }: { hasSignature: boolean }) {
               size="md"
               className="text-muted-foreground"
               disabled={busy}
-              onClick={() => remove.mutate({})}
+              onClick={() => {
+                clearProblems();
+                remove.mutate({});
+              }}
             >
               <Trash2 aria-hidden />
               {remove.isPending ? "Quitando…" : "Quitar firma"}

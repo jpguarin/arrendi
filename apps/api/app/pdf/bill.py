@@ -3,7 +3,6 @@
 Nothing here reads the database or storage: it turns what it is given into bytes.
 """
 
-import logging
 import re
 from dataclasses import dataclass
 from datetime import date
@@ -16,8 +15,6 @@ from reportlab.pdfgen.canvas import FILL_NON_ZERO, Canvas
 
 from app.pdf.format import format_long_date, format_number, format_pesos
 from app.pdf.logo import GREEN_PATHS, INK_PATHS, SIZE
-
-logger = logging.getLogger(__name__)
 
 # The light palette of docs/diseno.md, on the brand of docs/new-brand-design.
 FOREGROUND = HexColor("#14264C")
@@ -178,6 +175,10 @@ def _close_page(canvas: Canvas, bill: BillDocument) -> None:
     canvas.showPage()
 
 
+class SignatureError(Exception):
+    """The bill has a signature and it could not be drawn."""
+
+
 # The signature: no larger than this, and the line to sign on when there is none.
 SIGNATURE_WIDTH = 180
 SIGNATURE_HEIGHT = 60
@@ -201,7 +202,6 @@ def _signature(canvas: Canvas, bill: BillDocument, y: float) -> None:
     if y - 24 < signature_y + SIGNATURE_HEIGHT:
         _next_page(canvas, bill)
 
-    drawn = False
     if bill.signature:
         try:
             image = ImageReader(BytesIO(bill.signature))
@@ -209,11 +209,10 @@ def _signature(canvas: Canvas, bill: BillDocument, y: float) -> None:
             # As large as fits, and never more than a point per pixel.
             scale = min(SIGNATURE_WIDTH / width, SIGNATURE_HEIGHT / height, 1)
             canvas.drawImage(image, MARGIN, signature_y, width * scale, height * scale, mask="auto")
-            drawn = True
-        except Exception:
-            # The bill goes out all the same, with the line to sign by hand.
-            logger.exception("could not draw the signature of bill %s", bill.number)
-    if not drawn:
+        except Exception as error:
+            # Not drawn as if it had none: a bill that is kept as signed has to be signed.
+            raise SignatureError from error
+    else:
         canvas.setStrokeColor(MUTED)
         canvas.setLineWidth(0.75)
         canvas.line(MARGIN, signature_y, MARGIN + SIGNATURE_WIDTH, signature_y)

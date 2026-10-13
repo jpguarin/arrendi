@@ -246,7 +246,7 @@ def test_bills_are_signed_with_the_owners_signature(
     ImageDraw.Draw(picture).line([(10, 80), (290, 20)], fill=(20, 38, 76, 255), width=5)
     content = BytesIO()
     picture.save(content, "PNG")
-    signature = f"{ana}/signature/firma.png"
+    signature = f"{ana}/signatures/firma.png"
     storage.upload(signature, content.getvalue())
     execute(
         admin_engine,

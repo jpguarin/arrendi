@@ -736,6 +736,32 @@ def test_voiding_survives_a_signature_that_cannot_be_fetched(
     assert b"ANULADA" in pdf_of(storage, bill)
 
 
+def test_bill_is_not_issued_with_a_signature_that_cannot_be_drawn(
+    api: TestClient,
+    ana: dict[str, str],
+    two_owners: tuple[UUID, UUID],
+    trees: tuple[Tree, Tree],
+    storage: FakeStorage,
+    admin_engine: Engine,
+) -> None:
+    anas, _ = trees
+    signed_with = sign(api, storage, ana)
+    bill = monthly(api, ana, anas.lease_id).json()
+    storage.objects[signed_with] = b"\x89PNG\r\n\x1a\n" + b"x" * 50
+
+    set_today(date(2026, 11, 1))
+    response = monthly(api, ana, anas.lease_id)
+
+    assert (response.status_code, response.json()["code"]) == (409, "signature_unreadable")
+    assert numbers(admin_engine, two_owners[0]) == [1]
+    assert next_number(admin_engine, two_owners[0]) == 2
+    # The bill issued while the file was good can still be voided; its PDF says so,
+    # with the line to sign in place of the signature.
+    voided = api.post(f"/api/bills/{bill['id']}/void", headers=ana)
+    assert voided.status_code == 200
+    assert b"ANULADA" in pdf_of(storage, bill) and IMAGE not in pdf_of(storage, bill)
+
+
 def test_bill_is_not_issued_without_the_signature_it_should_carry(
     api: TestClient,
     ana: dict[str, str],

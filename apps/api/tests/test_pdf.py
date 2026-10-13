@@ -2,9 +2,10 @@ from dataclasses import replace
 from datetime import date
 from io import BytesIO
 
+import pytest
 from PIL import Image, ImageDraw
 
-from app.pdf.bill import BillDocument, BillLine, render_bill
+from app.pdf.bill import BillDocument, BillLine, SignatureError, render_bill
 from app.pdf.format import format_long_date, format_month, format_number, format_pesos
 
 BILL = BillDocument(
@@ -269,11 +270,10 @@ def test_signature_block_leaves_out_the_document_the_owner_has_not_filled_in() -
     assert b"C.C. 52.123.456" not in pdf
 
 
-def test_signature_that_cannot_be_read_does_not_stop_the_bill() -> None:
-    pdf = render_bill(replace(BILL, signature=b"\x89PNG\r\n\x1a\n" + b"x" * 50))
-
-    assert IMAGE not in pdf
-    assert pdf.count(b"(Ana Gomez) Tj") == 2 and b"Total a pagar" in pdf
+def test_signature_that_cannot_be_drawn_stops_the_bill() -> None:
+    # Better no bill than one that says it is signed and is not.
+    with pytest.raises(SignatureError):
+        render_bill(replace(BILL, signature=b"\x89PNG\r\n\x1a\n" + b"x" * 50))
 
 
 def test_signature_goes_on_the_last_page_only() -> None:
