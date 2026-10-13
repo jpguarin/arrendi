@@ -50,6 +50,12 @@ class Bill(Base):
             unique=True,
             postgresql_where=text("origin = 'monthly' and status <> 'voided'"),
         ),
+        CheckConstraint(
+            "(late_fee_amount is null) = (late_fee_deadline is null) "
+            "and (late_fee_amount is null or late_fee_amount > 0) "
+            "and (late_fee_waived_at is null or late_fee_amount is not null)",
+            name="bills_late_fee_check",
+        ),
         Index("bills_status_due_date_idx", "status", "due_date"),
         Index("bills_lease_id_idx", "lease_id"),
     )
@@ -68,6 +74,13 @@ class Bill(Base):
     status: Mapped[str] = mapped_column(Text, server_default=text("'pending'"))
     # How to pay, as it was when the bill was issued: its own, the lease's or the owner's.
     payment_details: Mapped[str | None] = mapped_column(Text)
+    # What paying this bill late costs, and the last day to pay it in time, as they were
+    # when it was issued. Null if the lease had no late fee then: it never owes one. The
+    # fee is not added here: a later bill charges it as an item.
+    late_fee_amount: Mapped[int | None] = mapped_column(BigInteger)
+    late_fee_deadline: Mapped[date | None]
+    # When the owner decided not to charge it.
+    late_fee_waived_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     # The owner's signature as it was when the bill was issued; null if they had none.
     signature_path: Mapped[str | None] = mapped_column(Text)
     # Path in the private storage bucket.

@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import (
@@ -7,6 +8,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Index,
+    Numeric,
     SmallInteger,
     Text,
     UniqueConstraint,
@@ -34,6 +36,17 @@ class Lease(Base):
         CheckConstraint("end_date is null or end_date > start_date", name="leases_dates_check"),
         CheckConstraint("deposit is null or deposit >= 0", name="leases_deposit_check"),
         CheckConstraint("status in ('active', 'ended')", name="leases_status_check"),
+        CheckConstraint(
+            "late_fee_percent is null or (late_fee_percent > 0 and late_fee_percent <= 100)",
+            name="leases_late_fee_percent_check",
+        ),
+        CheckConstraint(
+            "late_fee_grace_days between 0 and 30", name="leases_late_fee_grace_days_check"
+        ),
+        CheckConstraint(
+            "not late_fee_enabled or late_fee_percent is not null",
+            name="leases_late_fee_enabled_check",
+        ),
         # A unit has at most one active lease.
         Index(
             "leases_one_active_per_unit",
@@ -58,6 +71,10 @@ class Lease(Base):
     charge_deposit: Mapped[bool] = mapped_column(server_default=text("false"))
     status: Mapped[str] = mapped_column(Text, server_default=text("'active'"))
     auto_send: Mapped[bool] = mapped_column(server_default=text("true"))
+    # Paying the rent late costs this percentage of it, once, after the days of grace.
+    late_fee_enabled: Mapped[bool] = mapped_column(server_default=text("false"))
+    late_fee_percent: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+    late_fee_grace_days: Mapped[int] = mapped_column(SmallInteger, server_default=text("0"))
     # How to pay the bills of this lease; null means the owner's.
     payment_details: Mapped[str | None] = mapped_column(Text)
     # Path in the private storage bucket.

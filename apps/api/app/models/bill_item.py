@@ -24,8 +24,18 @@ class BillItem(Base):
         ForeignKeyConstraint(
             ["owner_id", "bill_id"], ["bills.owner_id", "bills.id"], name="bill_items_bill_fk"
         ),
+        ForeignKeyConstraint(
+            ["owner_id", "late_fee_of_bill_id"],
+            ["bills.owner_id", "bills.id"],
+            name="bill_items_late_fee_fk",
+        ),
         CheckConstraint("amount > 0", name="bill_items_amount_check"),
         Index("bill_items_bill_id_idx", "bill_id"),
+        Index(
+            "bill_items_late_fee_of_bill_id_idx",
+            "late_fee_of_bill_id",
+            postgresql_where=text("late_fee_of_bill_id is not null"),
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
@@ -34,6 +44,8 @@ class BillItem(Base):
     description: Mapped[str] = mapped_column(Text)
     # Money is whole pesos.
     amount: Mapped[int] = mapped_column(BigInteger)
+    # The late bill this item is the late fee of; null in every other item.
+    late_fee_of_bill_id: Mapped[UUID | None]
     # Its place in the bill, from 0: the items of a bill are created in the same instant.
     position: Mapped[int] = mapped_column(SmallInteger, server_default=text("0"))
     created_at: Mapped[datetime] = mapped_column(
