@@ -1,12 +1,13 @@
 import logging
-from dataclasses import replace
-from datetime import date
+from dataclasses import dataclass, replace
+from datetime import date, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID, uuid4
 
 from fastapi import BackgroundTasks
 from sqlalchemy import Select, exists, func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
 from app.errors import AppError, conflict, not_found, storage_unavailable
 from app.models import (
@@ -30,6 +31,8 @@ from app.schemas.bill import (
     BillResponse,
     BillStatusFilter,
     BillSummary,
+    LateFee,
+    LateFeeCharge,
     NotificationResponse,
 )
 from app.schemas.document import DocumentUrlResponse
@@ -44,6 +47,18 @@ logger = logging.getLogger(__name__)
 ONE_MONTHLY_PER_PERIOD = "bills_one_monthly_per_period"
 RENT = "Canon de arrendamiento"
 DEPOSIT = "Depósito"
+
+
+@dataclass(frozen=True)
+class Charge:
+    """An item of a bill about to be issued."""
+
+    description: str
+    amount: int
+    # The late bill this is the late fee of, if it is one.
+    late_fee_of_bill_id: UUID | None = None
+
+
 DOWNLOAD_LINK_SECONDS = 300
 RECENT_BILLS = 6
 STATUS_FILTERS: dict[BillStatusFilter, tuple[str, ...]] = {
@@ -147,6 +162,99 @@ def _owes_deposit(session: Session, lease: Lease) -> bool:
     )
 
 
+# The late fee. A monthly bill keeps what paying it late costs and until when; the fee
+# itself is never added to it. The next monthly bill of the lease charges it as an item.
+
+
+def late_fee_amount(rent: int, percent: Decimal) -> int | None:
+    """The percentage of the rent, in whole pesos. None if it does not reach a peso."""
+    amount = int((Decimal(rent) * percent / 100).quantize(Decimal(1), rounding=ROUND_HALF_UP))
+    return amount or None
+
+
+# What had been paid on a bill by the last day to pay it in time. The date of each payment
+# decides, not the day it was entered.
+_PAID_IN_TIME = (
+    select(func.coalesce(func.sum(Payment.amount), 0))
+    .where(Payment.bill_id == Bill.id, Payment.payment_date <= Bill.late_fee_deadline)
+    .correlate(Bill)
+    .scalar_subquery()
+)
+
+
+def _late_fee_charge(session: Session, bill_id: UUID) -> tuple[UUID, int] | None:
+    """The bill that charged the late fee of this one, by id and number, if any did.
+
+    A voided bill charges nothing: the one that replaces it gets the fee again.
+    """
+    charged = session.execute(
+        select(Bill.id, Bill.number)
+        .join(BillItem, BillItem.bill_id == Bill.id)
+        .where(BillItem.late_fee_of_bill_id == bill_id, Bill.status != "voided")
+    ).first()
+    return (charged.id, charged.number) if charged else None
+
+
+def _late_fees(session: Session, lease: Lease, today: date) -> list[Charge]:
+    """The late fees the monthly bill about to be issued has to charge.
+
+    One for every bill of the lease that was not paid in full by its deadline, whose fee
+    was neither waived nor charged yet.
+    """
+    charging = aliased(Bill)
+    charged = exists().where(
+        BillItem.late_fee_of_bill_id == Bill.id,
+        BillItem.bill_id == charging.id,
+        charging.status != "voided",
+    )
+    late = session.scalars(
+        select(Bill)
+        .where(
+            Bill.lease_id == lease.id,
+            Bill.status != "voided",
+            Bill.late_fee_amount.is_not(None),
+            Bill.late_fee_waived_at.is_(None),
+            Bill.late_fee_deadline < today,
+            _PAID_IN_TIME < Bill.total,
+            ~charged,
+        )
+        .order_by(Bill.period, Bill.number)
+    )
+    return [
+        Charge(
+            f"Recargo por mora de {format_month(bill.period).lower()}",
+            bill.late_fee_amount,
+            late_fee_of_bill_id=bill.id,
+        )
+        for bill in late
+    ]
+
+
+def late_fee_of(session: Session, bill: Bill, today: date) -> LateFee | None:
+    """Where the late fee of a bill stands today. None if it has none."""
+    if bill.late_fee_amount is None or bill.status == "voided":
+        return None
+    charge = _late_fee_charge(session, bill.id)
+    if charge:
+        status = "charged"
+    elif bill.late_fee_waived_at is not None:
+        status = "waived"
+    else:
+        paid_in_time = session.scalar(
+            select(func.coalesce(func.sum(Payment.amount), 0)).where(
+                Payment.bill_id == bill.id, Payment.payment_date <= bill.late_fee_deadline
+            )
+        )
+        late = today > bill.late_fee_deadline and paid_in_time < bill.total
+        status = "pending" if late else "on_time"
+    return LateFee(
+        amount=bill.late_fee_amount,
+        deadline=bill.late_fee_deadline,
+        status=status,
+        charged_on=LateFeeCharge(id=charge[0], number=charge[1]) if charge else None,
+    )
+
+
 def _issue(
     session: Session,
     storage: Storage,
@@ -156,13 +264,12 @@ def _issue(
     origin: str,
     period: date | None,
     due_date: date,
-    charges: list[tuple[str, int]],
+    charges: list[Charge],
     payment_details: str | None = None,
 ) -> Bill:
     """Creates a bill with the owner's next number and its PDF, all or nothing.
 
-    `charges` are its items, description and amount, in the order the bill shows them.
-    The total is their sum.
+    `charges` are its items, in the order the bill shows them. The total is their sum.
     """
     # The lock on the owner's row makes issuing one at a time per owner: whoever comes
     # next waits here and reads the number this transaction leaves. If anything below
@@ -176,9 +283,16 @@ def _issue(
     number = owner.next_number
     owner.next_number = number + 1
 
-    # Decided here, under the lock, so two requests at once cannot both be the first bill.
-    if origin == "monthly" and _owes_deposit(session, lease):
-        charges = [*charges, (DEPOSIT, lease.deposit)]
+    late_fee = None
+    if origin == "monthly":
+        # Decided here, under the lock, so two requests at once cannot both charge the
+        # same late fee or both be the first bill.
+        charges = [*charges, *_late_fees(session, lease, today)]
+        if _owes_deposit(session, lease):
+            charges = [*charges, Charge(DEPOSIT, lease.deposit)]
+        # What paying this one late will cost: a percentage of its rent, the first charge.
+        if lease.late_fee_enabled:
+            late_fee = late_fee_amount(charges[0].amount, lease.late_fee_percent)
 
     bill = Bill(
         # Made here, not by the database, because the path of the PDF carries it.
@@ -190,12 +304,17 @@ def _issue(
         period=period,
         issue_date=today,
         due_date=due_date,
-        total=sum(charged for _, charged in charges),
+        total=sum(charge.amount for charge in charges),
         # The bill's own, else the lease's, else the owner's. Kept here, so changing any
         # of them later does not touch this bill.
         payment_details=payment_details or lease.payment_details or owner.payment_details,
         # The owner's signature as it is now, kept for the same reason.
         signature_path=owner.signature_path,
+        # Its own terms for paying late, kept too. The fee goes on a later bill.
+        late_fee_amount=late_fee,
+        late_fee_deadline=(
+            due_date + timedelta(days=lease.late_fee_grace_days) if late_fee else None
+        ),
         # Already past its due date: the same thing the daily task would do tomorrow.
         status="overdue" if due_date < today else "pending",
     )
@@ -215,11 +334,12 @@ def _issue(
         BillItem(
             owner_id=bill.owner_id,
             bill_id=bill.id,
-            description=charge,
-            amount=charged,
+            description=charge.description,
+            amount=charge.amount,
+            late_fee_of_bill_id=charge.late_fee_of_bill_id,
             position=position,
         )
-        for position, (charge, charged) in enumerate(charges)
+        for position, charge in enumerate(charges)
     )
     session.flush()
 
@@ -252,10 +372,11 @@ def issue_monthly_bill(session: Session, storage: Storage, today: date, lease_id
         # The due day goes from 1 to 28, so it exists in every month.
         due_date=period.replace(day=lease.due_day),
         # The rent and the items of the lease as they are now; changing them later does
-        # not touch this bill. The first bill of the lease may also charge its deposit.
+        # not touch this bill. `_issue` adds the late fees of earlier bills, and the
+        # deposit if this is the first one.
         charges=[
-            (RENT, lease.rent),
-            *((item.description, item.amount) for item in lease_items(session, lease.id)),
+            Charge(RENT, lease.rent),
+            *(Charge(item.description, item.amount) for item in lease_items(session, lease.id)),
         ],
     )
 
@@ -270,7 +391,7 @@ def issue_manual_bill(session: Session, storage: Storage, today: date, data: Bil
         origin="manual",
         period=None,
         due_date=data.due_date,
-        charges=[(item.description, item.amount) for item in data.items],
+        charges=[Charge(item.description, item.amount) for item in data.items],
         payment_details=data.payment_details,
     )
 
@@ -385,7 +506,7 @@ def get_bill(session: Session, bill_id: UUID) -> Bill:
     return bill
 
 
-def bill_response(session: Session, bill: Bill) -> BillResponse:
+def bill_response(session: Session, bill: Bill, today: date) -> BillResponse:
     summary = bill_summaries(session, select(Bill).where(Bill.id == bill.id))[0]
     owner = session.get_one(Owner, bill.owner_id)
     lease = session.get_one(Lease, bill.lease_id)
@@ -415,6 +536,7 @@ def bill_response(session: Session, bill: Bill) -> BillResponse:
             payment_details=bill.payment_details,
         ),
         signed=bill.signature_path is not None,
+        late_fee=late_fee_of(session, bill, today),
         created_at=bill.created_at,
         voided_at=bill.voided_at,
         payments=[
@@ -467,7 +589,11 @@ def _replace_pdf(storage: Storage, path: str, pdf: bytes) -> None:
 
 
 def void_bill(
-    session: Session, storage: Storage, background: BackgroundTasks, bill_id: UUID
+    session: Session,
+    storage: Storage,
+    background: BackgroundTasks,
+    today: date,
+    bill_id: UUID,
 ) -> BillResponse:
     """Voids a bill nobody has paid. It keeps its number, and its PDF gets marked."""
     bill = get_bill(session, bill_id)
@@ -496,4 +622,39 @@ def void_bill(
         logger.exception("could not draw the signature of a voided bill: %s", bill.id)
         pdf = render_bill(replace(document, signature=None))
     background.add_task(_replace_pdf, storage, bill.pdf_path, pdf)
-    return bill_response(session, bill)
+    return bill_response(session, bill, today)
+
+
+# Waiving a late fee
+
+
+def _waivable(session: Session, bill_id: UUID) -> Bill:
+    """A bill whose late fee is still the owner's to decide on."""
+    bill = get_bill(session, bill_id)
+    if bill.late_fee_amount is None or bill.status == "voided":
+        raise AppError(400, "Esta cuenta no tiene recargo por mora.", "bill_has_no_late_fee")
+    if _late_fee_charge(session, bill.id):
+        raise AppError(
+            400,
+            "Este recargo ya se cobró en otra cuenta. Para quitarlo, anula esa cuenta.",
+            "late_fee_already_charged",
+        )
+    return bill
+
+
+def waive_late_fee(session: Session, today: date, bill_id: UUID) -> BillResponse:
+    """The owner lets the late fee of a bill go: no later bill will charge it."""
+    bill = _waivable(session, bill_id)
+    if bill.late_fee_waived_at is None:
+        bill.late_fee_waived_at = func.now()
+        session.flush()
+        session.refresh(bill)
+    return bill_response(session, bill, today)
+
+
+def restore_late_fee(session: Session, today: date, bill_id: UUID) -> BillResponse:
+    """Takes a waiver back: the fee is owed again and the next monthly bill charges it."""
+    bill = _waivable(session, bill_id)
+    bill.late_fee_waived_at = None
+    session.flush()
+    return bill_response(session, bill, today)

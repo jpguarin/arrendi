@@ -47,7 +47,7 @@ def register_payment(
             bill.owner_id,
             notifications.ReceiptDetails(payment.amount, payment.payment_date, payment.method),
         )
-    return bills.bill_response(session, bill)
+    return bills.bill_response(session, bill, today)
 
 
 @router.delete("/payments/{payment_id}")
@@ -59,7 +59,7 @@ def delete_payment(
     background: BackgroundTasks,
 ) -> BillResponse:
     bill = payments.delete_payment(session, storage, background, today, payment_id)
-    return bills.bill_response(session, bill)
+    return bills.bill_response(session, bill, today)
 
 
 # The proof of payment. The file never goes through the API: the browser sends it to
@@ -80,9 +80,10 @@ def confirm_proof(
     session: OwnerSession,
     storage: FileStorage,
     background: BackgroundTasks,
+    today: Today,
 ) -> BillResponse:
     payment = payments.confirm_proof(session, storage, background, payment_id, data)
-    return bills.bill_response(session, bills.get_bill(session, payment.bill_id))
+    return bills.bill_response(session, bills.get_bill(session, payment.bill_id), today)
 
 
 @router.get("/payments/{payment_id}/proof")

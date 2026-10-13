@@ -354,6 +354,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bills/{bill_id}/late-fee/waive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Waive Late Fee */
+        post: operations["waive_late_fee_api_bills__bill_id__late_fee_waive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bills/{bill_id}/late-fee/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Late Fee */
+        post: operations["restore_late_fee_api_bills__bill_id__late_fee_restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bills/{bill_id}/send": {
         parameters: {
             query?: never;
@@ -650,6 +684,7 @@ export interface components {
             issuer: components["schemas"]["BillIssuer"];
             /** Signed */
             signed: boolean;
+            late_fee: components["schemas"]["LateFee"] | null;
             /**
              * Created At
              * Format: date-time
@@ -787,6 +822,38 @@ export interface components {
             /** Amount */
             amount: number;
         };
+        /**
+         * LateFee
+         * @description What paying this bill late costs, as it said when it was issued.
+         */
+        LateFee: {
+            /** Amount */
+            amount: number;
+            /**
+             * Deadline
+             * Format: date
+             */
+            deadline: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "on_time" | "pending" | "waived" | "charged";
+            charged_on: components["schemas"]["LateFeeCharge"] | null;
+        };
+        /**
+         * LateFeeCharge
+         * @description The bill that charged a late fee.
+         */
+        LateFeeCharge: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: number;
+        };
         /** LeaseCreate */
         LeaseCreate: {
             /** Rent */
@@ -817,6 +884,18 @@ export interface components {
              * @default true
              */
             auto_send: boolean;
+            /**
+             * Late Fee Enabled
+             * @default false
+             */
+            late_fee_enabled: boolean;
+            /** Late Fee Percent */
+            late_fee_percent?: number | string | null;
+            /**
+             * Late Fee Grace Days
+             * @default 0
+             */
+            late_fee_grace_days: number;
             /** Payment Details */
             payment_details?: string | null;
             /**
@@ -859,6 +938,12 @@ export interface components {
             items: components["schemas"]["BillItemResponse"][];
             /** Auto Send */
             auto_send: boolean;
+            /** Late Fee Enabled */
+            late_fee_enabled: boolean;
+            /** Late Fee Percent */
+            late_fee_percent: string | null;
+            /** Late Fee Grace Days */
+            late_fee_grace_days: number;
             /** Payment Details */
             payment_details: string | null;
             /** Document Name */
@@ -910,6 +995,12 @@ export interface components {
             items?: components["schemas"]["ItemInput"][] | null;
             /** Auto Send */
             auto_send?: boolean | null;
+            /** Late Fee Enabled */
+            late_fee_enabled?: boolean | null;
+            /** Late Fee Percent */
+            late_fee_percent?: number | string | null;
+            /** Late Fee Grace Days */
+            late_fee_grace_days?: number | null;
             /** Payment Details */
             payment_details?: string | null;
             tenant?: components["schemas"]["TenantUpdate"] | null;
@@ -985,6 +1076,18 @@ export interface components {
              * @default true
              */
             auto_send: boolean;
+            /**
+             * Late Fee Enabled
+             * @default false
+             */
+            late_fee_enabled: boolean;
+            /** Late Fee Percent */
+            late_fee_percent?: number | string | null;
+            /**
+             * Late Fee Grace Days
+             * @default 0
+             */
+            late_fee_grace_days: number;
             /** Payment Details */
             payment_details?: string | null;
             /** Unit Index */
@@ -2604,6 +2707,122 @@ export interface operations {
         };
     };
     void_bill_api_bills__bill_id__void_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    waive_late_fee_api_bills__bill_id__late_fee_waive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    restore_late_fee_api_bills__bill_id__late_fee_restore_post: {
         parameters: {
             query?: never;
             header?: never;

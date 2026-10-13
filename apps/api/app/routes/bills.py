@@ -27,7 +27,7 @@ def issue_monthly_bill(
 ) -> BillResponse:
     """The bill of the current month, by hand. The daily task issues the same one."""
     bill = bills.issue_monthly_bill(session, storage, today, lease_id)
-    return bills.bill_response(session, bill)
+    return bills.bill_response(session, bill, today)
 
 
 @router.post("/bills", status_code=201, responses=ISSUE)
@@ -35,7 +35,7 @@ def create_bill(
     data: BillCreate, session: OwnerSession, storage: FileStorage, today: Today
 ) -> BillResponse:
     bill = bills.issue_manual_bill(session, storage, today, data)
-    return bills.bill_response(session, bill)
+    return bills.bill_response(session, bill, today)
 
 
 @router.get("/bills")
@@ -50,8 +50,8 @@ def list_bills(
 
 
 @router.get("/bills/{bill_id}", responses=NOT_FOUND)
-def get_bill(bill_id: UUID, session: OwnerSession) -> BillResponse:
-    return bills.bill_response(session, bills.get_bill(session, bill_id))
+def get_bill(bill_id: UUID, session: OwnerSession, today: Today) -> BillResponse:
+    return bills.bill_response(session, bills.get_bill(session, bill_id), today)
 
 
 @router.get("/bills/{bill_id}/pdf", responses=NOT_FOUND | {503: {"model": ErrorResponse}})
@@ -61,9 +61,28 @@ def get_pdf_url(bill_id: UUID, session: OwnerSession, storage: FileStorage) -> D
 
 @router.post("/bills/{bill_id}/void", responses=NOT_FOUND | {400: {"model": ErrorResponse}})
 def void_bill(
-    bill_id: UUID, session: OwnerSession, storage: FileStorage, background: BackgroundTasks
+    bill_id: UUID,
+    session: OwnerSession,
+    storage: FileStorage,
+    background: BackgroundTasks,
+    today: Today,
 ) -> BillResponse:
-    return bills.void_bill(session, storage, background, bill_id)
+    return bills.void_bill(session, storage, background, today, bill_id)
+
+
+# The late fee of a bill goes on a later one. Until then the owner may let it go.
+
+LATE_FEE = NOT_FOUND | {400: {"model": ErrorResponse}}
+
+
+@router.post("/bills/{bill_id}/late-fee/waive", responses=LATE_FEE)
+def waive_late_fee(bill_id: UUID, session: OwnerSession, today: Today) -> BillResponse:
+    return bills.waive_late_fee(session, today, bill_id)
+
+
+@router.post("/bills/{bill_id}/late-fee/restore", responses=LATE_FEE)
+def restore_late_fee(bill_id: UUID, session: OwnerSession, today: Today) -> BillResponse:
+    return bills.restore_late_fee(session, today, bill_id)
 
 
 # Email. The notification is set aside here and the email goes out after the response,
@@ -89,7 +108,7 @@ def send_bill(
     background.add_task(
         notifications.deliver, engine, mailer, storage, notification.id, today, bill.owner_id
     )
-    return bills.bill_response(session, bill)
+    return bills.bill_response(session, bill, today)
 
 
 @router.post("/bills/{bill_id}/remind", responses=EMAIL)
@@ -108,4 +127,4 @@ def remind_bill(
     background.add_task(
         notifications.deliver, engine, mailer, storage, notification.id, today, bill.owner_id
     )
-    return bills.bill_response(session, bill)
+    return bills.bill_response(session, bill, today)
