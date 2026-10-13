@@ -9,9 +9,23 @@ import tempfile
 import webbrowser
 from dataclasses import replace
 from datetime import date
+from io import BytesIO
 from pathlib import Path
 
+from PIL import Image, ImageDraw
+
 from app.pdf.bill import BillDocument, BillLine, render_bill
+
+
+def _signature() -> bytes:
+    """A few strokes that stand in for a signature, as the API stores one."""
+    image = Image.new("RGBA", (600, 200), (0, 0, 0, 0))
+    strokes = [(20, 150), (90, 40), (130, 160), (200, 60), (260, 150), (330, 90), (580, 110)]
+    ImageDraw.Draw(image).line(strokes, fill=(20, 38, 76, 255), width=6, joint="curve")
+    out = BytesIO()
+    image.save(out, "PNG")
+    return out.getvalue()
+
 
 SAMPLE = BillDocument(
     number=43,
@@ -29,6 +43,7 @@ SAMPLE = BillDocument(
     ],
     total=2_100_000,
     payment_details="Bancolombia · Ahorros 123-456789-01\nNequi 310 555 0142",
+    signature=_signature(),
 )
 # The most a monthly bill can carry: the rent, ten items of the lease and the deposit,
 # with payment details as long as they get.
@@ -53,6 +68,8 @@ SAMPLES = {
         SAMPLE, owner_document=None, tenant_document=None, payment_details=None
     ),
     "cuenta-anulada": replace(SAMPLE, voided=True),
+    # The owner has not uploaded a signature: a line is left to sign by hand.
+    "cuenta-sin-firma": replace(SAMPLE, signature=None),
     "cuenta-llena": FULL,
     # A manual bill: the unit goes in the heading, and no line says what month it is for.
     "cuenta-manual": replace(

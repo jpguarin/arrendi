@@ -2,10 +2,12 @@
 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
+from io import BytesIO
 from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from PIL import Image, ImageDraw
 from sqlalchemy import Engine, text
 
 from app.dates import today_in_bogota
@@ -118,6 +120,7 @@ def test_monthly_bill_takes_its_terms_from_the_lease(
             "document_number": None,
             "payment_details": None,
         },
+        "signed": False,
         "created_at": None,
         "voided_at": None,
         "payments": [],
@@ -648,6 +651,135 @@ def test_manual_bills_do_not_charge_the_items_of_the_lease(
     manual = api.post("/api/bills", headers=ana, json=manual_payload(anas.lease_id)).json()
 
     assert (manual["items"], manual["total"]) == ([LOCK_ITEM], 80000)
+
+
+# The signature: the owner's when the bill is issued, kept on the bill.
+
+IMAGE = b"/Subtype /Image"
+
+
+def sign(api: TestClient, storage: FakeStorage, headers: dict[str, str]) -> str:
+    """Uploads a signature for the owner and returns the path it ends up stored at."""
+    picture = Image.new("RGBA", (300, 100), (0, 0, 0, 0))
+    strokes = [(10, 80), (150, 20), (290, 80)]
+    ImageDraw.Draw(picture).line(strokes, fill=(20, 38, 76, 255), width=5)
+    content = BytesIO()
+    picture.save(content, "PNG")
+    before = set(storage.objects)
+    path = api.post(
+        "/api/settings/signature/upload-url",
+        headers=headers,
+        json={"filename": "firma.png", "content_type": "image/png", "size": content.tell()},
+    ).json()["path"]
+    storage.upload(path, content.getvalue())
+    confirmed = api.post("/api/settings/signature", headers=headers, json={"path": path})
+    assert confirmed.status_code == 200, confirmed.text
+    (stored,) = set(storage.objects) - before
+    return stored
+
+
+def pdf_of(storage: FakeStorage, bill: dict) -> bytes:
+    (path,) = [path for path in storage.objects if path.endswith(f"/bills/{bill['id']}.pdf")]
+    return storage.objects[path]
+
+
+def test_bill_is_issued_with_the_owners_signature(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], storage: FakeStorage
+) -> None:
+    anas, _ = trees
+    unsigned = api.post("/api/bills", headers=ana, json=manual_payload(anas.lease_id)).json()
+    sign(api, storage, ana)
+
+    month = monthly(api, ana, anas.lease_id).json()
+    manual = api.post("/api/bills", headers=ana, json=manual_payload(anas.lease_id)).json()
+
+    assert (unsigned["signed"], month["signed"], manual["signed"]) == (False, True, True)
+    assert IMAGE not in pdf_of(storage, unsigned)
+    assert IMAGE in pdf_of(storage, month) and IMAGE in pdf_of(storage, manual)
+    # Signing later does not reach the bill issued before.
+    assert api.get(f"/api/bills/{unsigned['id']}", headers=ana).json()["signed"] is False
+
+
+def test_changing_or_removing_the_signature_later_does_not_touch_the_bill(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], storage: FakeStorage
+) -> None:
+    anas, _ = trees
+    signed_with = sign(api, storage, ana)
+    bill = monthly(api, ana, anas.lease_id).json()
+    issued = pdf_of(storage, bill)
+
+    replaced_by = sign(api, storage, ana)
+    api.delete("/api/settings/signature", headers=ana)
+
+    assert api.get(f"/api/bills/{bill['id']}", headers=ana).json()["signed"] is True
+    assert pdf_of(storage, bill) == issued
+    # Its signature is still there, and the one no bill used is gone.
+    assert signed_with in storage.objects and replaced_by not in storage.objects
+    # Voiding draws the PDF again, with the signature the bill was issued with.
+    api.post(f"/api/bills/{bill['id']}/void", headers=ana)
+    voided = pdf_of(storage, bill)
+    assert b"ANULADA" in voided and IMAGE in voided
+
+
+def test_voiding_survives_a_signature_that_cannot_be_fetched(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], storage: FakeStorage
+) -> None:
+    anas, _ = trees
+    signed_with = sign(api, storage, ana)
+    bill = monthly(api, ana, anas.lease_id).json()
+    del storage.objects[signed_with]
+
+    response = api.post(f"/api/bills/{bill['id']}/void", headers=ana)
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "voided"
+    assert b"ANULADA" in pdf_of(storage, bill)
+
+
+def test_bill_is_not_issued_with_a_signature_that_cannot_be_drawn(
+    api: TestClient,
+    ana: dict[str, str],
+    two_owners: tuple[UUID, UUID],
+    trees: tuple[Tree, Tree],
+    storage: FakeStorage,
+    admin_engine: Engine,
+) -> None:
+    anas, _ = trees
+    signed_with = sign(api, storage, ana)
+    bill = monthly(api, ana, anas.lease_id).json()
+    storage.objects[signed_with] = b"\x89PNG\r\n\x1a\n" + b"x" * 50
+
+    set_today(date(2026, 11, 1))
+    response = monthly(api, ana, anas.lease_id)
+
+    assert (response.status_code, response.json()["code"]) == (409, "signature_unreadable")
+    assert numbers(admin_engine, two_owners[0]) == [1]
+    assert next_number(admin_engine, two_owners[0]) == 2
+    # The bill issued while the file was good can still be voided; its PDF says so,
+    # with the line to sign in place of the signature.
+    voided = api.post(f"/api/bills/{bill['id']}/void", headers=ana)
+    assert voided.status_code == 200
+    assert b"ANULADA" in pdf_of(storage, bill) and IMAGE not in pdf_of(storage, bill)
+
+
+def test_bill_is_not_issued_without_the_signature_it_should_carry(
+    api: TestClient,
+    ana: dict[str, str],
+    two_owners: tuple[UUID, UUID],
+    trees: tuple[Tree, Tree],
+    storage: FakeStorage,
+    admin_engine: Engine,
+) -> None:
+    anas, _ = trees
+    signed_with = sign(api, storage, ana)
+    del storage.objects[signed_with]
+
+    response = monthly(api, ana, anas.lease_id)
+
+    # Storage lost the file: better no bill than one that went out unsigned by accident.
+    assert response.status_code == 503
+    assert numbers(admin_engine, two_owners[0]) == []
+    assert next_number(admin_engine, two_owners[0]) == 1
 
 
 # Payment details: the bill's own, else the lease's, else the owner's. Kept on the bill.

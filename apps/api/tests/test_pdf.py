@@ -1,7 +1,11 @@
 from dataclasses import replace
 from datetime import date
+from io import BytesIO
 
-from app.pdf.bill import BillDocument, BillLine, render_bill
+import pytest
+from PIL import Image, ImageDraw
+
+from app.pdf.bill import BillDocument, BillLine, SignatureError, render_bill
 from app.pdf.format import format_long_date, format_month, format_number, format_pesos
 
 BILL = BillDocument(
@@ -125,11 +129,10 @@ def test_each_line_shows_its_own_amount_and_only_the_first_says_what_the_bill_is
     assert pages(pdf) == 1
 
 
-def test_the_fullest_monthly_bill_fits_on_one_page() -> None:
-    # The rent, ten items of the lease and the deposit.
-    lines = [*BILL.lines, *(BillLine(f"Concepto {n}", 10_000 * n) for n in range(1, 12))]
+def test_the_rent_and_seven_more_lines_fit_on_one_page_with_the_signature() -> None:
+    lines = [*BILL.lines, *(BillLine(f"Concepto {n}", 10_000 * n) for n in range(1, 8))]
 
-    assert pages(render_bill(replace(BILL, lines=lines, total=1_660_000))) == 1
+    assert pages(render_bill(replace(BILL, lines=lines, total=1_280_000))) == 1
 
 
 def test_a_bill_too_long_for_a_page_goes_on_to_the_next_with_nothing_lost() -> None:
@@ -223,3 +226,74 @@ def test_payment_details_too_long_for_what_is_left_of_the_page_go_on_to_the_next
     assert pages(pdf) == 2
     for n in range(1, 46):
         assert f"Cuenta {n:03d}".encode() in pdf
+
+
+# The signature: at the foot of the last page, then the owner's name, then their document.
+
+
+def signature() -> bytes:
+    image = Image.new("RGBA", (400, 120), (0, 0, 0, 0))
+    ImageDraw.Draw(image).line([(10, 100), (200, 20), (390, 100)], fill=(20, 38, 76, 255), width=5)
+    out = BytesIO()
+    image.save(out, "PNG")
+    return out.getvalue()
+
+
+IMAGE = b"/Subtype /Image"
+
+
+def test_signed_bill_ends_with_the_signature_the_name_and_the_document() -> None:
+    pdf = render_bill(replace(BILL, signature=signature()))
+
+    assert IMAGE in pdf
+    # Once under "Cobra" and once under the signature, in that order and after everything.
+    assert pdf.count(b"(Ana Gomez) Tj") == 2
+    assert pdf.count(b"(C.C. 52.123.456) Tj") == 2
+    foot = pdf.rindex(b"(Ana Gomez) Tj")
+    assert pdf.index(b"Pagar a:") < foot < pdf.rindex(b"(C.C. 52.123.456) Tj")
+    assert pages(pdf) == 1
+
+
+def test_bill_without_a_signature_leaves_a_line_to_sign_by_hand() -> None:
+    pdf = render_bill(BILL)
+
+    assert IMAGE not in pdf
+    assert pdf.count(b"(Ana Gomez) Tj") == 2
+    assert pdf.count(b"(C.C. 52.123.456) Tj") == 2
+
+
+def test_signature_block_leaves_out_the_document_the_owner_has_not_filled_in() -> None:
+    pdf = render_bill(replace(BILL, owner_document=None, signature=signature()))
+
+    assert IMAGE in pdf
+    assert pdf.count(b"(Ana Gomez) Tj") == 2
+    assert b"C.C. 52.123.456" not in pdf
+
+
+def test_signature_that_cannot_be_drawn_stops_the_bill() -> None:
+    # Better no bill than one that says it is signed and is not.
+    with pytest.raises(SignatureError):
+        render_bill(replace(BILL, signature=b"\x89PNG\r\n\x1a\n" + b"x" * 50))
+
+
+def test_signature_goes_on_the_last_page_only() -> None:
+    lines = [BillLine(f"Concepto {n} " + "muy largo " * 18, 1_000 * n) for n in range(1, 13)]
+
+    pdf = render_bill(replace(BILL, lines=lines, total=78_000, signature=signature()))
+
+    assert pages(pdf) == 2
+    assert IMAGE in pdf and pdf.count(b"(Ana Gomez) Tj") == 2
+    assert pdf.rindex(b"(Ana Gomez) Tj") > pdf.index(b"(P\\341gina 2) Tj")
+
+
+def test_signature_moves_to_a_new_page_when_the_bill_reaches_the_foot() -> None:
+    # The same bill fits on one page up to its payment box, with no room left under it.
+    lines = [*BILL.lines, *(BillLine(f"Concepto {n}", 10_000 * n) for n in range(1, 12))]
+    full = replace(BILL, lines=lines, total=1_660_000, payment_details="Banco\n" * 9)
+
+    pdf = render_bill(replace(full, signature=signature()))
+
+    assert pages(pdf) == 2
+    # The second page carries only its heading and the signature.
+    second = pdf[pdf.index(b"(P\\341gina 2) Tj") :]
+    assert IMAGE in pdf and b"(Ana Gomez) Tj" in second and b"Total a pagar" not in second

@@ -1,10 +1,12 @@
 """The daily task: idempotent, catches up on its own, and one failure does not stop it."""
 
 from datetime import UTC, date, datetime
+from io import BytesIO
 from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
+from PIL import Image, ImageDraw
 from sqlalchemy import Engine, text
 
 from app.config import get_settings
@@ -234,6 +236,34 @@ def test_bills_carry_the_items_of_their_lease(
     (first,) = [m for m in mailer.sent if m.to == "ana@example.com"]
     assert "Canon de arrendamiento y 2 conceptos más · Octubre 2026 · Apto ana" in first.text
     assert "$1.230.000" in first.text
+
+
+def test_bills_are_signed_with_the_owners_signature(
+    run, admin_engine: Engine, two_owners: tuple[UUID, UUID], trees, storage: FakeStorage
+) -> None:
+    ana, beto = two_owners
+    picture = Image.new("RGBA", (300, 100), (0, 0, 0, 0))
+    ImageDraw.Draw(picture).line([(10, 80), (290, 20)], fill=(20, 38, 76, 255), width=5)
+    content = BytesIO()
+    picture.save(content, "PNG")
+    signature = f"{ana}/signatures/firma.png"
+    storage.upload(signature, content.getvalue())
+    execute(
+        admin_engine,
+        "update owners set signature_path = :path where id = :id",
+        path=signature,
+        id=ana,
+    )
+
+    run(date(2026, 10, 1))
+    run(date(2026, 10, 1))
+
+    signed = "select signature_path from bills where owner_id = :id"
+    assert rows(admin_engine, signed, id=ana) == [(signature,)]
+    assert rows(admin_engine, signed, id=beto) == [(None,)]
+    pdfs = {path.split("/")[0]: pdf for path, pdf in storage.objects.items() if "/bills/" in path}
+    assert b"/Subtype /Image" in pdfs[str(ana)]
+    assert b"/Subtype /Image" not in pdfs[str(beto)]
 
 
 def test_lease_without_automatic_sending_gets_its_bill_but_no_email(

@@ -22,7 +22,7 @@ Arrendi es una aplicación web instalable (PWA) para que un arrendador pequeño 
 - Registro de pagos totales o parciales, con comprobante adjunto y recibo al arrendatario.
 - Panel de inicio: esperado, recaudado, pendiente y quién está en mora.
 - Listado de cuentas con filtros por unidad y estado.
-- Configuración de datos del propietario, datos de pago y envíos.
+- Configuración de datos del propietario, datos de pago, firma y envíos.
 
 ### Queda fuera
 
@@ -49,7 +49,7 @@ Las diez pantallas diseñadas están en `docs/mockups/` y descritas en `docs/dis
 | Registrar pago | Anotar un pago en pocos toques | Valor, fecha, medio, comprobante, enviar recibo |
 | Inmuebles y unidades | Ver cada inmueble con sus unidades y su estado | Agregar inmueble o unidad, abrir el contrato |
 | Contrato | Ver condiciones, lo que se cobra cada mes, documento y cuentas del contrato | Editar (también los conceptos fijos del mes, como la administración), terminar, ver o reemplazar el documento, activar envío automático |
-| Configuración | Definir datos del propietario, de pago, de envío y el tema | Editar datos, elegir día de envío y recordatorios, cambiar entre tema claro, oscuro o el del sistema |
+| Configuración | Definir datos del propietario, de pago, la firma, de envío y el tema | Editar datos, subir o dibujar la firma que cierra cada cuenta, verla y quitarla, elegir día de envío y recordatorios, cambiar entre tema claro, oscuro o el del sistema |
 | Alta 1: inmueble | Crear el primer inmueble | Nombre, dirección, ciudad, tipo |
 | Alta 2: unidades | Definir los espacios que se cobran por separado | Nombre y uso de cada unidad |
 | Alta 3: primer contrato | Crear el primer contrato | Arrendatario, correo, canon, día de pago, fechas, subir contrato |

@@ -9,6 +9,7 @@ import { FormMessage } from "@/components/FormMessage";
 import { Header } from "@/components/Header";
 import { LoadError, Loading } from "@/components/LoadState";
 import { SelectField } from "@/components/SelectField";
+import { SignatureSection } from "@/components/settings/SignatureSection";
 import { SignOutButton } from "@/components/SignOutButton";
 import { TextareaField } from "@/components/TextareaField";
 import { ThemeSelector } from "@/components/ThemeSelector";
@@ -208,6 +209,8 @@ export function SettingsScreen() {
         {settings ? (
           <>
             <SettingsForm settings={settings} />
+            {/* Saved on its own, as soon as it is uploaded or drawn: it is outside the form. */}
+            <SignatureSection hasSignature={settings.has_signature} />
             {/* Kept on the device, not in the account: it has no "save". */}
             <section aria-labelledby="appearance" className="flex flex-col gap-3 pt-4">
               <h2 id="appearance" className="text-section font-semibold">

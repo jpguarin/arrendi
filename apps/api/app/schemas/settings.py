@@ -28,6 +28,8 @@ class SettingsResponse(BaseModel):
     document_type: DocumentType
     document_number: str | None
     payment_details: str | None
+    # Whether there is a signature to put on the bills. The image has its own route.
+    has_signature: bool
     send_day: int
     # The reminders the day after the due date and seven days after it.
     reminder_1: bool

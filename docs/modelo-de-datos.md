@@ -59,6 +59,7 @@ El contrato es el centro: une una unidad con un arrendatario, y de él nacen las
 | `document_number` | text, nulo | Cédula o NIT |
 | `email` | text | |
 | `payment_details` | text, nulo | Texto libre con los datos de pago. Es el valor por defecto: un contrato o una cuenta pueden llevar los suyos |
+| `signature_path` | text, nulo | Ruta de la firma en el almacenamiento: un PNG que la API guarda ya recortado y reducido |
 | `send_day` | smallint, por defecto 1 | Entre 1 y 28 |
 | `reminder_1` | boolean, por defecto true | |
 | `reminder_2` | boolean, por defecto true | |
@@ -155,6 +156,7 @@ Permisos: `arrendi_api` lee, crea y borra; `arrendi_tasks` solo lee, para genera
 | `total` | bigint | Mayor que cero |
 | `status` | text | `pending`, `partial`, `paid`, `overdue`, `voided` |
 | `payment_details` | text, nulo | Datos de pago con los que se emitió. Se fijan al emitir y no cambian |
+| `signature_path` | text, nulo | Firma del propietario con la que se emitió. Nulo si no tenía. El archivo no se borra mientras una cuenta lo use |
 | `pdf_path` | text | |
 | `voided_at` | timestamptz, nulo | |
 

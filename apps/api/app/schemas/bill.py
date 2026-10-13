@@ -96,6 +96,9 @@ class BillResponse(BillSummary):
     tenant_document_type: DocumentType
     tenant_document_number: str | None
     issuer: BillIssuer
+    # Whether it was issued with the owner's signature. Without it, the PDF leaves a line
+    # to sign by hand.
+    signed: bool
     created_at: datetime
     voided_at: datetime | None
     # Both newest first.

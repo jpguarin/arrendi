@@ -1,4 +1,5 @@
 import logging
+from dataclasses import replace
 from datetime import date
 from uuid import UUID, uuid4
 
@@ -20,7 +21,7 @@ from app.models import (
     Tenant,
     Unit,
 )
-from app.pdf.bill import BillDocument, BillLine, render_bill
+from app.pdf.bill import BillDocument, BillLine, SignatureError, render_bill
 from app.pdf.format import format_month
 from app.schemas.bill import (
     BillCreate,
@@ -88,8 +89,18 @@ def _pdf_path(bill: Bill) -> str:
     return f"{bill.owner_id}/bills/{bill.id}.pdf"
 
 
-def _document(session: Session, bill: Bill, voided: bool = False) -> BillDocument:
+def _document(session: Session, storage: Storage, bill: Bill, voided: bool = False) -> BillDocument:
     """What the PDF shows, as it is right now. Called when issuing and when voiding."""
+    signature = None
+    if bill.signature_path:
+        try:
+            signature = storage.download(bill.signature_path)
+        except StorageError:
+            # A bill is not issued without the signature it should carry. A voided one is
+            # no longer owed: its PDF only has to say so.
+            if not voided:
+                raise
+            logger.exception("could not fetch the signature of a voided bill: %s", bill.id)
     owner = session.get_one(Owner, bill.owner_id)
     lease = session.get_one(Lease, bill.lease_id)
     tenant = session.get_one(Tenant, lease.tenant_id)
@@ -115,6 +126,7 @@ def _document(session: Session, bill: Bill, voided: bool = False) -> BillDocumen
         payment_details=bill.payment_details,
         voided=voided,
         unit_name=None if bill.period else unit.name,
+        signature=signature,
     )
 
 
@@ -182,6 +194,8 @@ def _issue(
         # The bill's own, else the lease's, else the owner's. Kept here, so changing any
         # of them later does not touch this bill.
         payment_details=payment_details or lease.payment_details or owner.payment_details,
+        # The owner's signature as it is now, kept for the same reason.
+        signature_path=owner.signature_path,
         # Already past its due date: the same thing the daily task would do tomorrow.
         status="overdue" if due_date < today else "pending",
     )
@@ -210,9 +224,17 @@ def _issue(
     session.flush()
 
     try:
-        storage.upload(bill.pdf_path, render_bill(_document(session, bill)), "application/pdf")
+        storage.upload(
+            bill.pdf_path, render_bill(_document(session, storage, bill)), "application/pdf"
+        )
     except StorageError as error:
         raise storage_unavailable() from error
+    except SignatureError as error:
+        # Better no bill than one kept as signed that is not. Everything above rolls back.
+        raise conflict(
+            "No pudimos poner tu firma en la cuenta. Súbela de nuevo en Ajustes.",
+            "signature_unreadable",
+        ) from error
     return bill
 
 
@@ -392,6 +414,7 @@ def bill_response(session: Session, bill: Bill) -> BillResponse:
             document_number=owner.document_number,
             payment_details=bill.payment_details,
         ),
+        signed=bill.signature_path is not None,
         created_at=bill.created_at,
         voided_at=bill.voided_at,
         payments=[
@@ -465,6 +488,12 @@ def void_bill(
 
     # After the response, which is after the commit: if saving fails, the bill is still
     # owed and its PDF must not say otherwise.
-    pdf = render_bill(_document(session, bill, voided=True))
+    document = _document(session, storage, bill, voided=True)
+    try:
+        pdf = render_bill(document)
+    except SignatureError:
+        # A voided bill is no longer owed: its PDF only has to say so.
+        logger.exception("could not draw the signature of a voided bill: %s", bill.id)
+        pdf = render_bill(replace(document, signature=None))
     background.add_task(_replace_pdf, storage, bill.pdf_path, pdf)
     return bill_response(session, bill)
