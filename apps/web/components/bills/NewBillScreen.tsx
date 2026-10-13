@@ -3,31 +3,34 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 import { FormField } from "@/components/FormField";
 import { FormMessage } from "@/components/FormMessage";
 import { FormScreen, FormScreenFallback } from "@/components/FormScreen";
+import {
+  EMPTY_ITEM,
+  itemErrors,
+  ItemsField,
+  itemsTotal,
+  MAX_ITEMS,
+} from "@/components/ItemsField";
 import { LoadError, Loading } from "@/components/LoadState";
-import { MoneyField } from "@/components/MoneyField";
 import { SelectField } from "@/components/SelectField";
 import { TextareaField } from "@/components/TextareaField";
 import { Button } from "@/components/ui/button";
 import { errorMessage } from "@/lib/api/errors";
 import { useCreateBill, useProperties } from "@/lib/api/queries";
-import { paymentDetails, requiredText } from "@/lib/validation";
+import { formatPesos } from "@/lib/format";
+import { item, paymentDetails } from "@/lib/validation";
 
 const FORM_ID = "bill";
 const TITLE = "Nueva cuenta de cobro";
 
 const schema = z.object({
   lease_id: z.string().min(1, "Elige a quién le cobras."),
-  description: requiredText("Escribe qué estás cobrando."),
-  amount: z
-    .number("Escribe el valor.")
-    .nullable()
-    .refine((value) => value !== null && value > 0, "Escribe el valor."),
+  items: z.array(item).min(1).max(MAX_ITEMS),
   due_date: z.string().min(1, "Elige la fecha de vencimiento."),
   payment_details: paymentDetails,
 });
@@ -58,12 +61,13 @@ export function NewBillScreen({ leaseId }: { leaseId?: string }) {
     resolver: zodResolver(schema),
     defaultValues: {
       lease_id: leaseId ?? "",
-      description: "",
-      amount: null,
+      items: [EMPTY_ITEM],
       due_date: "",
       payment_details: "",
     },
   });
+
+  const total = itemsTotal(useWatch({ control, name: "items" }));
 
   if (!properties) {
     return (
@@ -95,7 +99,7 @@ export function NewBillScreen({ leaseId }: { leaseId?: string }) {
       {
         body: {
           ...values,
-          amount: values.amount ?? 0,
+          items: values.items.map((charged) => ({ ...charged, amount: charged.amount ?? 0 })),
           payment_details: values.payment_details || null,
         },
       },
@@ -138,38 +142,33 @@ export function NewBillScreen({ leaseId }: { leaseId?: string }) {
             />
           )}
         />
-        <FormField
-          id="description"
-          label="Concepto"
-          placeholder="Qué estás cobrando"
-          autoComplete="off"
-          error={errors.description?.message}
-          {...register("description")}
+        <Controller
+          control={control}
+          name="items"
+          render={({ field }) => (
+            <ItemsField
+              id="item"
+              min={1}
+              placeholder="Qué estás cobrando"
+              addLabel="Agregar otro concepto"
+              value={field.value}
+              onChange={field.onChange}
+              errors={itemErrors(errors.items)}
+            />
+          )}
         />
-        <div className="grid grid-cols-2 items-start gap-3">
-          <Controller
-            control={control}
-            name="amount"
-            render={({ field }) => (
-              <MoneyField
-                id="amount"
-                label="Valor"
-                placeholder="$0"
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-                error={errors.amount?.message}
-              />
-            )}
-          />
-          <FormField
-            id="due_date"
-            label="Vence el"
-            type="date"
-            error={errors.due_date?.message}
-            {...register("due_date")}
-          />
+        <div className="flex items-baseline justify-between gap-3 rounded-xl border border-border bg-card p-4">
+          <p className="text-section font-semibold">Total a pagar</p>
+          <p className="text-title font-bold">{formatPesos(total)}</p>
         </div>
+        <FormField
+          id="due_date"
+          label="Vence el"
+          type="date"
+          description="Una sola fecha para toda la cuenta."
+          error={errors.due_date?.message}
+          {...register("due_date")}
+        />
         <TextareaField
           id="payment_details"
           label="Cómo te pagan (opcional)"

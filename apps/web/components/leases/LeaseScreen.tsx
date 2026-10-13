@@ -321,6 +321,33 @@ export function LeaseScreen({
           onChange={refresh}
         />
 
+        {lease.items.length > 0 && (
+          <section
+            aria-labelledby="lease-items"
+            className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4"
+          >
+            <h2 id="lease-items" className="text-support text-muted-foreground">
+              Cada mes se cobra
+            </h2>
+            <ul className="flex flex-col gap-1.5 text-section">
+              {[{ description: "Canon de arrendamiento", amount: lease.rent }, ...lease.items].map(
+                (charged, index) => (
+                  <li key={index} className="flex justify-between gap-3">
+                    <span className="min-w-0 break-words">{charged.description}</span>
+                    <span className="shrink-0 font-semibold">{formatPesos(charged.amount)}</span>
+                  </li>
+                ),
+              )}
+            </ul>
+            <hr className="border-border" />
+            <p className="flex items-baseline justify-between gap-3">
+              <span className="text-section font-semibold">Total de cada mes</span>
+              <span className="text-body font-bold">
+                {formatPesos(lease.items.reduce((sum, charged) => sum + charged.amount, lease.rent))}
+              </span>
+            </p>
+          </section>
+        )}
         {lease.payment_details && (
           <section
             aria-labelledby="lease-payment-details"

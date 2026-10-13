@@ -14,3 +14,12 @@ export const optionalText = z.string().trim().max(200, "Usa 200 caracteres o men
 
 /** How the owner gets paid: free text of several lines, which may be left empty. */
 export const paymentDetails = z.string().trim().max(500, "Usa 500 caracteres o menos.");
+
+/** Something charged on a bill: what it is and how much. The amount is null while empty. */
+export const item = z.object({
+  description: requiredText("Escribe el concepto."),
+  amount: z
+    .number("Escribe el valor.")
+    .nullable()
+    .refine((value) => value !== null && value > 0, "Escribe el valor."),
+});
