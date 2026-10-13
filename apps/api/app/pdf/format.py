@@ -36,3 +36,11 @@ def format_month(day: date) -> str:
 def format_number(number: int) -> str:
     """`N.º 0031`."""
     return f"N.º {number:04d}"
+
+
+def late_fee_notice(amount: int, deadline: date) -> str:
+    """What a bill says about paying it late. The fee goes on the next bill, not on it."""
+    return (
+        f"Si se paga después del {format_long_date(deadline)}, la siguiente cuenta "
+        f"incluirá un recargo por mora de {format_pesos(amount)}."
+    )

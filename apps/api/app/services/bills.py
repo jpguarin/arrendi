@@ -141,6 +141,8 @@ def _document(session: Session, storage: Storage, bill: Bill, voided: bool = Fal
         payment_details=bill.payment_details,
         voided=voided,
         unit_name=None if bill.period else unit.name,
+        late_fee_amount=bill.late_fee_amount,
+        late_fee_deadline=bill.late_fee_deadline,
         signature=signature,
     )
 

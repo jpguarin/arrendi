@@ -6,7 +6,7 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 
-from app.pdf.format import format_long_date, format_number, format_pesos
+from app.pdf.format import format_long_date, format_number, format_pesos, late_fee_notice
 
 # The receipt has no notification of its own kind of bill: it is about a payment.
 KINDS = ("bill", "reminder_1", "reminder_2", "manual_reminder", "receipt")
@@ -42,6 +42,9 @@ class BillEmail:
     balance: int
     due_date: date
     payment_details: str | None
+    # What paying late costs and the last day to pay in time, if the bill has a late fee.
+    late_fee_amount: int | None = None
+    late_fee_deadline: date | None = None
     # Only for the receipt.
     payment_amount: int | None = None
     payment_date: date | None = None
@@ -88,6 +91,11 @@ def render_email(kind: str, email: BillEmail, today: date) -> RenderedEmail:
         "brand_mark_cid": BRAND_MARK_CID,
         "number": number,
         "concept_lower": _mid_sentence(email.concept),
+        "late_fee_notice": (
+            late_fee_notice(email.late_fee_amount, email.late_fee_deadline)
+            if email.late_fee_amount and email.late_fee_deadline
+            else None
+        ),
         "days_overdue": days_overdue,
         "due_line": f"Venció el {due}" if days_overdue else f"Vence el {due}",
     }

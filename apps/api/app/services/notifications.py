@@ -116,6 +116,8 @@ def _message(
             balance=bill.total - paid,
             due_date=bill.due_date,
             payment_details=bill.payment_details,
+            late_fee_amount=bill.late_fee_amount,
+            late_fee_deadline=bill.late_fee_deadline,
             payment_amount=receipt.amount if receipt else None,
             payment_date=receipt.payment_date if receipt else None,
             payment_method=METHOD_LABELS[receipt.method] if receipt else None,

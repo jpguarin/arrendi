@@ -6,7 +6,8 @@ Cuenta de cobro {{ number }}
 {{ concept }}
 Valor: {{ total | pesos }}
 Vence el {{ due_date | long_date }}
-{% if payment_details %}
+{% if late_fee_notice %}{{ late_fee_notice }}
+{% endif %}{% if payment_details %}
 Datos de pago:
 {{ payment_details }}
 {% endif %}

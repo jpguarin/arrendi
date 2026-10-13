@@ -117,6 +117,27 @@ def test_monthly_bill_keeps_what_paying_late_costs_and_until_when(
     }
 
 
+def test_bill_and_its_email_say_what_paying_late_costs(
+    api: TestClient,
+    ana: dict[str, str],
+    lease: UUID,
+    storage: FakeStorage,
+    mailer: FakeEmailSender,
+) -> None:
+    bill = monthly(api, ana, lease).json()
+
+    api.post(f"/api/bills/{bill['id']}/send", headers=ana)
+
+    (pdf,) = storage.objects.values()
+    assert b"s del 8 de octubre de 2026, la siguiente cuenta" in pdf
+    assert b"un recargo por" in pdf and b"mora de $47.500." in pdf
+    (message,) = mailer.sent
+    assert (
+        "Si se paga después del 8 de octubre de 2026, la siguiente cuenta incluirá un "
+        "recargo por mora de $47.500." in message.text
+    )
+
+
 def test_bill_of_a_lease_without_a_late_fee_never_owes_one(
     api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
 ) -> None:
