@@ -2,16 +2,33 @@ import { api, type ApiError } from "./client";
 import { apiErrorMessage, CONNECTION_ERROR } from "./errors";
 
 // The same limits the API enforces; checking here saves the owner a failed upload.
-export const DOCUMENT_TYPES = ["application/pdf", "image/jpeg", "image/png"];
-const MAX_SIZE = 10 * 1024 * 1024;
+const MB = 1024 * 1024;
+type Limits = { types: readonly string[]; maxSize: number; wrongType: string; tooLarge: string };
 
-/** Why this file cannot be a lease document, or undefined if it can. */
-export function documentProblem(file: File): string | undefined {
-  if (!DOCUMENT_TYPES.includes(file.type)) return "Solo se aceptan archivos PDF, JPG o PNG.";
-  if (file.size > MAX_SIZE) return "El archivo supera los 10 MB.";
+const DOCUMENT: Limits = {
+  types: ["application/pdf", "image/jpeg", "image/png"],
+  maxSize: 10 * MB,
+  wrongType: "Solo se aceptan archivos PDF, JPG o PNG.",
+  tooLarge: "El archivo supera los 10 MB.",
+};
+const SIGNATURE: Limits = {
+  types: ["image/png", "image/jpeg"],
+  maxSize: 2 * MB,
+  wrongType: "Solo se aceptan imágenes JPG o PNG.",
+  tooLarge: "La imagen supera los 2 MB.",
+};
+export const DOCUMENT_TYPES = DOCUMENT.types;
+export const SIGNATURE_TYPES = SIGNATURE.types;
+
+function fileProblem(file: File, limits: Limits): string | undefined {
+  if (!limits.types.includes(file.type)) return limits.wrongType;
+  if (file.size > limits.maxSize) return limits.tooLarge;
   if (file.size === 0) return "El archivo está vacío.";
   return undefined;
 }
+
+/** Why this file cannot be a lease document, or undefined if it can. */
+export const documentProblem = (file: File) => fileProblem(file, DOCUMENT);
 
 type Answer<T> = { data?: T; error?: ApiError };
 
@@ -26,8 +43,9 @@ async function sendFile(
   file: File,
   askForLink: () => Promise<Answer<{ upload_url: string; path: string }>>,
   confirm: (path: string) => Promise<Answer<unknown>>,
+  limits: Limits = DOCUMENT,
 ): Promise<string | undefined> {
-  const problem = documentProblem(file);
+  const problem = fileProblem(file, limits);
   if (problem) return problem;
 
   try {
@@ -71,6 +89,16 @@ export function uploadPaymentProof(paymentId: string, file: File): Promise<strin
     file,
     () => api.POST("/api/payments/{payment_id}/proof/upload-url", { params, body: describe(file) }),
     (path) => api.POST("/api/payments/{payment_id}/proof", { params, body: { path } }),
+  );
+}
+
+/** Makes the image the owner's signature. Returns an error message, or undefined. */
+export function uploadSignature(file: File): Promise<string | undefined> {
+  return sendFile(
+    file,
+    () => api.POST("/api/settings/signature/upload-url", { body: describe(file) }),
+    (path) => api.POST("/api/settings/signature", { body: { path } }),
+    SIGNATURE,
   );
 }
 

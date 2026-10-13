@@ -33,6 +33,7 @@ const leaseKey = (leaseId: string) =>
 // Every month of the home screen.
 const SUMMARIES = ["get", "/api/summary"] as const;
 const SETTINGS = $api.queryOptions("get", "/api/settings").queryKey;
+const SIGNATURE = $api.queryOptions("get", "/api/settings/signature").queryKey;
 // Every list of bills, whatever its filters: the key of each one starts like this.
 const BILL_LISTS = ["get", "/api/bills"] as const;
 const billKey = (billId: string) =>
@@ -52,6 +53,16 @@ export const useLease = (leaseId: string) =>
 export const useSummary = () => $api.useQuery("get", "/api/summary");
 
 export const useSettings = () => $api.useQuery("get", "/api/settings");
+// A temporary link to the owner's signature. It lasts five minutes, so it is asked for
+// again before that.
+const SIGNATURE_LINK_MS = 4 * 60 * 1000;
+export const useSignatureUrl = (enabled: boolean) =>
+  $api.useQuery(
+    "get",
+    "/api/settings/signature",
+    {},
+    { enabled, staleTime: SIGNATURE_LINK_MS, refetchInterval: SIGNATURE_LINK_MS },
+  );
 
 /** The bills that match the filters. Without a status, voided ones are left out. */
 export const useBills = (filters: BillFilters = {}) =>
@@ -312,4 +323,28 @@ export function useRefreshBill(billId: string) {
     () => client.invalidateQueries({ queryKey: billKey(billId) }),
     [client, billId],
   );
+}
+
+/** Asks for the settings again, after a signature went up outside these hooks. */
+export function useRefreshSignature() {
+  const client = useQueryClient();
+  return useCallback(
+    () =>
+      Promise.all([
+        client.invalidateQueries({ queryKey: SETTINGS }),
+        client.invalidateQueries({ queryKey: SIGNATURE }),
+      ]),
+    [client],
+  );
+}
+
+/** Takes the owner's signature away. The bills already issued keep theirs. */
+export function useDeleteSignature() {
+  const client = useQueryClient();
+  return $api.useMutation("delete", "/api/settings/signature", {
+    onSuccess: (settings) => {
+      client.setQueryData<Settings>(SETTINGS, settings);
+      client.removeQueries({ queryKey: SIGNATURE });
+    },
+  });
 }

@@ -142,6 +142,20 @@ function DocumentPreview({ bill }: { bill: Bill }) {
         Vence el {formatLongDate(bill.due_date)}
         {bill.issuer.payment_details && `\nPagar a: ${bill.issuer.payment_details}`}
       </p>
+      {/* How the PDF ends: the signature, or a line to sign on, then who signs. */}
+      <div className="flex flex-col gap-0.5 pt-3">
+        {bill.signed ? (
+          <p className="text-badge font-normal text-muted-foreground">Firmada</p>
+        ) : (
+          <hr aria-hidden className="mt-6 mb-1 w-40 border-border-dashed" />
+        )}
+        <p className="text-section font-semibold break-words">{bill.issuer.name}</p>
+        {bill.issuer.document_number && (
+          <p className="text-support text-muted-foreground">
+            {DOCUMENT_TYPE_LABELS[bill.issuer.document_type]} {bill.issuer.document_number}
+          </p>
+        )}
+      </div>
     </section>
   );
 }

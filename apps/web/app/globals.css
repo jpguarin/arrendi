@@ -63,6 +63,10 @@
   --neutral: #8a90a0;
   /* The collected bar of a chart. */
   --chart-bar: #14264c;
+  /* A sheet of paper and the ink on it: the signature, as it goes on the PDF. The same in
+     both themes, like the PDF itself. */
+  --paper: #ffffff;
+  --ink: #14264c;
 }
 
 .dark {
@@ -112,6 +116,8 @@
   --font-heading: var(--font-red-hat-display), var(--font-inter), system-ui, sans-serif;
 
   --color-background: var(--background);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
