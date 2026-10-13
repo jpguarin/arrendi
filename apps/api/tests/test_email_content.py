@@ -122,3 +122,16 @@ def test_concept_starts_lowercase_mid_sentence_unless_it_starts_with_an_acronym(
     assert "la cuenta de cobro de canon de arrendamiento" in usual.text
     assert "la cuenta de cobro de IVA del canon" in acronym.text
     assert "iVA" not in acronym.text and "iVA" not in acronym.html
+
+
+def test_bill_email_says_what_paying_late_costs() -> None:
+    with_fee = replace(EMAIL, late_fee_amount=50000, late_fee_deadline=date(2026, 10, 8))
+    notice = (
+        "Si se paga después del 8 de octubre de 2026, la siguiente cuenta incluirá un "
+        "recargo por mora de $50.000."
+    )
+
+    email = render_email("bill", with_fee, TODAY)
+
+    assert notice in email.text and notice in email.html
+    assert "recargo" not in render_email("bill", EMAIL, TODAY).text

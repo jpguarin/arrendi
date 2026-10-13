@@ -74,6 +74,31 @@ class BillIssuer(BaseModel):
     payment_details: str | None
 
 
+# Where the late fee of a bill stands. `on_time`: not late yet, or paid in time. `pending`:
+# late, to be charged by the next monthly bill. `waived`: the owner let it go. `charged`:
+# it is an item of another bill.
+LateFeeStatus = Literal["on_time", "pending", "waived", "charged"]
+
+
+class LateFeeCharge(BaseModel):
+    """The bill that charged a late fee."""
+
+    id: UUID
+    number: int
+
+
+class LateFee(BaseModel):
+    """What paying this bill late costs, as it said when it was issued."""
+
+    amount: int
+    # The last day to pay it in full without the fee.
+    deadline: date
+    status: LateFeeStatus
+    charged_on: LateFeeCharge | None
+    # What the bill says about it, word for word as on its PDF.
+    notice: str
+
+
 NotificationType = Literal[
     "bill", "reminder_1", "reminder_2", "receipt", "manual_reminder", "resend"
 ]
@@ -99,6 +124,11 @@ class BillResponse(BillSummary):
     # Whether it was issued with the owner's signature. Without it, the PDF leaves a line
     # to sign by hand.
     signed: bool
+    # Null if the bill was issued without a late fee, is a manual one, or is voided.
+    late_fee: LateFee | None
+    # Whether it charges the late fee of an earlier bill. The daily task does not send
+    # such a bill on its own: the owner looks at the fee first.
+    charges_late_fee: bool
     created_at: datetime
     voided_at: datetime | None
     # Both newest first.

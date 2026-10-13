@@ -121,6 +121,8 @@ def test_monthly_bill_takes_its_terms_from_the_lease(
             "payment_details": None,
         },
         "signed": False,
+        "late_fee": None,
+        "charges_late_fee": False,
         "created_at": None,
         "voided_at": None,
         "payments": [],

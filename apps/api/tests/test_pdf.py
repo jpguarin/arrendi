@@ -297,3 +297,19 @@ def test_signature_moves_to_a_new_page_when_the_bill_reaches_the_foot() -> None:
     # The second page carries only its heading and the signature.
     second = pdf[pdf.index(b"(P\\341gina 2) Tj") :]
     assert IMAGE in pdf and b"(Ana Gomez) Tj" in second and b"Total a pagar" not in second
+
+
+# The late fee: said on the bill from the start, next to when it is due.
+
+
+def test_bill_with_a_late_fee_says_what_paying_late_costs_and_from_when() -> None:
+    pdf = render_bill(replace(BILL, late_fee_amount=50_000, late_fee_deadline=date(2026, 10, 8)))
+
+    assert b"Si se paga despu" in pdf
+    assert b"s del 8 de octubre de 2026, la siguiente cuenta" in pdf
+    assert b"un recargo por" in pdf and b"mora de $50.000." in pdf
+    assert pages(pdf) == 1
+
+
+def test_bill_without_a_late_fee_says_nothing_about_it() -> None:
+    assert b"recargo" not in render_bill(BILL)

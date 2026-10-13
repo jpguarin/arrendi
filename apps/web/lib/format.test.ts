@@ -10,8 +10,11 @@ import {
   formatDayMonth,
   formatLongDate,
   formatMonth,
+  formatPercent,
   formatPesos,
+  parsePercent,
   parsePesos,
+  percentOf,
   todayInBogota,
 } from "./format.ts";
 
@@ -103,4 +106,33 @@ test("an instant is written with its hour in Colombia", () => {
   // Midnight in Colombia is still the day before in UTC terms, and reads as 12.
   assert.equal(formatDateHour("2026-10-06T05:05:00Z"), "6 oct 2026 · 12:05 a. m.");
   assert.equal(formatDateHour("2026-10-05T17:30:00Z"), "5 oct 2026 · 12:30 p. m.");
+});
+
+test("a percentage is written with a comma and without the zeros it does not need", () => {
+  assert.equal(formatPercent("5.00"), "5 %");
+  assert.equal(formatPercent("2.50"), "2,5 %");
+  assert.equal(formatPercent("1.25"), "1,25 %");
+  assert.equal(formatPercent("100.00"), "100 %");
+  assert.equal(formatPercent("10"), "10 %");
+});
+
+test("what the owner types as a percentage is read with a comma or a dot", () => {
+  assert.equal(parsePercent("5"), "5");
+  assert.equal(parsePercent("2,5"), "2.5");
+  assert.equal(parsePercent("2.50"), "2.5");
+  assert.equal(parsePercent(" 5 % "), "5");
+  assert.equal(parsePercent("100"), "100");
+});
+
+test("a percentage has to be above zero, up to 100 and with two decimals at most", () => {
+  for (const text of ["", "0", "0,00", "100,01", "2,555", "-5", "cinco", "1.000"]) {
+    assert.equal(parsePercent(text), null, text);
+  }
+});
+
+test("the late fee is a percentage of the rent in whole pesos", () => {
+  assert.equal(percentOf(950000, "5"), 47500);
+  assert.equal(percentOf(1000000, "2.5"), 25000);
+  assert.equal(percentOf(1000020, "2.5"), 25001);
+  assert.equal(percentOf(1234567, "2.5"), 30864);
 });

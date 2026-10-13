@@ -6,4 +6,5 @@
 {% include "_figures.html" %}
 Valor: <strong>{{ total | pesos }}</strong><br>
 Vence el {{ due_date | long_date }}
+{% if late_fee_notice %}<br>{{ late_fee_notice }}{% endif %}
 {% endblock %}

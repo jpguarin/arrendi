@@ -9,12 +9,14 @@ import {
   LeaseForm,
   leaseTenant,
   leaseTerms,
+  newLeaseTerms,
   type LeaseValues,
 } from "@/components/leases/LeaseForm";
 import { LoadError, Loading } from "@/components/LoadState";
 import { uploadLeaseDocument } from "@/lib/api/documents";
 import { TENANT_DOCUMENT_TYPE } from "@/lib/labels";
 import { errorMessage } from "@/lib/api/errors";
+import { formatPercent } from "@/lib/format";
 import { useCreateLease, useLease, useProperties, useUpdateLease } from "@/lib/api/queries";
 
 const FORM_ID = "lease";
@@ -60,7 +62,7 @@ export function NewLeaseScreen({ unitId }: { unitId: string | undefined }) {
     try {
       lease = await create.mutateAsync({
         body: {
-          ...leaseTerms(values),
+          ...newLeaseTerms(values),
           auto_send: true,
           unit_id: unitId,
           tenant: leaseTenant(values),
@@ -91,6 +93,7 @@ export function NewLeaseScreen({ unitId }: { unitId: string | undefined }) {
         showDeposit
         showChargeDeposit
         showItems
+        showLateFee
         showTenantDocument
         showPaymentDetails
         onSubmit={onSubmit}
@@ -137,6 +140,7 @@ export function EditLeaseScreen({ leaseId }: { leaseId: string }) {
           !lease.recent_bills.some((bill) => bill.origin === "monthly" && bill.status !== "voided")
         }
         showItems
+        showLateFee
         showTenantDocument
         showPaymentDetails
         defaultValues={{
@@ -154,6 +158,11 @@ export function EditLeaseScreen({ leaseId }: { leaseId: string }) {
           deposit: lease.deposit,
           charge_deposit: lease.charge_deposit,
           items: lease.items,
+          late_fee_enabled: lease.late_fee_enabled,
+          late_fee_percent: lease.late_fee_percent
+            ? formatPercent(lease.late_fee_percent).replace(" %", "")
+            : "",
+          late_fee_grace_days: String(lease.late_fee_grace_days),
           payment_details: lease.payment_details ?? "",
         }}
         onSubmit={(values: LeaseValues) =>

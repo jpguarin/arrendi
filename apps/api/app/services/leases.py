@@ -65,6 +65,9 @@ def lease_response(session: Session, lease: Lease) -> LeaseResponse:
         end_date=lease.end_date,
         deposit=lease.deposit,
         charge_deposit=lease.charge_deposit,
+        late_fee_enabled=lease.late_fee_enabled,
+        late_fee_percent=lease.late_fee_percent,
+        late_fee_grace_days=lease.late_fee_grace_days,
         items=[
             BillItemResponse(description=item.description, amount=item.amount)
             for item in lease_items(session, lease.id)
@@ -155,6 +158,11 @@ def update_lease(session: Session, lease_id: UUID, data: LeaseUpdate) -> LeaseRe
     for field, value in changes.items():
         setattr(lease, field, value)
     _check_dates(lease.start_date, lease.end_date)
+    # Checked against what is stored: the switch and the percentage may come apart.
+    if lease.late_fee_enabled and lease.late_fee_percent is None:
+        raise AppError(
+            422, "Escribe el porcentaje del recargo por mora.", "late_fee_percent_required"
+        )
 
     if tenant_changes:
         tenant = session.get_one(Tenant, lease.tenant_id)

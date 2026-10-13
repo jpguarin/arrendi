@@ -126,7 +126,10 @@ class _Run:
             # One transaction per lease: a failure here rolls back only this bill.
             with Session(self.engine) as session, session.begin():
                 bill = bills.issue_monthly_bill(session, self.storage, self.today, lease_id)
-                if auto_send:
+                # A bill that charges a late fee waits for the owner: a payment that came
+                # in time but is not entered yet would make the fee a mistake, and a bill
+                # already sent is hard to take back.
+                if auto_send and not bills.charges_late_fee(session, bill.id):
                     notification = notifications.reserve(session, bill, "bill")
                     notification_id = notification.id if notification else None
         except AppError as error:

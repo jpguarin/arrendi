@@ -68,6 +68,18 @@ SAMPLES = {
         SAMPLE, owner_document=None, tenant_document=None, payment_details=None
     ),
     "cuenta-anulada": replace(SAMPLE, voided=True),
+    # The lease has a late fee: the bill says what paying late costs, and the next one
+    # charges the fee of a month that was paid late.
+    "cuenta-con-aviso-de-recargo": replace(
+        SAMPLE, late_fee_amount=97_500, late_fee_deadline=date(2026, 10, 8)
+    ),
+    "cuenta-con-recargo": replace(
+        SAMPLE,
+        lines=[*SAMPLE.lines, BillLine("Recargo por mora de septiembre 2026", 97_500)],
+        total=2_197_500,
+        late_fee_amount=97_500,
+        late_fee_deadline=date(2026, 10, 8),
+    ),
     # The owner has not uploaded a signature: a line is left to sign by hand.
     "cuenta-sin-firma": replace(SAMPLE, signature=None),
     "cuenta-llena": FULL,

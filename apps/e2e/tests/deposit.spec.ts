@@ -58,6 +58,6 @@ test("the first bill of the month charges the deposit as its own item", async ({
     await page.getByRole("link", { name: /Apto 5 · Vivienda/ }).click();
     await page.getByRole("link", { name: /Editar contrato/ }).click();
     await expect(page.getByLabel("Depósito (opcional)")).toHaveValue("$500.000");
-    await expect(page.getByRole("switch")).toHaveCount(0);
+    await expect(page.getByRole("switch", { name: /Cobrar el depósito/ })).toHaveCount(0);
   });
 });

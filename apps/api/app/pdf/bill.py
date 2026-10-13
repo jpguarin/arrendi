@@ -13,7 +13,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen.canvas import FILL_NON_ZERO, Canvas
 
-from app.pdf.format import format_long_date, format_number, format_pesos
+from app.pdf.format import format_long_date, format_number, format_pesos, late_fee_notice
 from app.pdf.logo import GREEN_PATHS, INK_PATHS, SIZE
 
 # The light palette of docs/diseno.md, on the brand of docs/new-brand-design.
@@ -61,6 +61,9 @@ class BillDocument:
     voided: bool = False
     # The unit, for the heading of a manual bill: none of its lines says where it is from.
     unit_name: str | None = None
+    # What paying late costs and the last day to pay in time. Both or neither.
+    late_fee_amount: int | None = None
+    late_fee_deadline: date | None = None
     # The image the owner signs with, as a PNG or a JPG. Without it the bill leaves a
     # line to sign by hand.
     signature: bytes | None = None
@@ -324,6 +327,9 @@ def render_bill(bill: BillDocument) -> bytes:
 
     # When and how to pay.
     notes = [f"Vence el {format_long_date(bill.due_date)}"]
+    if bill.late_fee_amount and bill.late_fee_deadline:
+        notice = late_fee_notice(bill.late_fee_amount, bill.late_fee_deadline)
+        notes.extend(_wrapped(notice, REGULAR, 11, CONTENT - 28))
     if bill.payment_details:
         notes.extend(_wrapped(f"Pagar a: {bill.payment_details}", REGULAR, 11, CONTENT - 28))
     # In a box, or in one on each page when they are more than the page has room for.

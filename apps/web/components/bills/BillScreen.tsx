@@ -28,8 +28,10 @@ import {
   useBill,
   useDeletePayment,
   useRemindBill,
+  useRestoreLateFee,
   useSendBill,
   useVoidBill,
+  useWaiveLateFee,
 } from "@/lib/api/queries";
 import type { components } from "@/lib/api/schema";
 import {
@@ -140,6 +142,7 @@ function DocumentPreview({ bill }: { bill: Bill }) {
       </div>
       <p className="rounded-md bg-background px-3 py-2.5 text-support whitespace-pre-line text-foreground-soft">
         Vence el {formatLongDate(bill.due_date)}
+        {bill.late_fee && `\n${bill.late_fee.notice}`}
         {bill.issuer.payment_details && `\nPagar a: ${bill.issuer.payment_details}`}
       </p>
       {/* How the PDF ends: the signature, or a line to sign on, then who signs. */}
@@ -156,6 +159,77 @@ function DocumentPreview({ bill }: { bill: Bill }) {
           </p>
         )}
       </div>
+    </section>
+  );
+}
+
+/** Where the late fee of the bill stands, and the owner's say on it while it is theirs. */
+function LateFeeSection({
+  bill,
+  working,
+  onWaive,
+  onRestore,
+}: {
+  bill: Bill;
+  working: boolean;
+  onWaive: () => void;
+  onRestore: () => void;
+}) {
+  const fee = bill.late_fee;
+  // Nothing to say while the bill is in time: its preview already carries the warning.
+  if (!fee || fee.status === "on_time") return null;
+  const amount = formatPesos(fee.amount);
+
+  return (
+    <section
+      aria-labelledby="late-fee"
+      className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4"
+    >
+      <div className="flex flex-col gap-0.5">
+        <h2 id="late-fee" className="text-section font-semibold">
+          Recargo por mora
+        </h2>
+        <p className="text-support text-muted-foreground">
+          {fee.status === "pending" &&
+            `No quedó paga el ${formatDate(fee.deadline)}. La próxima cuenta del mes de este contrato cobrará ${amount}. Si el contrato termina antes, cóbralo con "Cobrar otro concepto".`}
+          {fee.status === "waived" &&
+            `Decidiste no cobrar el recargo de ${amount}. Ninguna cuenta lo incluirá.`}
+          {fee.status === "charged" && `Se cobraron ${amount} en la `}
+          {fee.status === "charged" && fee.charged_on && (
+            <Link href={`/bills/${fee.charged_on.id}`} className="font-semibold underline">
+              cuenta {formatBillNumber(fee.charged_on.number)}
+            </Link>
+          )}
+          {fee.status === "charged" && "."}
+        </p>
+      </div>
+      {fee.status === "pending" && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" size="md" disabled={working}>
+              No cobrar este recargo
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿No cobrar este recargo?</AlertDialogTitle>
+              <AlertDialogDescription>
+                La próxima cuenta del mes saldrá sin el recargo de {amount}. Puedes volver a
+                cobrarlo mientras esa cuenta no se haya generado.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={onWaive}>No cobrarlo</AlertDialogAction>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+      {fee.status === "waived" && (
+        <Button variant="outline" size="md" disabled={working} onClick={onRestore}>
+          Volver a cobrarlo
+        </Button>
+      )}
     </section>
   );
 }
@@ -350,6 +424,8 @@ export function BillScreen({
   const send = useSendBill();
   const remind = useRemindBill();
   const deletePayment = useDeletePayment();
+  const waiveFee = useWaiveLateFee();
+  const restoreFee = useRestoreLateFee();
   const [opening, setOpening] = useState(false);
   // What went wrong opening or uploading a file; the changes keep their own errors.
   const [pdfError, setPdfError] = useState<string | undefined>(
@@ -378,7 +454,13 @@ export function BillScreen({
   // A bill with payments is not voided; neither is one already voided.
   const voidable =
     (bill.status === "pending" || bill.status === "overdue") && bill.payments.length === 0;
-  const changeError = voidBill.error ?? send.error ?? remind.error ?? deletePayment.error;
+  const changeError =
+    voidBill.error ??
+    send.error ??
+    remind.error ??
+    deletePayment.error ??
+    waiveFee.error ??
+    restoreFee.error;
   const error = pdfError ?? (changeError ? errorMessage(changeError) : undefined);
   const path = { bill_id: billId };
   const voided = bill.status === "voided";
@@ -432,7 +514,11 @@ export function BillScreen({
         {error && <FormMessage tone="error">{error}</FormMessage>}
         {!error && emailed && <FormMessage tone="success">{emailed}</FormMessage>}
         {!voided && !wasSent && !emailing && (
-          <FormMessage tone="info">Esta cuenta aún no se le ha enviado al arrendatario.</FormMessage>
+          <FormMessage tone="info">
+            {bill.charges_late_fee
+              ? "Esta cuenta trae un recargo por mora y no se envió sola. Revisa que el pago atrasado esté bien registrado antes de enviarla."
+              : "Esta cuenta aún no se le ha enviado al arrendatario."}
+          </FormMessage>
         )}
         {voided && (
           <FormMessage tone="info">
@@ -457,6 +543,13 @@ export function BillScreen({
             </p>
           </section>
         )}
+
+        <LateFeeSection
+          bill={bill}
+          working={waiveFee.isPending || restoreFee.isPending}
+          onWaive={() => waiveFee.mutate({ params: { path } })}
+          onRestore={() => restoreFee.mutate({ params: { path } })}
+        />
 
         <DocumentPreview bill={bill} />
 

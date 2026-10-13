@@ -8,7 +8,7 @@ import { DocumentPicker } from "@/components/leases/DocumentPicker";
 import {
   LeaseForm,
   leaseTenant,
-  leaseTerms,
+  newLeaseTerms,
   type LeaseValues,
 } from "@/components/leases/LeaseForm";
 import { OnboardingScreen } from "@/components/onboarding/OnboardingScreen";
@@ -56,7 +56,7 @@ export function LeaseStep() {
           property,
           units,
           lease: values && {
-            ...leaseTerms(values),
+            ...newLeaseTerms(values),
             auto_send: true,
             unit_index: Number(values.unit),
             tenant: leaseTenant(values),

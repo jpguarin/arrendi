@@ -262,6 +262,22 @@ export function useVoidBill() {
   });
 }
 
+/** Lets the late fee of a bill go: no later bill will charge it. */
+export function useWaiveLateFee() {
+  const client = useQueryClient();
+  return $api.useMutation("post", "/api/bills/{bill_id}/late-fee/waive", {
+    onSuccess: (bill) => putBill(client, bill),
+  });
+}
+
+/** Takes a waiver back: the next monthly bill charges the late fee. */
+export function useRestoreLateFee() {
+  const client = useQueryClient();
+  return $api.useMutation("post", "/api/bills/{bill_id}/late-fee/restore", {
+    onSuccess: (bill) => putBill(client, bill),
+  });
+}
+
 export function useUpdateSettings() {
   const client = useQueryClient();
   return $api.useMutation("patch", "/api/settings", {
