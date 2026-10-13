@@ -27,7 +27,11 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 | --- | --- |
 | `GET /api/me` | Devuelve el propietario y si completó el alta (`onboarding_complete`). Crea su fila si es la primera vez. `onboarding_complete` es verdadero cuando el propietario tiene al menos un inmueble. El nombre y el correo salen del token solo al crear la fila; después manda lo que el propietario guardó. Si el token no trae nombre se usa el correo, y sin correo responde 400 (`email_required`). |
 | `PATCH /api/settings` | Actualiza nombre, tipo de documento (`document_type`: `cc` o `nit`), documento y datos de pago (`name`, `document_number`, `payment_details`). Los datos de pago son el valor por defecto de las cuentas. Solo cambian los campos enviados. También día de envío (`send_day`, 1 a 28), recordatorios (`reminder_1`, `reminder_2`) y copia (`email_copy`) |
-| `GET /api/settings` | Devuelve la configuración |
+| `POST /api/settings/signature/upload-url` | Primer paso para subir la firma. Recibe `filename`, `content_type` (`image/png` o `image/jpeg`) y `size` (hasta 2 MB); devuelve el enlace firmado de subida y la ruta. 422 `unsupported_file_type` o `file_too_large` |
+| `POST /api/settings/signature` | Segundo paso. Recibe `path`. Valida la imagen, la recorta a sus trazos, la reduce a 600×200 px como máximo y la guarda como PNG; borra lo que subió el navegador y la firma anterior si ninguna cuenta la usa. Devuelve los ajustes. 404 si la ruta no es de la carpeta del propietario; 400 `document_not_uploaded`; 422 `invalid_image` si no se puede leer o está en blanco |
+| `GET /api/settings/signature` | Enlace temporal a la firma (`url`, `name` y `expires_in`, 5 minutos). 404 `signature_not_found` |
+| `DELETE /api/settings/signature` | Quita la firma. Las cuentas ya emitidas conservan la suya. Devuelve los ajustes |
+| `GET /api/settings` | Devuelve la configuración. `has_signature` dice si hay firma; la imagen tiene su propia ruta |
 | `POST /api/onboarding` | Crea el primer inmueble (`property`), sus unidades (`units`, de 1 a 50) y, opcionalmente, el arrendatario y el contrato (`lease`, que señala la unidad con `unit_index`), en una transacción. 409 `onboarding_already_complete` si el propietario ya tiene un inmueble |
 
 ## Inmuebles y unidades

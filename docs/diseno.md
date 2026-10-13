@@ -70,6 +70,8 @@ Los cuatro rellenos se validaron como paleta (separación para daltonismo y cont
 - **En oscuro, el botón primario es marfil con texto navy,** al revés que en claro. No escribas texto fijo sobre el primario: usa `primary-foreground`.
 - **PDF y correos:** siempre en claro.
 
+**Papel y tinta.** La firma del propietario es tinta oscura sobre una hoja, como sale en el PDF, que siempre va en tema claro. Por eso la hoja para dibujarla y el recuadro que la muestra en Ajustes usan `--paper` y `--ink`, dos variables que valen lo mismo en los dos temas. No se usan para nada más.
+
 ## Tipografía
 
 - **Inter** (400, 500, 600): interfaz, tablas, formularios.
