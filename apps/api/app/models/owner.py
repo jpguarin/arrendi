@@ -23,6 +23,8 @@ class Owner(Base):
     document_number: Mapped[str | None] = mapped_column(Text)
     email: Mapped[str] = mapped_column(Text)
     payment_details: Mapped[str | None] = mapped_column(Text)
+    # Path of the image the owner signs the bills with, in the private storage bucket.
+    signature_path: Mapped[str | None] = mapped_column(Text)
     send_day: Mapped[int] = mapped_column(SmallInteger, server_default=text("1"))
     reminder_1: Mapped[bool] = mapped_column(server_default=text("true"))
     reminder_2: Mapped[bool] = mapped_column(server_default=text("true"))

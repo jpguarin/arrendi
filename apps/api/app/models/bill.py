@@ -68,6 +68,8 @@ class Bill(Base):
     status: Mapped[str] = mapped_column(Text, server_default=text("'pending'"))
     # How to pay, as it was when the bill was issued: its own, the lease's or the owner's.
     payment_details: Mapped[str | None] = mapped_column(Text)
+    # The owner's signature as it was when the bill was issued; null if they had none.
+    signature_path: Mapped[str | None] = mapped_column(Text)
     # Path in the private storage bucket.
     pdf_path: Mapped[str] = mapped_column(Text)
     voided_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
