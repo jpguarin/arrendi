@@ -127,6 +127,9 @@ def test_monthly_bill_takes_its_terms_from_the_lease(
     pdf = storage.objects[f"{two_owners[0]}/bills/{bill['id']}.pdf"]
     assert pdf.startswith(b"%PDF-")
     assert b"0001" in pdf and b"$950.000" in pdf and b"Vence el 5 de octubre de 2026" in pdf
+    # The monthly bill says its month and its unit under the rent, and nowhere else.
+    assert b"Octubre 2026 \\267 Apto ana" in pdf
+    assert pdf.count(b"Apto ana") == 1
 
 
 def test_pdf_carries_the_owners_details(
@@ -352,6 +355,9 @@ def test_manual_bill_has_its_own_description_amount_and_due_date(
     assert bill["items"] == [LOCK_ITEM]
     (pdf,) = storage.objects.values()
     assert b"Arreglo de la chapa" in pdf and b"$80.000" in pdf
+    # The unit goes in the heading, after the number and the date; no line repeats it.
+    assert b"3 de octubre de 2026 \\267 Apto ana" in pdf
+    assert pdf.count(b"Apto ana") == 1
 
 
 def test_manual_bill_adds_up_its_items_in_the_order_given(

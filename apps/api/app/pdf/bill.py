@@ -11,6 +11,7 @@ from io import BytesIO
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import simpleSplit
+from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfgen.canvas import FILL_NON_ZERO, Canvas
 
 from app.pdf.format import format_long_date, format_number, format_pesos
@@ -39,7 +40,7 @@ CONTENT = WIDTH - 2 * MARGIN
 class BillLine:
     description: str
     amount: int
-    # What the bill is about, like "Octubre 2026 · Apto 2". Only its first line says it.
+    # What it is for, like "Octubre 2026 · Apto 2": the rent of a monthly bill says it.
     detail: str | None = None
 
 
@@ -59,6 +60,8 @@ class BillDocument:
     total: int
     payment_details: str | None
     voided: bool = False
+    # The unit, for the heading of a manual bill: none of its lines says where it is from.
+    unit_name: str | None = None
 
 
 DOCUMENT_LABELS = {"cc": "C.C.", "nit": "NIT"}
@@ -186,9 +189,18 @@ def render_bill(bill: BillDocument) -> bytes:
         label = DOCUMENT_LABELS[bill.owner_document_type]
         canvas.drawRightString(RIGHT, y - 12, f"{label} {bill.owner_document}")
     y -= 20
-    canvas.drawString(
-        MARGIN, y, f"{format_number(bill.number)} · {format_long_date(bill.issue_date)}"
-    )
+    issued = f"{format_number(bill.number)} · {format_long_date(bill.issue_date)}"
+    if bill.unit_name:
+        # After the number and the date. A name too long to share the line with the
+        # owner's document, on the right, goes below it.
+        with_unit = f"{issued} · {bill.unit_name}"
+        if stringWidth(with_unit, REGULAR, 11) <= CONTENT - 140:
+            issued = with_unit
+        else:
+            canvas.drawString(MARGIN, y, issued)
+            y -= 15
+            issued = _wrapped(bill.unit_name, REGULAR, 11, CONTENT)[0]
+    canvas.drawString(MARGIN, y, issued)
 
     y -= 22
     _rule(canvas, y)

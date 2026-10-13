@@ -94,9 +94,9 @@ def _document(session: Session, bill: Bill, voided: bool = False) -> BillDocumen
     lease = session.get_one(Lease, bill.lease_id)
     tenant = session.get_one(Tenant, lease.tenant_id)
     unit = session.get_one(Unit, lease.unit_id)
-    # What the bill is about, said once, under its first line: the month, if it is the
-    # monthly one, and the unit.
-    about = f"{format_month(bill.period)} · {unit.name}" if bill.period else unit.name
+    # A monthly bill says its month and its unit under the rent, its first line. A manual
+    # one has no line to say it under, so the unit goes in the heading.
+    of_the_rent = f"{format_month(bill.period)} · {unit.name}" if bill.period else None
     return BillDocument(
         number=bill.number,
         issue_date=bill.issue_date,
@@ -108,12 +108,13 @@ def _document(session: Session, bill: Bill, voided: bool = False) -> BillDocumen
         tenant_document_type=tenant.document_type,
         tenant_document=tenant.document_number,
         lines=[
-            BillLine(item.description, item.amount, None if index else about)
+            BillLine(item.description, item.amount, None if index else of_the_rent)
             for index, item in enumerate(_items(session, bill.id))
         ],
         total=bill.total,
         payment_details=bill.payment_details,
         voided=voided,
+        unit_name=None if bill.period else unit.name,
     )
 
 

@@ -60,8 +60,9 @@ const withDocument = (name: string, type: DocumentType, document: string | null)
 
 /** The bill as the tenant reads it. The stored PDF is the one that counts. */
 function DocumentPreview({ bill }: { bill: Bill }) {
-  // What the bill is about, said once, under its first line.
-  const about = bill.period ? `${formatMonth(bill.period)} · ${bill.unit_name}` : bill.unit_name;
+  // A monthly bill says its month and its unit under the rent, its first line. A manual
+  // one has no line to say it under, so the unit goes in the heading.
+  const ofTheRent = bill.period && `${formatMonth(bill.period)} · ${bill.unit_name}`;
 
   return (
     <section
@@ -73,6 +74,7 @@ function DocumentPreview({ bill }: { bill: Bill }) {
           <p className="text-body font-bold">Cuenta de cobro</p>
           <p className="text-badge font-normal text-muted-foreground">
             {formatBillNumber(bill.number)} · {formatLongDate(bill.issue_date)}
+            {!bill.period && ` · ${bill.unit_name}`}
           </p>
         </div>
         <p className="text-right text-badge font-normal text-muted-foreground">
@@ -96,10 +98,10 @@ function DocumentPreview({ bill }: { bill: Bill }) {
         <div key={index} className="flex justify-between gap-3 text-section">
           <p className="min-w-0 break-words">
             {item.description}
-            {index === 0 && (
+            {index === 0 && ofTheRent && (
               <>
                 <br />
-                <span className="text-support text-muted-foreground">{about}</span>
+                <span className="text-support text-muted-foreground">{ofTheRent}</span>
               </>
             )}
           </p>

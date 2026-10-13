@@ -54,6 +54,13 @@ SAMPLES = {
     ),
     "cuenta-anulada": replace(SAMPLE, voided=True),
     "cuenta-llena": FULL,
+    # A manual bill: the unit goes in the heading, and no line says what month it is for.
+    "cuenta-manual": replace(
+        SAMPLE,
+        lines=[BillLine("Arreglo de la chapa", 80_000), BillLine("Pintura", 45_000)],
+        total=125_000,
+        unit_name="Local 1",
+    ),
     "cuenta-de-dos-paginas": replace(
         FULL,
         voided=True,

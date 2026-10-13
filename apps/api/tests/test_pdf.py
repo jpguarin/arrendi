@@ -144,3 +144,32 @@ def test_a_bill_too_long_for_a_page_goes_on_to_the_next_with_nothing_lost() -> N
     assert b"Total a pagar" in pdf and b"$78.000" in pdf and b"Vence el" in pdf
     # Every page says it is voided.
     assert pdf.count(b"ANULADA") == pages(pdf)
+
+
+def test_manual_bill_names_its_unit_in_the_heading_and_not_under_its_first_line() -> None:
+    manual = replace(
+        BILL,
+        lines=[BillLine("Arreglo de la chapa", 80_000), BillLine("Pintura", 45_000)],
+        total=125_000,
+        unit_name="Apto 2",
+    )
+
+    pdf = render_bill(manual)
+
+    # After the number and the date, on the same line.
+    assert b"1 de octubre de 2026 \\267 Apto 2" in pdf
+    assert pdf.count(b"Apto 2") == 1
+
+
+def test_monthly_bill_says_what_it_is_about_under_its_first_line_only() -> None:
+    pdf = render_bill(BILL)
+
+    assert pdf.count(b"Octubre 2026 - Apto 2") == 1
+    assert pdf.count(b"Apto 2") == 1
+
+
+def test_unit_name_too_long_for_the_heading_goes_below_it() -> None:
+    pdf = render_bill(replace(BILL, unit_name="Local del primer piso " * 5))
+
+    assert b"1 de octubre de 2026) Tj" in pdf
+    assert b"Local del primer piso" in pdf
