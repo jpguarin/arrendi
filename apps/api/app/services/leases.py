@@ -1,11 +1,13 @@
 from datetime import date
 from uuid import UUID
 
+from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.errors import AppError, conflict, not_found
-from app.models import Lease, Property, Tenant, Unit
+from app.models import Lease, LeaseItem, Property, Tenant, Unit
+from app.schemas.bill import BillItemResponse
 from app.schemas.lease import (
     LeaseCreate,
     LeaseResponse,
@@ -15,7 +17,7 @@ from app.schemas.lease import (
     TenantCreate,
     TenantResponse,
 )
-from app.services.bills import recent_bills
+from app.services.bills import lease_items, recent_bills
 
 # Every query here runs inside the owner's transaction: row security already limits it to
 # their rows, so another owner's id simply finds nothing.
@@ -37,6 +39,16 @@ def _check_dates(start_date: date, end_date: date | None) -> None:
         )
 
 
+def _replace_items(session: Session, lease: Lease, items: list[dict]) -> None:
+    # Out with the old ones first: the positions are unique within the lease.
+    session.execute(delete(LeaseItem).where(LeaseItem.lease_id == lease.id))
+    session.add_all(
+        LeaseItem(owner_id=lease.owner_id, lease_id=lease.id, position=position, **item)
+        for position, item in enumerate(items)
+    )
+    session.flush()
+
+
 def lease_response(session: Session, lease: Lease) -> LeaseResponse:
     unit = session.get_one(Unit, lease.unit_id)
     parent = session.get_one(Property, unit.property_id)
@@ -50,6 +62,10 @@ def lease_response(session: Session, lease: Lease) -> LeaseResponse:
         end_date=lease.end_date,
         deposit=lease.deposit,
         charge_deposit=lease.charge_deposit,
+        items=[
+            BillItemResponse(description=item.description, amount=item.amount)
+            for item in lease_items(session, lease.id)
+        ],
         auto_send=lease.auto_send,
         payment_details=lease.payment_details,
         document_name=lease.document_path.rsplit("/", 1)[-1] if lease.document_path else None,
@@ -102,7 +118,7 @@ def create_lease_for_unit(
         owner_id=unit.owner_id,
         unit_id=unit.id,
         tenant_id=tenant_id,
-        **terms.model_dump(include=set(LeaseTerms.model_fields)),
+        **terms.model_dump(include=set(LeaseTerms.model_fields) - {"items"}),
     )
     session.add(lease)
     try:
@@ -113,6 +129,8 @@ def create_lease_for_unit(
         if getattr(error.orig.diag, "constraint_name", None) == ONE_ACTIVE_PER_UNIT:
             raise _unit_has_active_lease() from error
         raise
+    if terms.items:
+        _replace_items(session, lease, [item.model_dump() for item in terms.items])
     return lease
 
 
@@ -129,6 +147,7 @@ def update_lease(session: Session, lease_id: UUID, data: LeaseUpdate) -> LeaseRe
     lease = get_lease(session, lease_id)
     changes = data.changes()
     tenant_changes = changes.pop("tenant", None)
+    items = changes.pop("items", None)
 
     for field, value in changes.items():
         setattr(lease, field, value)
@@ -140,6 +159,9 @@ def update_lease(session: Session, lease_id: UUID, data: LeaseUpdate) -> LeaseRe
             setattr(tenant, field, value)
 
     session.flush()
+    # Only the bills still to come: the ones already issued keep their own items.
+    if items is not None:
+        _replace_items(session, lease, items)
     return lease_response(session, lease)
 
 

@@ -93,11 +93,12 @@ def _message(
         .where(BillItem.bill_id == bill.id)
         .order_by(BillItem.position, BillItem.created_at)
     ).all()
-    # "Canon de arrendamiento y depósito": everything charged, read as one phrase.
+    # "Canon de arrendamiento, administración y depósito": everything charged, as one phrase.
     charged = [
         item if index == 0 else item[:1].lower() + item[1:] for index, item in enumerate(items)
     ]
-    concept = [" y ".join(charged) or "Cuenta de cobro"]
+    listed = " y ".join([", ".join(charged[:-1]), charged[-1]] if len(charged) > 1 else charged)
+    concept = [listed or "Cuenta de cobro"]
     if bill.period:
         concept.append(format_month(bill.period))
     concept.append(unit.name)

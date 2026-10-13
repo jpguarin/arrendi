@@ -200,6 +200,45 @@ def test_deposit_is_charged_on_the_first_bill_only_and_the_email_says_so(
     assert "$1.450.000" in first.text
 
 
+def test_bills_carry_the_items_of_their_lease(
+    run, admin_engine: Engine, two_owners: tuple[UUID, UUID], trees: tuple[Tree, Tree], mailer
+) -> None:
+    ana, beto = two_owners
+    for position, (description, amount) in enumerate(
+        [("Administración", 200000), ("Parqueadero", 80000)]
+    ):
+        execute(
+            admin_engine,
+            "insert into lease_items (owner_id, lease_id, description, amount, position) "
+            "values (:owner, :lease, :description, :amount, :position)",
+            owner=ana,
+            lease=trees[0].lease_id,
+            description=description,
+            amount=amount,
+            position=position,
+        )
+
+    run(date(2026, 10, 1))
+    run(date(2026, 10, 1))
+
+    totals = "select total from bills where owner_id = :id order by number"
+    assert rows(admin_engine, totals, id=ana) == [(1230000,)]
+    assert rows(admin_engine, totals, id=beto) == [(950000,)]
+    items = "select description, amount from bill_items where owner_id = :id order by position"
+    assert rows(admin_engine, items, id=ana) == [
+        ("Canon de arrendamiento", 950000),
+        ("Administración", 200000),
+        ("Parqueadero", 80000),
+    ]
+    assert rows(admin_engine, items, id=beto) == [("Canon de arrendamiento", 950000)]
+    (first,) = [m for m in mailer.sent if m.to == "ana@example.com"]
+    assert (
+        "Canon de arrendamiento, administración y parqueadero · Octubre 2026 · Apto ana"
+        in first.text
+    )
+    assert "$1.230.000" in first.text
+
+
 def test_lease_without_automatic_sending_gets_its_bill_but_no_email(
     run, admin_engine: Engine, two_owners: tuple[UUID, UUID], trees: tuple[Tree, Tree], mailer
 ) -> None:

@@ -505,7 +505,7 @@ export interface components {
         };
         /**
          * BillCreate
-         * @description A manual bill: an extra charge on a lease, apart from the monthly rent.
+         * @description A manual bill: one or more extra charges on a lease, apart from the monthly rent.
          */
         BillCreate: {
             /**
@@ -513,10 +513,8 @@ export interface components {
              * Format: uuid
              */
             lease_id: string;
-            /** Description */
-            description: string;
-            /** Amount */
-            amount: number;
+            /** Items */
+            items: components["schemas"]["ItemInput"][];
             /**
              * Due Date
              * Format: date
@@ -741,6 +739,16 @@ export interface components {
              */
             status: "ok";
         };
+        /**
+         * ItemInput
+         * @description Something charged: what it is and how much. A bill is the sum of these.
+         */
+        ItemInput: {
+            /** Description */
+            description: string;
+            /** Amount */
+            amount: number;
+        };
         /** LeaseCreate */
         LeaseCreate: {
             /** Rent */
@@ -761,6 +769,11 @@ export interface components {
              * @default true
              */
             charge_deposit: boolean;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["ItemInput"][];
             /**
              * Auto Send
              * @default true
@@ -804,6 +817,8 @@ export interface components {
             deposit: number | null;
             /** Charge Deposit */
             charge_deposit: boolean;
+            /** Items */
+            items: components["schemas"]["BillItemResponse"][];
             /** Auto Send */
             auto_send: boolean;
             /** Payment Details */
@@ -853,6 +868,8 @@ export interface components {
             deposit?: number | null;
             /** Charge Deposit */
             charge_deposit?: boolean | null;
+            /** Items */
+            items?: components["schemas"]["ItemInput"][] | null;
             /** Auto Send */
             auto_send?: boolean | null;
             /** Payment Details */
@@ -920,6 +937,11 @@ export interface components {
              * @default true
              */
             charge_deposit: boolean;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["ItemInput"][];
             /**
              * Auto Send
              * @default true

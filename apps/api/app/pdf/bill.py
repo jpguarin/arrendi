@@ -38,9 +38,9 @@ CONTENT = WIDTH - 2 * MARGIN
 @dataclass(frozen=True)
 class BillLine:
     description: str
-    # What the description is about, like "Octubre 2026 · Apto 2".
-    detail: str
     amount: int
+    # What the bill is about, like "Octubre 2026 · Apto 2". Only its first line says it.
+    detail: str | None = None
 
 
 @dataclass(frozen=True)
@@ -125,21 +125,56 @@ def _wrapped(text: str, font: str, size: float, width: float) -> list[str]:
     return lines
 
 
+# Below this the page belongs to the brand mark at the foot.
+BOTTOM = MARGIN + 8
+
+
+def _open_page(canvas: Canvas) -> float:
+    """Draws what every page starts with and returns where its content begins."""
+    # A band of the brand color across the top edge.
+    canvas.setFillColor(FOREGROUND)
+    canvas.rect(0, HEIGHT - 8, WIDTH, 8, stroke=0, fill=1)
+    return HEIGHT - MARGIN - 8
+
+
+def _close_page(canvas: Canvas, bill: BillDocument) -> None:
+    # The brand, small at the foot: the bill is the owner's, Arrendi only issues it.
+    mark_height = 16
+    mark_width = SIZE[0] * mark_height / SIZE[1]
+    _brand_mark(canvas, (WIDTH - mark_width) / 2, MARGIN / 2 - 4, mark_height)
+
+    if bill.voided:
+        # Across the page, so no copy of it passes for a bill still owed.
+        canvas.saveState()
+        canvas.translate(WIDTH / 2, HEIGHT / 2)
+        canvas.rotate(35)
+        canvas.setFillColor(ALERT, alpha=0.3)
+        canvas.setFont(BOLD, 96)
+        canvas.drawCentredString(0, 0, "ANULADA")
+        canvas.restoreState()
+
+    canvas.showPage()
+
+
+def _room(canvas: Canvas, bill: BillDocument, y: float, height: float) -> float:
+    """Where to draw something `height` tall: here, or on a new page if it does not fit."""
+    if y - height >= BOTTOM:
+        return y
+    _close_page(canvas, bill)
+    return _open_page(canvas)
+
+
 def render_bill(bill: BillDocument) -> bytes:
     buffer = BytesIO()
-    # Not compressed: the file is one small page, and its text can be found in it.
+    # Not compressed: the file is small, and its text can be found in it.
     canvas = Canvas(buffer, pagesize=letter, pageCompression=0)
     canvas.setTitle(f"Cuenta de cobro {format_number(bill.number)}")
     canvas.setAuthor(bill.owner_name)
     # The name of the brand is drawn, not written: this keeps it in the file as text.
     canvas.setCreator("Arrendi")
 
-    # A band of the brand color across the top edge.
-    canvas.setFillColor(FOREGROUND)
-    canvas.rect(0, HEIGHT - 8, WIDTH, 8, stroke=0, fill=1)
-
     # Heading: what it is on the left, who issues it on the right.
-    y = HEIGHT - MARGIN - 8
+    y = _open_page(canvas)
     canvas.setFillColor(FOREGROUND)
     canvas.setFont(BOLD, 20)
     canvas.drawString(MARGIN, y, "Cuenta de cobro")
@@ -169,21 +204,28 @@ def render_bill(bill: BillDocument) -> bytes:
         MARGIN, y, _with_document(bill.tenant_name, bill.tenant_document_type, bill.tenant_document)
     )
 
-    # What for.
+    # What for: each thing charged, with its own amount.
     y -= 34
     for line in bill.lines:
+        description = _wrapped(line.description, REGULAR, 12, CONTENT - 120)
+        # A line is never split between two pages.
+        y = _room(canvas, bill, y, 16 * len(description) + (11 if line.detail else 0))
         canvas.setFillColor(FOREGROUND)
         canvas.setFont(BOLD, 12)
         canvas.drawRightString(RIGHT, y, format_pesos(line.amount))
         canvas.setFont(REGULAR, 12)
-        for text in _wrapped(line.description, REGULAR, 12, CONTENT - 120):
+        for text in description:
             canvas.drawString(MARGIN, y, text)
             y -= 16
-        canvas.setFillColor(MUTED)
-        canvas.setFont(REGULAR, 11)
-        canvas.drawString(MARGIN, y, line.detail)
-        y -= 24
+        if line.detail:
+            canvas.setFillColor(MUTED)
+            canvas.setFont(REGULAR, 11)
+            canvas.drawString(MARGIN, y, line.detail)
+            y -= 16
+        y -= 8
 
+    # The total: the sum of the lines above. It stays with the rule that closes them.
+    y = _room(canvas, bill, y, 34 + 4)
     _rule(canvas, y)
 
     y -= 34
@@ -198,6 +240,7 @@ def render_bill(bill: BillDocument) -> bytes:
     if bill.payment_details:
         notes.extend(_wrapped(f"Pagar a: {bill.payment_details}", REGULAR, 11, CONTENT - 28))
     box_height = 24 + 16 * len(notes)
+    y = _room(canvas, bill, y, 26 + box_height)
     y -= 26 + box_height
     canvas.setFillColor(BACKGROUND)
     canvas.roundRect(MARGIN, y, CONTENT, box_height, 6, stroke=0, fill=1)
@@ -208,21 +251,6 @@ def render_bill(bill: BillDocument) -> bytes:
         canvas.drawString(MARGIN + 14, text_y, note)
         text_y -= 16
 
-    # The brand, small at the foot: the bill is the owner's, Arrendi only issues it.
-    mark_height = 16
-    mark_width = SIZE[0] * mark_height / SIZE[1]
-    _brand_mark(canvas, (WIDTH - mark_width) / 2, MARGIN / 2 - 4, mark_height)
-
-    if bill.voided:
-        # Across the page, so no copy of it passes for a bill still owed.
-        canvas.saveState()
-        canvas.translate(WIDTH / 2, HEIGHT / 2)
-        canvas.rotate(35)
-        canvas.setFillColor(ALERT, alpha=0.3)
-        canvas.setFont(BOLD, 96)
-        canvas.drawCentredString(0, 0, "ANULADA")
-        canvas.restoreState()
-
-    canvas.showPage()
+    _close_page(canvas, bill)
     canvas.save()
     return buffer.getvalue()

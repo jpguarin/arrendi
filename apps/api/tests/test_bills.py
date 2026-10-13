@@ -43,11 +43,13 @@ def monthly(api: TestClient, headers: dict[str, str], lease_id: UUID):
     return api.post(f"/api/leases/{lease_id}/bills", headers=headers)
 
 
+LOCK_ITEM = {"description": "Arreglo de la chapa", "amount": 80000}
+
+
 def manual_payload(lease_id: UUID, **overrides: object) -> dict:
     return {
         "lease_id": str(lease_id),
-        "description": "Arreglo de la chapa",
-        "amount": 80000,
+        "items": [LOCK_ITEM],
         "due_date": "2026-10-20",
     } | overrides
 
@@ -347,9 +349,53 @@ def test_manual_bill_has_its_own_description_amount_and_due_date(
         "2026-10-20",
         "pending",
     )
-    assert bill["items"] == [{"description": "Arreglo de la chapa", "amount": 80000}]
+    assert bill["items"] == [LOCK_ITEM]
     (pdf,) = storage.objects.values()
     assert b"Arreglo de la chapa" in pdf and b"$80.000" in pdf
+
+
+def test_manual_bill_adds_up_its_items_in_the_order_given(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], storage: FakeStorage
+) -> None:
+    anas, _ = trees
+    items = [
+        LOCK_ITEM,
+        {"description": "  Destape de la tubería  ", "amount": 120000},
+        {"description": "Pintura", "amount": 45000},
+    ]
+
+    response = api.post("/api/bills", headers=ana, json=manual_payload(anas.lease_id, items=items))
+
+    assert response.status_code == 201, response.text
+    bill = response.json()
+    expected = [
+        LOCK_ITEM,
+        {"description": "Destape de la tubería", "amount": 120000},
+        {"description": "Pintura", "amount": 45000},
+    ]
+    assert bill["items"] == expected
+    assert (bill["total"], bill["balance"], bill["due_date"]) == (245000, 245000, "2026-10-20")
+    assert api.get(f"/api/bills/{bill['id']}", headers=ana).json()["items"] == expected
+    (pdf,) = storage.objects.values()
+    for text_in_pdf in (b"Arreglo de la chapa", b"Pintura", b"$80.000", b"$120.000", b"$45.000"):
+        assert text_in_pdf in pdf
+    assert b"$245.000" in pdf
+    # One due date for the whole bill.
+    assert pdf.count(b"Vence el") == 1
+
+
+def test_manual_bill_takes_up_to_ten_items(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], storage: FakeStorage
+) -> None:
+    anas, _ = trees
+    items = [{"description": f"Concepto {n}", "amount": 1000 * n} for n in range(1, 11)]
+
+    bill = api.post(
+        "/api/bills", headers=ana, json=manual_payload(anas.lease_id, items=items)
+    ).json()
+
+    assert bill["items"] == items
+    assert bill["total"] == 55000
 
 
 def test_several_manual_bills_fit_in_the_same_month(
@@ -367,12 +413,19 @@ def test_several_manual_bills_fit_in_the_same_month(
 @pytest.mark.parametrize(
     "overrides",
     [
-        {"amount": 0},
-        {"amount": -1},
-        {"amount": 80000.5},
-        {"amount": "80000"},
-        {"description": "   "},
-        {"description": "x" * 201},
+        {"items": [LOCK_ITEM | {"amount": 0}]},
+        {"items": [LOCK_ITEM | {"amount": -1}]},
+        {"items": [LOCK_ITEM | {"amount": 80000.5}]},
+        {"items": [LOCK_ITEM | {"amount": "80000"}]},
+        {"items": [LOCK_ITEM | {"description": "   "}]},
+        {"items": [LOCK_ITEM | {"description": "x" * 201}]},
+        # One bad item among good ones is enough.
+        {"items": [LOCK_ITEM, LOCK_ITEM | {"amount": 0}]},
+        {"items": []},
+        {"items": [LOCK_ITEM] * 11},
+        {"items": None},
+        # The old shape, with one description and one amount, is no longer a bill.
+        {"items": None, "description": "Arreglo de la chapa", "amount": 80000},
         {"due_date": "20 de octubre"},
     ],
 )
@@ -486,7 +539,7 @@ def test_manual_bills_neither_charge_the_deposit_nor_count_as_the_first(
     manual = api.post("/api/bills", headers=ana, json=manual_payload(anas.lease_id)).json()
     month = monthly(api, ana, anas.lease_id).json()
 
-    assert manual["items"] == [{"description": "Arreglo de la chapa", "amount": 80000}]
+    assert manual["items"] == [LOCK_ITEM]
     assert month["items"] == [RENT_ITEM, DEPOSIT_ITEM]
 
 
@@ -518,6 +571,77 @@ def test_first_bill_at_once_charges_the_deposit_only_once(
             text("select description from bill_items order by position")
         ).scalars()
         assert list(items) == ["Canon de arrendamiento", "Depósito"]
+
+
+# The items of the lease: charged every month, after the rent and before the deposit.
+
+FEE_ITEM = {"description": "Administración", "amount": 200000}
+PARKING_ITEM = {"description": "Parqueadero", "amount": 80000}
+
+
+def set_items(api: TestClient, headers: dict[str, str], lease_id: UUID, items: list) -> None:
+    response = api.patch(f"/api/leases/{lease_id}", headers=headers, json={"items": items})
+    assert response.status_code == 200, response.text
+
+
+def test_monthly_bill_charges_the_rent_and_the_items_of_the_lease(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], storage: FakeStorage
+) -> None:
+    anas, _ = trees
+    set_items(api, ana, anas.lease_id, [FEE_ITEM, PARKING_ITEM])
+
+    bill = monthly(api, ana, anas.lease_id).json()
+
+    assert bill["items"] == [RENT_ITEM, FEE_ITEM, PARKING_ITEM]
+    assert (bill["total"], bill["balance"]) == (1230000, 1230000)
+    assert api.get("/api/bills", headers=ana).json()[0]["total"] == 1230000
+    (pdf,) = storage.objects.values()
+    for text_in_pdf in (b"Parqueadero", b"$950.000", b"$200.000", b"$80.000", b"$1.230.000"):
+        assert text_in_pdf in pdf
+
+
+def test_every_monthly_bill_charges_the_items_and_only_the_first_the_deposit(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+    set_items(api, ana, anas.lease_id, [FEE_ITEM])
+    with_deposit(api, ana, anas.lease_id)
+
+    october = monthly(api, ana, anas.lease_id).json()
+    set_today(date(2026, 11, 1))
+    november = monthly(api, ana, anas.lease_id).json()
+
+    assert october["items"] == [RENT_ITEM, FEE_ITEM, DEPOSIT_ITEM]
+    assert october["total"] == 1650000
+    assert november["items"] == [RENT_ITEM, FEE_ITEM]
+    assert november["total"] == 1150000
+
+
+def test_changing_the_items_of_the_lease_does_not_touch_issued_bills(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+    set_items(api, ana, anas.lease_id, [FEE_ITEM])
+    october = monthly(api, ana, anas.lease_id).json()
+
+    set_items(api, ana, anas.lease_id, [PARKING_ITEM])
+
+    after = api.get(f"/api/bills/{october['id']}", headers=ana).json()
+    assert (after["items"], after["total"]) == ([RENT_ITEM, FEE_ITEM], 1150000)
+    # The next one takes the lease as it is then.
+    set_today(date(2026, 11, 1))
+    assert monthly(api, ana, anas.lease_id).json()["items"] == [RENT_ITEM, PARKING_ITEM]
+
+
+def test_manual_bills_do_not_charge_the_items_of_the_lease(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+    set_items(api, ana, anas.lease_id, [FEE_ITEM])
+
+    manual = api.post("/api/bills", headers=ana, json=manual_payload(anas.lease_id)).json()
+
+    assert (manual["items"], manual["total"]) == ([LOCK_ITEM], 80000)
 
 
 # Payment details: the bill's own, else the lease's, else the owner's. Kept on the bill.

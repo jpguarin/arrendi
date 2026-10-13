@@ -163,8 +163,7 @@ def test_paid_and_voided_bills_take_no_payments(
         headers=ana,
         json={
             "lease_id": str(trees[0].lease_id),
-            "description": "Arreglo",
-            "amount": 80_000,
+            "items": [{"description": "Arreglo", "amount": 80_000}],
             "due_date": "2026-10-20",
         },
     ).json()

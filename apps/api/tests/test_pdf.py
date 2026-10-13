@@ -14,7 +14,7 @@ BILL = BillDocument(
     tenant_name="Carlos Rojas",
     tenant_document_type="cc",
     tenant_document="80.111.222",
-    lines=[BillLine("Canon de arrendamiento", "Octubre 2026 - Apto 2", 1_000_000)],
+    lines=[BillLine("Canon de arrendamiento", 1_000_000, "Octubre 2026 - Apto 2")],
     total=1_000_000,
     payment_details="Bancolombia, ahorros 123-456789-00\nNequi 300 123 4567",
 )
@@ -94,8 +94,53 @@ def test_voided_bill_is_marked() -> None:
 def test_long_texts_do_not_break_the_page() -> None:
     long = replace(
         BILL,
-        lines=[BillLine("Arreglo de la tuberia del patio " * 8, "Apto 2", 350_000)],
+        lines=[BillLine("Arreglo de la tuberia del patio " * 8, 350_000, "Apto 2")],
         payment_details="Bancolombia " * 40,
     )
 
     assert render_bill(long).startswith(b"%PDF-")
+
+
+def pages(pdf: bytes) -> int:
+    return pdf.count(b"/Type /Page\n")
+
+
+def test_each_line_shows_its_own_amount_and_only_the_first_says_what_the_bill_is_about() -> None:
+    pdf = render_bill(
+        replace(
+            BILL,
+            lines=[
+                *BILL.lines,
+                BillLine("Administracion", 200_000),
+                BillLine("Parqueadero", 80_000),
+            ],
+            total=1_280_000,
+        )
+    )
+
+    for text in (b"$1.000.000", b"Administracion", b"$200.000", b"Parqueadero", b"$80.000"):
+        assert text in pdf
+    assert b"Total a pagar" in pdf and b"$1.280.000" in pdf
+    assert pdf.count(b"Octubre 2026 - Apto 2") == 1
+    assert pages(pdf) == 1
+
+
+def test_the_fullest_monthly_bill_fits_on_one_page() -> None:
+    # The rent, ten items of the lease and the deposit.
+    lines = [*BILL.lines, *(BillLine(f"Concepto {n}", 10_000 * n) for n in range(1, 12))]
+
+    assert pages(render_bill(replace(BILL, lines=lines, total=1_660_000))) == 1
+
+
+def test_a_bill_too_long_for_a_page_goes_on_to_the_next_with_nothing_lost() -> None:
+    lines = [BillLine(f"Concepto {n} " + "muy largo " * 18, 1_000 * n) for n in range(1, 13)]
+    bill = replace(BILL, lines=lines, total=78_000, payment_details="Banco " * 80, voided=True)
+
+    pdf = render_bill(bill)
+
+    assert pages(pdf) > 1
+    for n in range(1, 13):
+        assert f"Concepto {n} ".encode() in pdf
+    assert b"Total a pagar" in pdf and b"$78.000" in pdf and b"Vence el" in pdf
+    # Every page says it is voided.
+    assert pdf.count(b"ANULADA") == pages(pdf)
