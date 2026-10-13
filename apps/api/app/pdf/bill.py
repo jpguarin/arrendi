@@ -11,7 +11,6 @@ from io import BytesIO
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import simpleSplit
-from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfgen.canvas import FILL_NON_ZERO, Canvas
 
 from app.pdf.format import format_long_date, format_number, format_pesos
@@ -67,8 +66,8 @@ class BillDocument:
 DOCUMENT_LABELS = {"cc": "C.C.", "nit": "NIT"}
 
 
-def _with_document(name: str, document_type: str, document: str | None) -> str:
-    return f"{name} · {DOCUMENT_LABELS[document_type]} {document}" if document else name
+# Room for "Cobra" and "Debe", to the left of the names.
+PARTY_LABEL = 52
 
 
 def _rule(canvas: Canvas, y: float) -> None:
@@ -181,43 +180,49 @@ def render_bill(bill: BillDocument) -> bytes:
     canvas.setFillColor(FOREGROUND)
     canvas.setFont(BOLD, 20)
     canvas.drawString(MARGIN, y, "Cuenta de cobro")
-    canvas.setFont(BOLD, 11)
-    canvas.drawRightString(RIGHT, y + 4, bill.owner_name)
+    canvas.drawRightString(RIGHT, y, format_number(bill.number))
+    # Below the title: when it was issued and, in a manual bill, the unit it is for.
+    issued = format_long_date(bill.issue_date)
+    if bill.unit_name:
+        issued = f"{issued} · {bill.unit_name}"
     canvas.setFillColor(MUTED)
     canvas.setFont(REGULAR, 11)
-    if bill.owner_document:
-        label = DOCUMENT_LABELS[bill.owner_document_type]
-        canvas.drawRightString(RIGHT, y - 12, f"{label} {bill.owner_document}")
-    y -= 20
-    issued = f"{format_number(bill.number)} · {format_long_date(bill.issue_date)}"
-    if bill.unit_name:
-        # After the number and the date. A name too long to share the line with the
-        # owner's document, on the right, goes below it.
-        with_unit = f"{issued} · {bill.unit_name}"
-        if stringWidth(with_unit, REGULAR, 11) <= CONTENT - 140:
-            issued = with_unit
-        else:
-            canvas.drawString(MARGIN, y, issued)
-            y -= 15
-            issued = _wrapped(bill.unit_name, REGULAR, 11, CONTENT)[0]
-    canvas.drawString(MARGIN, y, issued)
+    y -= 5
+    for text in _wrapped(issued, REGULAR, 11, CONTENT):
+        y -= 15
+        canvas.drawString(MARGIN, y, text)
 
     y -= 22
     _rule(canvas, y)
 
-    # Who owes.
-    y -= 26
-    canvas.setFont(REGULAR, 10)
-    canvas.drawString(MARGIN, y, "Debe")
-    y -= 17
-    canvas.setFillColor(FOREGROUND)
-    canvas.setFont(BOLD, 12)
-    canvas.drawString(
-        MARGIN, y, _with_document(bill.tenant_name, bill.tenant_document_type, bill.tenant_document)
-    )
+    # Who charges and who owes: a label, then the name across the page, on as many lines
+    # as it needs, and the document under it.
+    y -= 28
+    for label, name, document_type, document in (
+        ("Cobra", bill.owner_name, bill.owner_document_type, bill.owner_document),
+        ("Debe", bill.tenant_name, bill.tenant_document_type, bill.tenant_document),
+    ):
+        canvas.setFillColor(MUTED)
+        canvas.setFont(REGULAR, 10)
+        canvas.drawString(MARGIN, y, label)
+        canvas.setFillColor(FOREGROUND)
+        canvas.setFont(BOLD, 12)
+        for text in _wrapped(name, BOLD, 12, CONTENT - PARTY_LABEL):
+            canvas.drawString(MARGIN + PARTY_LABEL, y, text)
+            y -= 16
+        if document:
+            canvas.setFillColor(MUTED)
+            canvas.setFont(REGULAR, 11)
+            canvas.drawString(
+                MARGIN + PARTY_LABEL, y, f"{DOCUMENT_LABELS[document_type]} {document}"
+            )
+            y -= 16
+        y -= 8
+    y += 4
+    _rule(canvas, y)
 
     # What for: each thing charged, with its own amount.
-    y -= 34
+    y -= 30
     for line in bill.lines:
         description = _wrapped(line.description, REGULAR, 12, CONTENT - 120)
         # A line is never split between two pages.

@@ -55,8 +55,32 @@ const BACK = "/bills";
 const PROOF_FAILED =
   "El pago quedó guardado, pero no pudimos subir el comprobante. Elimina el pago y regístralo de nuevo si lo necesitas.";
 
-const withDocument = (name: string, type: DocumentType, document: string | null) =>
-  document ? `${name} · ${DOCUMENT_TYPE_LABELS[type]} ${document}` : name;
+/** Who charges or who owes: the name on as many lines as it needs, its document under it. */
+function Party({
+  label,
+  name,
+  documentType,
+  documentNumber,
+}: {
+  label: string;
+  name: string;
+  documentType: DocumentType;
+  documentNumber: string | null;
+}) {
+  return (
+    <>
+      <dt className="pt-0.5 text-badge font-normal text-muted-foreground">{label}</dt>
+      <dd className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-section font-semibold break-words">{name}</span>
+        {documentNumber && (
+          <span className="text-support text-muted-foreground">
+            {DOCUMENT_TYPE_LABELS[documentType]} {documentNumber}
+          </span>
+        )}
+      </dd>
+    </>
+  );
+}
 
 /** The bill as the tenant reads it. The stored PDF is the one that counts. */
 function DocumentPreview({ bill }: { bill: Bill }) {
@@ -69,31 +93,32 @@ function DocumentPreview({ bill }: { bill: Bill }) {
       aria-label="Vista previa del documento"
       className="flex flex-col gap-3.5 rounded-md border border-border bg-card p-5"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-0.5">
+      <div className="flex flex-col gap-0.5">
+        <div className="flex items-baseline justify-between gap-3">
           <p className="text-body font-bold">Cuenta de cobro</p>
-          <p className="text-badge font-normal text-muted-foreground">
-            {formatBillNumber(bill.number)} · {formatLongDate(bill.issue_date)}
-            {!bill.period && ` · ${bill.unit_name}`}
-          </p>
+          <p className="shrink-0 text-body font-bold">{formatBillNumber(bill.number)}</p>
         </div>
-        <p className="text-right text-badge font-normal text-muted-foreground">
-          {bill.issuer.name}
-          {bill.issuer.document_number && (
-            <>
-              <br />
-              {DOCUMENT_TYPE_LABELS[bill.issuer.document_type]} {bill.issuer.document_number}
-            </>
-          )}
+        <p className="text-badge font-normal break-words text-muted-foreground">
+          {formatLongDate(bill.issue_date)}
+          {!bill.period && ` · ${bill.unit_name}`}
         </p>
       </div>
       <hr className="border-border" />
-      <div className="flex flex-col gap-0.5">
-        <p className="text-badge font-normal text-muted-foreground">Debe</p>
-        <p className="text-section font-semibold">
-          {withDocument(bill.tenant_name, bill.tenant_document_type, bill.tenant_document_number)}
-        </p>
-      </div>
+      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2.5">
+        <Party
+          label="Cobra"
+          name={bill.issuer.name}
+          documentType={bill.issuer.document_type}
+          documentNumber={bill.issuer.document_number}
+        />
+        <Party
+          label="Debe"
+          name={bill.tenant_name}
+          documentType={bill.tenant_document_type}
+          documentNumber={bill.tenant_document_number}
+        />
+      </dl>
+      <hr className="border-border" />
       {bill.items.map((item, index) => (
         <div key={index} className="flex justify-between gap-3 text-section">
           <p className="min-w-0 break-words">

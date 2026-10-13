@@ -168,8 +168,35 @@ def test_monthly_bill_says_what_it_is_about_under_its_first_line_only() -> None:
     assert pdf.count(b"Apto 2") == 1
 
 
-def test_unit_name_too_long_for_the_heading_goes_below_it() -> None:
+def test_unit_name_too_long_for_its_line_goes_on_to_the_next() -> None:
     pdf = render_bill(replace(BILL, unit_name="Local del primer piso " * 5))
 
-    assert b"1 de octubre de 2026) Tj" in pdf
-    assert b"Local del primer piso" in pdf
+    assert b"1 de octubre de 2026 \\267 Local del primer piso" in pdf
+    # Cut where the line ends, with every word still there.
+    assert pdf.count(b"Local") == 5
+
+
+def test_heading_has_the_title_and_the_number_and_then_who_charges_and_who_owes() -> None:
+    pdf = render_bill(BILL)
+
+    # The number stands alone, across from the title; the date goes on the line below.
+    assert b"(Cuenta de cobro) Tj" in pdf
+    assert b"0031) Tj" in pdf
+    assert b"(1 de octubre de 2026) Tj" in pdf
+    # Each one with a label, the name on its own line and the document under it.
+    for text in (b"(Cobra) Tj", b"(Ana Gomez) Tj", b"(Debe) Tj", b"(Carlos Rojas) Tj"):
+        assert text in pdf, text
+    assert pdf.index(b"(Cobra) Tj") < pdf.index(b"(Debe) Tj") < pdf.index(b"Canon de")
+
+
+def test_long_names_take_the_lines_they_need_instead_of_running_over_the_title() -> None:
+    owner = "MARIA CRISTINA SUZETTE GEORGETTE RODRIGUEZ de GUARIN y SUCESORES ASOCIADOS"
+    tenant = "Comercializadora Internacional de Productos del Pacifico y del Caribe Colombiano SAS"
+
+    pdf = render_bill(replace(BILL, owner_name=owner, tenant_name=tenant))
+
+    # Neither fits on a line, so each is cut into several; nothing is lost.
+    assert f"({owner}) Tj".encode() not in pdf and f"({tenant}) Tj".encode() not in pdf
+    for word in (*owner.split(), *tenant.split()):
+        assert word.encode() in pdf, word
+    assert pages(pdf) == 1
