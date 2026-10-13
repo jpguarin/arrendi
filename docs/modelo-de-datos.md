@@ -118,6 +118,9 @@ En esta tabla, `owner_id` es la propia columna `id`.
 | `charge_deposit` | boolean, por defecto false | Si la primera cuenta mensual cobra el depósito. La API lo enciende en los contratos nuevos, salvo que el propietario diga que no; los anteriores a esta columna quedaron en false |
 | `status` | text | `active`, `ended` |
 | `auto_send` | boolean, por defecto true | |
+| `late_fee_enabled` | boolean, por defecto false | Si pagar tarde el canon genera recargo por mora |
+| `late_fee_percent` | numeric(5,2), nulo | Porcentaje del canon. Mayor que 0, hasta 100. Obligatorio con el recargo activo; se conserva al apagarlo |
+| `late_fee_grace_days` | smallint, por defecto 0 | Días después del vencimiento antes de que aplique. Entre 0 y 30 |
 | `payment_details` | text, nulo | Datos de pago propios del contrato. Nulo: sus cuentas usan los del propietario |
 | `document_path` | text, nulo | Ruta en el almacenamiento |
 | `document_uploaded_at` | timestamptz, nulo | |
@@ -156,6 +159,9 @@ Permisos: `arrendi_api` lee, crea y borra; `arrendi_tasks` solo lee, para genera
 | `total` | bigint | Mayor que cero |
 | `status` | text | `pending`, `partial`, `paid`, `overdue`, `voided` |
 | `payment_details` | text, nulo | Datos de pago con los que se emitió. Se fijan al emitir y no cambian |
+| `late_fee_amount` | bigint, nulo | Lo que cuesta pagar tarde esta cuenta, fijado al emitir. Nulo si el contrato no tenía recargo: nunca lo genera |
+| `late_fee_deadline` | date, nulo | Último día para pagarla sin recargo: vencimiento más días de gracia |
+| `late_fee_waived_at` | timestamptz, nulo | Cuándo el propietario decidió no cobrarlo |
 | `signature_path` | text, nulo | Firma del propietario con la que se emitió. Nulo si no tenía. El archivo no se borra mientras una cuenta lo use |
 | `pdf_path` | text | |
 | `voided_at` | timestamptz, nulo | |
@@ -180,6 +186,7 @@ Permisos: `arrendi_api` y `arrendi_tasks` leen, crean y modifican cuentas (la ta
 | `description` | text | |
 | `amount` | bigint | Mayor que cero |
 | `position` | smallint, por defecto 0 | Orden del concepto dentro de la cuenta, desde 0 |
+| `late_fee_of_bill_id` | uuid, FK, nulo | La cuenta atrasada de la que este concepto es el recargo. La clave foránea lleva el propietario |
 
 Los conceptos de una cuenta emitida no cambian: ningún rol puede modificarlos, solo leerlos y crearlos.
 
