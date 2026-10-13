@@ -2,6 +2,7 @@ from app.models.base import Base
 from app.models.bill import Bill
 from app.models.bill_item import BillItem
 from app.models.lease import Lease
+from app.models.lease_item import LeaseItem
 from app.models.notification import Notification
 from app.models.owner import Owner
 from app.models.payment import Payment
@@ -14,6 +15,7 @@ __all__ = [
     "Bill",
     "BillItem",
     "Lease",
+    "LeaseItem",
     "Notification",
     "Owner",
     "Payment",

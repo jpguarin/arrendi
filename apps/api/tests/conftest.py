@@ -131,6 +131,7 @@ OWNED_TABLES = (
     "notifications",
     "bill_items",
     "bills",
+    "lease_items",
     "leases",
     "tenants",
     "units",
