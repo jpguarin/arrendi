@@ -34,6 +34,33 @@ export function parsePesos(text: string): number | null {
   return digits ? Number(digits) : null;
 }
 
+/** A percentage as the API writes it (`"5.00"`, `"2.50"`), as `5 %` or `2,5 %`. */
+export function formatPercent(value: string | number): string {
+  const [whole, decimals = ""] = String(value).split(".");
+  const trimmed = decimals.replace(/0+$/, "");
+  return `${whole}${trimmed ? `,${trimmed}` : ""} %`;
+}
+
+/**
+ * What the owner typed as a percentage (`2,5`, `2.5`, `5 %`), as the API takes it (`2.5`).
+ * Null unless it is above 0, up to 100, and has two decimals at most.
+ */
+export function parsePercent(text: string): string | null {
+  const plain = text.replace("%", "").trim().replace(",", ".");
+  if (!/^\d{1,3}(\.\d{1,2})?$/.test(plain)) return null;
+  const value = Number(plain);
+  return value > 0 && value <= 100 ? String(value) : null;
+}
+
+/**
+ * The late fee a percentage of the rent comes to, in whole pesos, half a peso going up.
+ * Only to show the owner while they type: the API works out the one that is charged.
+ */
+export function percentOf(amount: number, percent: string): number {
+  // In hundredths of a percent, so the arithmetic is on whole numbers.
+  return Math.round((amount * Math.round(Number(percent) * 100)) / 10000);
+}
+
 /**
  * A business date (`2026-10-05`) as `5 oct 2026`.
  *

@@ -18,7 +18,7 @@ import {
   TENANT_DOCUMENT_TYPE,
   TENANT_DOCUMENT_TYPE_OPTIONS,
 } from "@/lib/labels";
-import { formatPesos } from "@/lib/format";
+import { formatPesos, parsePercent, percentOf } from "@/lib/format";
 import { email, item, optionalText, paymentDetails, requiredText } from "@/lib/validation";
 
 const schema = z
@@ -38,7 +38,15 @@ const schema = z
     deposit: z.number().nullable(),
     charge_deposit: z.boolean(),
     items: z.array(item).max(MAX_ITEMS),
+    late_fee_enabled: z.boolean(),
+    // As typed: "5", "2,5". Read with `parsePercent`.
+    late_fee_percent: z.string(),
+    late_fee_grace_days: z.string().regex(/^(\d|[12]\d|30)$/, "Escribe un número de 0 a 30."),
     payment_details: paymentDetails,
+  })
+  .refine((values) => !values.late_fee_enabled || parsePercent(values.late_fee_percent), {
+    path: ["late_fee_percent"],
+    message: "Escribe un porcentaje mayor que 0, hasta 100 y con dos decimales como mucho.",
   })
   // ISO dates compare as text.
   .refine((values) => !values.end_date || values.end_date > values.start_date, {
@@ -67,6 +75,10 @@ export function leaseTerms(values: LeaseValues) {
     deposit: values.deposit,
     charge_deposit: values.charge_deposit,
     items: values.items.map((charged) => ({ ...charged, amount: charged.amount ?? 0 })),
+    late_fee_enabled: values.late_fee_enabled,
+    // Kept when the late fee is off, to turn it back on as it was.
+    late_fee_percent: parsePercent(values.late_fee_percent),
+    late_fee_grace_days: Number(values.late_fee_grace_days),
     payment_details: values.payment_details || null,
   };
 }
@@ -82,6 +94,8 @@ type LeaseFormProps = {
   showChargeDeposit?: boolean;
   /** What the lease charges every month besides the rent, like the building fee. */
   showItems?: boolean;
+  /** What paying the rent late costs, when the lease says so. */
+  showLateFee?: boolean;
   /** The tenant's document, which the bill shows. The onboarding leaves it for later. */
   showTenantDocument?: boolean;
   /** How to pay this lease's bills, when it is not as Ajustes says. */
@@ -99,6 +113,7 @@ export function LeaseForm({
   showDeposit = false,
   showChargeDeposit = false,
   showItems = false,
+  showLateFee = false,
   showTenantDocument = false,
   showPaymentDetails = false,
   onSubmit,
@@ -125,6 +140,9 @@ export function LeaseForm({
       deposit: null,
       charge_deposit: true,
       items: [],
+      late_fee_enabled: false,
+      late_fee_percent: "",
+      late_fee_grace_days: "0",
       payment_details: "",
       ...defaultValues,
     },
@@ -134,6 +152,8 @@ export function LeaseForm({
   const hasDeposit = Boolean(useWatch({ control, name: "deposit" }));
   const rent = useWatch({ control, name: "rent" });
   const items = useWatch({ control, name: "items" });
+  const lateFeeOn = useWatch({ control, name: "late_fee_enabled" });
+  const lateFeePercent = parsePercent(useWatch({ control, name: "late_fee_percent" }));
 
   return (
     <form id={id} onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
@@ -319,6 +339,53 @@ export function LeaseForm({
             </div>
           )}
         </FieldSet>
+      )}
+      {showLateFee && (
+        <>
+          <label className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
+            <span className="flex flex-col gap-0.5">
+              <span className="text-section">Cobrar recargo por mora</span>
+              <span className="text-support text-muted-foreground">
+                Si el canon no se paga a tiempo, la cuenta del mes siguiente trae un recargo,
+                una sola vez. Actívalo solo si tu contrato lo dice.
+              </span>
+            </span>
+            <Controller
+              control={control}
+              name="late_fee_enabled"
+              render={({ field }) => (
+                <Switch checked={field.value} onCheckedChange={field.onChange} />
+              )}
+            />
+          </label>
+          {lateFeeOn && (
+            <div className="grid grid-cols-2 items-start gap-3">
+              <FormField
+                id="late_fee_percent"
+                label="Porcentaje del canon"
+                placeholder="5"
+                inputMode="decimal"
+                autoComplete="off"
+                description={
+                  rent && lateFeePercent
+                    ? `Con este canon, el recargo es de ${formatPesos(percentOf(rent, lateFeePercent))}.`
+                    : "Por ejemplo 5 o 2,5."
+                }
+                error={errors.late_fee_percent?.message}
+                {...register("late_fee_percent")}
+              />
+              <FormField
+                id="late_fee_grace_days"
+                label="Días de gracia"
+                inputMode="numeric"
+                autoComplete="off"
+                description="Después del vencimiento, antes de que aplique."
+                error={errors.late_fee_grace_days?.message}
+                {...register("late_fee_grace_days")}
+              />
+            </div>
+          )}
+        </>
       )}
       {showPaymentDetails && (
         <TextareaField

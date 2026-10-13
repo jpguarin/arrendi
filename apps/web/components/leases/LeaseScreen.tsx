@@ -40,6 +40,7 @@ import {
   formatDateTime,
   formatDayMonth,
   formatMonth,
+  formatPercent,
   formatPesos,
   todayInBogota,
 } from "@/lib/format";
@@ -312,6 +313,18 @@ export function LeaseScreen({
           <Term label="Fin">{lease.end_date ? formatDate(lease.end_date) : "Sin fecha"}</Term>
           <Term label="Depósito">
             {lease.deposit !== null ? formatPesos(lease.deposit) : "Sin depósito"}
+          </Term>
+          <Term label="Recargo por mora">
+            {lease.late_fee_enabled && lease.late_fee_percent
+              ? `${formatPercent(lease.late_fee_percent)} del canon`
+              : "No se cobra"}
+            {lease.late_fee_enabled && lease.late_fee_grace_days > 0 && (
+              <span className="block text-support font-normal text-muted-foreground">
+                {lease.late_fee_grace_days === 1
+                  ? "1 día de gracia"
+                  : `${lease.late_fee_grace_days} días de gracia`}
+              </span>
+            )}
           </Term>
         </dl>
 
