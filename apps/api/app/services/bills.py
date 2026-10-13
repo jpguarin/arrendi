@@ -5,7 +5,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID, uuid4
 
 from fastapi import BackgroundTasks
-from sqlalchemy import Select, exists, func, select
+from sqlalchemy import ColumnElement, Select, and_, exists, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, aliased
 
@@ -23,7 +23,7 @@ from app.models import (
     Unit,
 )
 from app.pdf.bill import BillDocument, BillLine, SignatureError, render_bill
-from app.pdf.format import format_month
+from app.pdf.format import format_month, format_number, late_fee_notice
 from app.schemas.bill import (
     BillCreate,
     BillIssuer,
@@ -141,8 +141,9 @@ def _document(session: Session, storage: Storage, bill: Bill, voided: bool = Fal
         payment_details=bill.payment_details,
         voided=voided,
         unit_name=None if bill.period else unit.name,
-        late_fee_amount=bill.late_fee_amount,
-        late_fee_deadline=bill.late_fee_deadline,
+        # A voided bill is owed no more, and neither is a fee for paying it late.
+        late_fee_amount=None if voided else bill.late_fee_amount,
+        late_fee_deadline=None if voided else bill.late_fee_deadline,
         signature=signature,
     )
 
@@ -184,15 +185,30 @@ _PAID_IN_TIME = (
 )
 
 
-def _late_fee_charge(session: Session, bill_id: UUID) -> tuple[UUID, int] | None:
-    """The bill that charged the late fee of this one, by id and number, if any did.
+def _is_late(today: date) -> ColumnElement[bool]:
+    """Whether a bill was not paid in full by its deadline, which has passed."""
+    return and_(Bill.late_fee_deadline < today, _PAID_IN_TIME < Bill.total)
+
+
+def _charges_fee_of(charging: type[Bill], late_bill_id: object) -> ColumnElement[bool]:
+    """Whether `charging` has the late fee of a bill among its items.
 
     A voided bill charges nothing: the one that replaces it gets the fee again.
     """
+    return and_(
+        BillItem.bill_id == charging.id,
+        BillItem.late_fee_of_bill_id == late_bill_id,
+        charging.status != "voided",
+    )
+
+
+def _late_fee_charge(session: Session, bill_id: UUID) -> tuple[UUID, int] | None:
+    """The bill that charged the late fee of this one, by id and number, if any did."""
+    charging = aliased(Bill)
     charged = session.execute(
-        select(Bill.id, Bill.number)
-        .join(BillItem, BillItem.bill_id == Bill.id)
-        .where(BillItem.late_fee_of_bill_id == bill_id, Bill.status != "voided")
+        select(charging.id, charging.number).where(
+            exists().where(_charges_fee_of(charging, bill_id))
+        )
     ).first()
     return (charged.id, charged.number) if charged else None
 
@@ -204,11 +220,6 @@ def _late_fees(session: Session, lease: Lease, today: date) -> list[Charge]:
     was neither waived nor charged yet.
     """
     charging = aliased(Bill)
-    charged = exists().where(
-        BillItem.late_fee_of_bill_id == Bill.id,
-        BillItem.bill_id == charging.id,
-        charging.status != "voided",
-    )
     late = session.scalars(
         select(Bill)
         .where(
@@ -216,9 +227,8 @@ def _late_fees(session: Session, lease: Lease, today: date) -> list[Charge]:
             Bill.status != "voided",
             Bill.late_fee_amount.is_not(None),
             Bill.late_fee_waived_at.is_(None),
-            Bill.late_fee_deadline < today,
-            _PAID_IN_TIME < Bill.total,
-            ~charged,
+            _is_late(today),
+            ~exists().where(_charges_fee_of(charging, Bill.id)),
         )
         .order_by(Bill.period, Bill.number)
     )
@@ -242,18 +252,23 @@ def late_fee_of(session: Session, bill: Bill, today: date) -> LateFee | None:
     elif bill.late_fee_waived_at is not None:
         status = "waived"
     else:
-        paid_in_time = session.scalar(
-            select(func.coalesce(func.sum(Payment.amount), 0)).where(
-                Payment.bill_id == bill.id, Payment.payment_date <= bill.late_fee_deadline
-            )
-        )
-        late = today > bill.late_fee_deadline and paid_in_time < bill.total
+        late = session.scalar(select(_is_late(today)).where(Bill.id == bill.id))
         status = "pending" if late else "on_time"
     return LateFee(
         amount=bill.late_fee_amount,
         deadline=bill.late_fee_deadline,
         status=status,
         charged_on=LateFeeCharge(id=charge[0], number=charge[1]) if charge else None,
+        notice=late_fee_notice(bill.late_fee_amount, bill.late_fee_deadline),
+    )
+
+
+def charges_late_fee(session: Session, bill_id: UUID) -> bool:
+    """Whether the bill has the late fee of an earlier one among its items."""
+    return session.scalar(
+        select(
+            exists().where(BillItem.bill_id == bill_id, BillItem.late_fee_of_bill_id.is_not(None))
+        )
     )
 
 
@@ -285,7 +300,7 @@ def _issue(
     number = owner.next_number
     owner.next_number = number + 1
 
-    late_fee = None
+    late_fee = deadline = None
     if origin == "monthly":
         # Decided here, under the lock, so two requests at once cannot both charge the
         # same late fee or both be the first bill.
@@ -293,7 +308,10 @@ def _issue(
         if _owes_deposit(session, lease):
             charges = [*charges, Charge(DEPOSIT, lease.deposit)]
         # What paying this one late will cost: a percentage of its rent, the first charge.
-        if lease.late_fee_enabled:
+        # Unless its deadline is already behind, as when the bill of a month is generated
+        # by hand weeks into it: nobody could have paid that one in time.
+        deadline = due_date + timedelta(days=lease.late_fee_grace_days)
+        if lease.late_fee_enabled and deadline >= today:
             late_fee = late_fee_amount(charges[0].amount, lease.late_fee_percent)
 
     bill = Bill(
@@ -314,9 +332,7 @@ def _issue(
         signature_path=owner.signature_path,
         # Its own terms for paying late, kept too. The fee goes on a later bill.
         late_fee_amount=late_fee,
-        late_fee_deadline=(
-            due_date + timedelta(days=lease.late_fee_grace_days) if late_fee else None
-        ),
+        late_fee_deadline=deadline if late_fee else None,
         # Already past its due date: the same thing the daily task would do tomorrow.
         status="overdue" if due_date < today else "pending",
     )
@@ -539,6 +555,7 @@ def bill_response(session: Session, bill: Bill, today: date) -> BillResponse:
         ),
         signed=bill.signature_path is not None,
         late_fee=late_fee_of(session, bill, today),
+        charges_late_fee=charges_late_fee(session, bill.id),
         created_at=bill.created_at,
         voided_at=bill.voided_at,
         payments=[
@@ -609,6 +626,16 @@ def void_bill(
             "Esta cuenta tiene pagos y no se puede anular.",
             "bill_has_payments",
         )
+    # Its late fee is an item of a later bill, which would go on charging for a bill that
+    # no longer counts. That one goes first.
+    charge = _late_fee_charge(session, bill.id)
+    if charge:
+        raise AppError(
+            400,
+            f"El recargo por mora de esta cuenta se cobró en la cuenta {format_number(charge[1])}. "
+            "Anula primero esa cuenta.",
+            "late_fee_charged_elsewhere",
+        )
     bill.status = "voided"
     bill.voided_at = func.now()
     session.flush()
@@ -633,6 +660,10 @@ def void_bill(
 def _waivable(session: Session, bill_id: UUID) -> Bill:
     """A bill whose late fee is still the owner's to decide on."""
     bill = get_bill(session, bill_id)
+    # The same lock issuing takes: a bill being issued right now has either charged this
+    # fee already, and it shows below, or will see what is decided here.
+    session.execute(select(Owner.id).where(Owner.id == bill.owner_id).with_for_update())
+    session.refresh(bill)
     if bill.late_fee_amount is None or bill.status == "voided":
         raise AppError(400, "Esta cuenta no tiene recargo por mora.", "bill_has_no_late_fee")
     if _late_fee_charge(session, bill.id):

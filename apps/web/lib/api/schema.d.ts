@@ -685,6 +685,8 @@ export interface components {
             /** Signed */
             signed: boolean;
             late_fee: components["schemas"]["LateFee"] | null;
+            /** Charges Late Fee */
+            charges_late_fee: boolean;
             /**
              * Created At
              * Format: date-time
@@ -840,6 +842,8 @@ export interface components {
              */
             status: "on_time" | "pending" | "waived" | "charged";
             charged_on: components["schemas"]["LateFeeCharge"] | null;
+            /** Notice */
+            notice: string;
         };
         /**
          * LateFeeCharge

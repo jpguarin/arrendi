@@ -95,6 +95,8 @@ class LateFee(BaseModel):
     deadline: date
     status: LateFeeStatus
     charged_on: LateFeeCharge | None
+    # What the bill says about it, word for word as on its PDF.
+    notice: str
 
 
 NotificationType = Literal[
@@ -124,6 +126,9 @@ class BillResponse(BillSummary):
     signed: bool
     # Null if the bill was issued without a late fee, is a manual one, or is voided.
     late_fee: LateFee | None
+    # Whether it charges the late fee of an earlier bill. The daily task does not send
+    # such a bill on its own: the owner looks at the fee first.
+    charges_late_fee: bool
     created_at: datetime
     voided_at: datetime | None
     # Both newest first.

@@ -9,6 +9,7 @@ import {
   LeaseForm,
   leaseTenant,
   leaseTerms,
+  newLeaseTerms,
   type LeaseValues,
 } from "@/components/leases/LeaseForm";
 import { LoadError, Loading } from "@/components/LoadState";
@@ -61,7 +62,7 @@ export function NewLeaseScreen({ unitId }: { unitId: string | undefined }) {
     try {
       lease = await create.mutateAsync({
         body: {
-          ...leaseTerms(values),
+          ...newLeaseTerms(values),
           auto_send: true,
           unit_id: unitId,
           tenant: leaseTenant(values),

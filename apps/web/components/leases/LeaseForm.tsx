@@ -41,12 +41,18 @@ const schema = z
     late_fee_enabled: z.boolean(),
     // As typed: "5", "2,5". Read with `parsePercent`.
     late_fee_percent: z.string(),
-    late_fee_grace_days: z.string().regex(/^(\d|[12]\d|30)$/, "Escribe un número de 0 a 30."),
+    late_fee_grace_days: z.string(),
     payment_details: paymentDetails,
   })
+  // Only while the late fee is on: its fields are hidden otherwise, and an error on a
+  // field that is not there would stop the form without saying why.
   .refine((values) => !values.late_fee_enabled || parsePercent(values.late_fee_percent), {
     path: ["late_fee_percent"],
     message: "Escribe un porcentaje mayor que 0, hasta 100 y con dos decimales como mucho.",
+  })
+  .refine((values) => !values.late_fee_enabled || graceDays(values.late_fee_grace_days) !== null, {
+    path: ["late_fee_grace_days"],
+    message: "Escribe un número de 0 a 30.",
   })
   // ISO dates compare as text.
   .refine((values) => !values.end_date || values.end_date > values.start_date, {
@@ -54,6 +60,11 @@ const schema = z
     message: "Debe ser posterior a la fecha de inicio.",
   });
 export type LeaseValues = z.infer<typeof schema>;
+
+/** The days of grace as typed, from 0 to 30, or null if they are not that. */
+function graceDays(text: string): number | null {
+  return /^(\d|[12]\d|30)$/.test(text.trim()) ? Number(text) : null;
+}
 
 /** The tenant of the form, in the shape the API takes them. */
 export function leaseTenant(values: LeaseValues) {
@@ -76,11 +87,18 @@ export function leaseTerms(values: LeaseValues) {
     charge_deposit: values.charge_deposit,
     items: values.items.map((charged) => ({ ...charged, amount: charged.amount ?? 0 })),
     late_fee_enabled: values.late_fee_enabled,
-    // Kept when the late fee is off, to turn it back on as it was.
-    late_fee_percent: parsePercent(values.late_fee_percent),
-    late_fee_grace_days: Number(values.late_fee_grace_days),
+    // With the late fee off these are not checked, so whatever is not valid is left out:
+    // the lease keeps what it had, to turn the fee back on as it was.
+    late_fee_percent: parsePercent(values.late_fee_percent) ?? undefined,
+    late_fee_grace_days: graceDays(values.late_fee_grace_days) ?? undefined,
     payment_details: values.payment_details || null,
   };
+}
+
+/** The terms of a lease that does not exist yet: nothing to keep, so nothing is left out. */
+export function newLeaseTerms(values: LeaseValues) {
+  const terms = leaseTerms(values);
+  return { ...terms, late_fee_grace_days: terms.late_fee_grace_days ?? 0 };
 }
 
 type LeaseFormProps = {

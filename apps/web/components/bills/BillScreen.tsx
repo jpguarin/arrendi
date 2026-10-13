@@ -142,8 +142,7 @@ function DocumentPreview({ bill }: { bill: Bill }) {
       </div>
       <p className="rounded-md bg-background px-3 py-2.5 text-support whitespace-pre-line text-foreground-soft">
         Vence el {formatLongDate(bill.due_date)}
-        {bill.late_fee &&
-          `\nSi se paga después del ${formatLongDate(bill.late_fee.deadline)}, la siguiente cuenta incluirá un recargo por mora de ${formatPesos(bill.late_fee.amount)}.`}
+        {bill.late_fee && `\n${bill.late_fee.notice}`}
         {bill.issuer.payment_details && `\nPagar a: ${bill.issuer.payment_details}`}
       </p>
       {/* How the PDF ends: the signature, or a line to sign on, then who signs. */}
@@ -515,7 +514,11 @@ export function BillScreen({
         {error && <FormMessage tone="error">{error}</FormMessage>}
         {!error && emailed && <FormMessage tone="success">{emailed}</FormMessage>}
         {!voided && !wasSent && !emailing && (
-          <FormMessage tone="info">Esta cuenta aún no se le ha enviado al arrendatario.</FormMessage>
+          <FormMessage tone="info">
+            {bill.charges_late_fee
+              ? "Esta cuenta trae un recargo por mora y no se envió sola. Revisa que el pago atrasado esté bien registrado antes de enviarla."
+              : "Esta cuenta aún no se le ha enviado al arrendatario."}
+          </FormMessage>
         )}
         {voided && (
           <FormMessage tone="info">
