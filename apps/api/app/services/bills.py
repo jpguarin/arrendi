@@ -182,6 +182,8 @@ def _issue(
         # The bill's own, else the lease's, else the owner's. Kept here, so changing any
         # of them later does not touch this bill.
         payment_details=payment_details or lease.payment_details or owner.payment_details,
+        # The owner's signature as it is now, kept for the same reason.
+        signature_path=owner.signature_path,
         # Already past its due date: the same thing the daily task would do tomorrow.
         status="overdue" if due_date < today else "pending",
     )

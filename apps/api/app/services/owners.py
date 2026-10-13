@@ -38,6 +38,7 @@ def settings_response(owner: Owner) -> SettingsResponse:
         document_type=owner.document_type,
         document_number=owner.document_number,
         payment_details=owner.payment_details,
+        has_signature=owner.signature_path is not None,
         send_day=owner.send_day,
         reminder_1=owner.reminder_1,
         reminder_2=owner.reminder_2,
