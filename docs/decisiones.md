@@ -32,6 +32,8 @@
 | Cuenta mensual a mano | `POST /api/leases/{id}/bills` genera la del mes en curso, con el mismo servicio que usa la tarea diaria |
 | Ajustes mínimo en la etapa 3 | Nombre, documento y datos de pago se adelantan a la etapa 3, porque el PDF los necesita. El resto de la configuración sigue en la etapa 4 |
 | Cuenta con vencimiento pasado | Nace `overdue`, sin esperar a la tarea diaria |
+| Varios conceptos por cuenta | Una cuenta es la suma de sus conceptos. El contrato guarda conceptos fijos (tabla `lease_items`) que salen en todas sus cuentas mensuales, después del canon; la cuenta manual lleva los que se le escriban. Hasta 10 en cada caso. Un solo vencimiento por cuenta. El canon sigue siendo un campo aparte del contrato. En el registro inicial no se piden: se agregan al editar el contrato |
+| PDF de más de una página | Si los conceptos y los datos de pago no caben, la cuenta sigue en otra hoja. La más llena posible con descripciones cortas (canon, 10 conceptos y depósito) cabe en una |
 | Depósito en la primera cuenta | El depósito del contrato se cobra una sola vez, como concepto aparte en la primera cuenta mensual, y el total es la suma. Un interruptor en el contrato lo apaga si el arrendatario ya lo pagó por fuera. Los contratos que existían antes quedaron apagados: su depósito se da por cobrado. En el inicio cuenta como cualquier cobro, dentro del total de la cuenta |
 | Datos de pago por contrato y por cuenta | Los de Ajustes son el valor por defecto. Un contrato puede llevar los suyos, al crearlo o al editarlo, y una cuenta manual los suyos. La cuenta guarda los que resultan al emitir (cuenta, contrato, Ajustes) y no cambian después. Las cuentas emitidas antes de esto quedaron con los de Ajustes de ese día |
 | Proveedor de correo | Resend, por su API HTTP con `httpx2`, sin SDK |
@@ -45,7 +47,7 @@
 | Fuente del PDF | Sigue Helvetica, aunque la marca pide Inter: no viaja ningún archivo de fuente con la API |
 | Gráficas | Hechas con Tailwind, sin librería: una barra de composición y barras por mes no la justifican |
 | Mes de un pago | El de su cuenta, no el de la fecha en que se recibió |
-| Eliminar un pago | Borrado real, con su comprobante. Es la única tabla donde la API borra |
+| Eliminar un pago | Borrado real, con su comprobante. Junto con `lease_items`, cuya lista se reemplaza al editar el contrato, son las únicas tablas donde la API borra |
 | PDF | ReportLab con Helvetica, que ya trae; no se empaqueta Figtree |
 
 ## Provisionales
