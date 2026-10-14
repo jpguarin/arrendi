@@ -106,6 +106,7 @@ Se configura a mano en GitHub, en Settings → Branches (o Rulesets), para `main
 - Exigir que pase el check de CI, cuando exista.
 - Bloquear los *force push* y el borrado de la rama.
 - En Settings → General: permitir solo *merge commits* y activar el borrado automático de la rama al fusionar.
+- En Settings → General → Default branch: **`develop` como rama por defecto.** Así cada PR nuevo apunta a `develop` desde el inicio. Solo la promoción y el hotfix cambian la base a `main` a mano. Con `main` por defecto, un PR de feature termina fusionado en producción sin pasar por pruebas si se olvida cambiar la base.
 
 Si el plan de GitHub no impone reglas en repositorios privados, el flujo queda por convención. Se confirma en su documentación vigente.
 
