@@ -207,6 +207,8 @@ Fuera de producción, la API nunca envía correo a arrendatarios reales: todo de
 
 Solo las variables con prefijo `NEXT_PUBLIC_` llegan al navegador. La clave secreta nunca va en la web.
 
+`NEXT_PUBLIC_APP_ENV` no se define a mano: `next.config.ts` la calcula al compilar desde `VERCEL_ENV`, que Vercel pone en cada despliegue (`production` o `preview`). Fuera de Vercel vale `local`. De ella salen la franja y la pestaña que identifican el ambiente (`docs/diseno.md`).
+
 Supabase retira las claves antiguas `anon` y `service_role` a finales de 2026; por eso se usan la publicable y la secreta.
 
 ## PWA

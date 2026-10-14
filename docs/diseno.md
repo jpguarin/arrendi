@@ -134,6 +134,16 @@ Se construyen sobre shadcn/ui (con Radix), ajustando variantes y medidas a este 
 | `ActionFooter` | propio | Franja inferior fija con la acción principal de un detalle |
 | `FormMessage` | propio | Mensaje con tres tonos: `error`, `success` e `info` |
 | `Loading`, `LoadError` | propio | Carga y error de una pantalla |
+| `EnvironmentBanner` | propio | Franja de 24 px arriba de todas las pantallas que dice el ambiente: "ENV · develop" en ámbar suave (`warning-tint`, texto `warning-ink`) y "ENV · local" en azul fuerte (`info`, texto blanco en tema claro y `rail` en oscuro, para el contraste AA). En producción no existe |
+
+### Identificador de ambiente
+
+Fuera de producción, la web dice dónde está, para no confundir ambientes con varias pestañas abiertas (`lib/environment.ts`):
+
+- **Franja:** `EnvironmentBanner`, sobre todas las pantallas, también el acceso y los detalles. El texto dice el ambiente; el color solo lo apoya.
+- **Pestaña:** el título empieza con 🧪 en pruebas y 💻 en local, y el favicon lleva un punto ámbar o azul (`public/icons/favicon-preview.png`, `favicon-local.png`).
+- **Producción:** sin franja, título `Arrendi` y el favicon de siempre (`public/icons/favicon.png`).
+- Las vistas previas de cualquier rama cuentan como pruebas y dicen "ENV · develop", aunque la rama sea otra.
 
 - `cn` se importa siempre de `@/lib/utils`, que conoce los tamaños de letra propios.
 - El dinero y las fechas se muestran con `lib/format.ts`, nunca con `Intl` directo. `formatDateHour` da fecha y hora de Colombia: `5 oct 2026 · 3:42 p. m.`.
