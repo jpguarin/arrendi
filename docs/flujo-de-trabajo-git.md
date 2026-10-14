@@ -27,13 +27,14 @@ docs/<nombre> ──PR──►    │                          │
 
 ## Reglas
 
-1. **Nadie sube directo** a `main` ni a `develop`. Todo entra por PR, aunque lo fusione el mismo fundador.
+1. **Nadie sube directo** a `main` ni a `develop`. Todo entra por PR, aunque lo fusione el mismo fundador. El hook `pre-push` lo impide desde el computador (ver "Protección").
 2. **Un PR de feature, fix o docs apunta a `develop`.** Al fusionarlo, Vercel despliega el ambiente de pruebas y ahí se prueba.
 3. **A `main` solo llegan promociones desde `develop`, y hotfix.** Lo que está en `develop` es lo que se publica: si algo no debe salir todavía, no se fusiona en `develop`.
 4. **Se fusiona con commit de fusión** (*Create a merge commit*) en todos los PR. Nunca *squash*, y menos en la promoción o el hotfix: `main` y `develop` divergerían y cada promoción traería conflictos.
 5. **Commits** pequeños, en español, un cambio lógico por commit.
-6. **La rama se borra al fusionar.**
-7. **Antes de abrir un PR** pasan `pnpm lint`, `pnpm test` y `pnpm build`. El CI (ver abajo) lo comprueba en cada PR.
+6. **La rama se borra a mano al fusionar**, con el botón *Delete branch* del PR. El borrado automático de GitHub está apagado (ver "Protección").
+7. **Antes de abrir un PR** pasan `pnpm lint`, `pnpm test` y `pnpm build`. El CI (ver abajo) lo comprueba en cada PR. **No se fusiona un PR con el CI en rojo**: GitHub no lo impide en este plan, así que se mira el check antes de fusionar.
+8. **Nunca se abre un PR con `main` o `develop` como rama de origen**, salvo la promoción (`develop` → `main`). Para llevar algo de `main` a `develop` se usa la rama del hotfix.
 
 ## Feature (nuevo)
 
@@ -62,8 +63,9 @@ git push -u origin hotfix/<nombre-corto>
 ```
 
 1. PR hacia `main`. Al fusionarlo, se despliega producción. Comprobar el arreglo ahí.
-2. **Llevarlo a `develop`** enseguida, para que no se pierda ni choque con la siguiente promoción: PR de `main` hacia `develop`. Si hay conflictos, se resuelven en ese PR.
-3. Si el hotfix lleva una migración, sigue la regla de migraciones y se aplica a las dos bases (producción primero).
+2. **Llevarlo a `develop`** enseguida, para que no se pierda ni choque con la siguiente promoción: un segundo PR de la misma rama `hotfix/<nombre-corto>` hacia `develop`. Si hay conflictos, se resuelven en ese PR. No se usa `main` como origen del PR.
+3. Borrar la rama del hotfix solo después de fusionar los dos PR.
+4. Si el hotfix lleva una migración, sigue la regla de migraciones y se aplica a las dos bases (producción primero).
 
 Un hotfix lleva solo el arreglo: sin mejoras ni limpieza aprovechando el viaje.
 
@@ -82,6 +84,10 @@ PR de `develop` hacia `main`, con este checklist en la descripción:
 
 Después de fusionar, se comprueba `https://<web-prod>/api/health`.
 
+**No se sincroniza `main` hacia `develop` después de la promoción.** Tras fusionar, `main` queda un commit por delante: el de la fusión. Tiene el mismo contenido que `develop`, y la siguiente promoción lo absorbe sin conflictos. No hace falta un PR de `main` hacia `develop`, y con el borrado automático encendido ese PR borraría `main`.
+
+**La rama `develop` no se borra al fusionar la promoción**, aunque GitHub ofrezca el botón *Delete branch*.
+
 ## Migraciones con dos ambientes
 
 Las migraciones se aplican a mano desde el computador, a cada base por separado:
@@ -98,17 +104,45 @@ Si una migración no puede ser compatible, se avisa en el PR y se hace en un mom
 
 Una migración ya aplicada a una base compartida no se edita: se crea otra.
 
-## Protección en GitHub
+## Protección
 
-Se configura a mano en GitHub, en Settings → Branches (o Rulesets), para `main` y `develop`:
+El repositorio es privado y está en el plan Free de GitHub, que no aplica rulesets ni protección de ramas en repositorios privados. Mientras siga así, la protección es esta:
 
-- Exigir PR antes de fusionar, con 0 aprobaciones (trabaja una sola persona).
-- Exigir que pase el check `ci` del workflow CI. GitHub solo lo ofrece en la lista después de que haya corrido una vez.
-- Bloquear los *force push* y el borrado de la rama.
-- En Settings → General: permitir solo *merge commits* y activar el borrado automático de la rama al fusionar.
-- En Settings → General → Default branch: **`develop` como rama por defecto.** Así cada PR nuevo apunta a `develop` desde el inicio. Solo la promoción y el hotfix cambian la base a `main` a mano. Con `main` por defecto, un PR de feature termina fusionado en producción sin pasar por pruebas si se olvida cambiar la base.
+**En GitHub, Settings → General:**
 
-Si el plan de GitHub no impone reglas en repositorios privados, el flujo queda por convención. Se confirma en su documentación vigente.
+- **Default branch:** `develop`. Así cada PR nuevo apunta a `develop` desde el inicio. Solo la promoción y el hotfix cambian la base a `main` a mano. Con `main` por defecto, un PR de feature termina fusionado en producción sin pasar por pruebas si se olvida cambiar la base.
+- **Pull Requests:** solo *Allow merge commits*.
+- **Automatically delete head branches: apagado.** Al fusionar, GitHub borra la rama de origen del PR, y sin protección no distingue `main` ni `develop`. El 14 de octubre de 2026 un PR de `main` hacia `develop` borró `main` así.
+
+**En el computador, el hook `.githooks/pre-push`:** rechaza cualquier push que actualice o borre `main` o `develop`, así sea por error. Se activa una vez por copia del repositorio:
+
+```
+git config core.hooksPath .githooks
+```
+
+Solo protege el computador donde está activo. No cubre lo que se haga en la web de GitHub.
+
+**Lo que queda por convención:** no fusionar un PR con el CI en rojo, no borrar `main` ni `develop` desde la web y no abrir PR con ellas como rama de origen (regla 8).
+
+### Si se borra `main` o `develop` en GitHub
+
+El último despliegue de Vercel sigue en pie: borrar la rama no tumba producción. Se restaura desde el computador con la copia local, al día y comprobada (`git log -1 main`), saltando el hook solo esta vez:
+
+```
+git push --no-verify origin main
+```
+
+`--no-verify` es solo para esto. Nunca para saltarse el flujo.
+
+### Con GitHub Pro
+
+Si el repositorio pasa a GitHub Pro, se crea un ruleset en Settings → Rules → Rulesets → New branch ruleset, para la rama por defecto y el patrón `main`, sin nadie en la lista de excepciones:
+
+- *Restrict deletions* y *Block force pushes*.
+- *Require a pull request before merging*, con 0 aprobaciones y solo el método *Merge*.
+- *Require status checks to pass*, con el check `ci`.
+
+Con eso el borrado automático de ramas se puede volver a encender, y el hook queda como respaldo.
 
 ## CI
 
@@ -134,3 +168,4 @@ Para reproducirlo en local antes de abrir un PR: `pnpm lint && pnpm test && pnpm
 
 - Claude crea la rama, escribe y confirma los cambios y propone la descripción del PR.
 - El push y la fusión los pide o los hace el fundador. Claude no sube ni fusiona sin que se lo pidan.
+- Claude no usa `--no-verify` ni desactiva el hook sin que el fundador lo pida para un caso concreto.
