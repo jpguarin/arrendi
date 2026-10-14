@@ -130,7 +130,7 @@ El nombre `arrendi-api` está escrito en `apps/web/next.config.ts`: la web lo us
 - **Un solo dominio:** Next.js redirige `/api/:ruta*` hacia el proyecto `api` con una regla `rewrites`. El navegador nunca ve dos orígenes, así que no hace falta CORS.
 - **Vistas previas:** cada rama genera un despliegue de vista previa en ambos proyectos. La web de vista previa apunta a la API de la misma rama mediante "Related Projects" de Vercel: `relatedProjects` en `apps/web/vercel.json` y el paquete `@vercel/related-projects`. Si `API_URL` está definida, tiene prioridad y la web apunta a esa API fija (por ejemplo un dominio propio). Sin ella, en Vercel manda el proyecto relacionado y en local se usa `http://localhost:8000`. Ambas usan la base de datos de desarrollo.
 - **Proyectos sin cambios:** Vercel omite el despliegue del proyecto que un commit no toca. Requiere que cada aplicación tenga un `package.json` con nombre único; el de `apps/api` lo cumple.
-- **Tarea diaria:** un Cron Job en `apps/api/vercel.json` llama a `/api/cron/daily` a las 11:00 UTC, que son las 6:00 a. m. en Colombia.
+- **Tarea diaria:** un Cron Job en `apps/api/vercel.json` llama a `/api/cron/daily` a las 11:00 UTC, que son las 6:00 a. m. en Colombia. Vercel solo ejecuta los Cron Jobs en Producción; en vista previa (rama `develop`) la llama a la misma hora el workflow `.github/workflows/preview-cron.yml` de GitHub Actions. Se configura en `docs/guia-supabase-vercel.md`.
 - **Tiempo máximo:** cada llamada tiene un límite de duración, configurable en `vercel.json` con la clave `functions` y la entrada `app/main.py`. La tarea diaria procesa por lotes.
 
 ### Guía de despliegue
