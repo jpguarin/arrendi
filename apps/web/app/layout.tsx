@@ -30,13 +30,9 @@ export const metadata: Metadata = {
     apple: { url: appIcons.apple, sizes: "180x180", type: "image/png" },
   },
   description: "Genera tus cuentas de cobro cada mes, envíalas por correo y sabe quién te debe.",
-  // Outside production the installed app draws under the status bar, so the environment
-  // banner can paint it (components/EnvironmentBanner.tsx). Production stays as it was.
-  appleWebApp: {
-    capable: true,
-    title: "Arrendi",
-    statusBarStyle: environment ? "black-translucent" : "default",
-  },
+  // An opaque status bar: with "black-translucent", iOS 26 blurs the top of the page and
+  // the safe areas push the bottom bar up (docs/diseno.md).
+  appleWebApp: { capable: true, title: "Arrendi", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
@@ -46,7 +42,6 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  ...(environment && { viewportFit: "cover" }),
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: BACKGROUND_LIGHT },
     { media: "(prefers-color-scheme: dark)", color: BACKGROUND_DARK },

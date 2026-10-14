@@ -145,7 +145,7 @@ Fuera de producción, la web dice dónde está, para no confundir ambientes con 
 - **App en la pantalla de inicio:** fuera de producción, el ícono es el ámbar de `docs/new-brand-design/app-icon-dev.svg` (`public/icons/apple-icon-dev.png`, `icon-dev-192.png`, `icon-dev-512.png`), igual en local y en pruebas.
 - **Producción:** sin franja, título `Arrendi`, el favicon de siempre (`public/icons/favicon.png`) y el ícono azul de la app.
 - Las vistas previas de cualquier rama cuentan como pruebas y dicen "ENV · develop", aunque la rama sea otra.
-- **App instalada en el iPhone:** iOS desenfoca lo que queda justo debajo de la barra de estado. Fuera de producción la app se dibuja detrás de la barra de estado (`viewport-fit=cover` y `black-translucent`), la franja pinta esa zona con el color fuerte del tono (`warning` o `info`, para que la hora en blanco se lea) y el texto empieza debajo, donde no hay desenfoque. Producción conserva `default` y no se dibuja detrás de la barra.
+- **App instalada en el iPhone:** la barra de estado es opaca (`default`) en todos los ambientes. Con `black-translucent` y `viewport-fit=cover`, iOS 26 desenfoca la parte de arriba de la página, incluida la franja, y las zonas seguras agregan un espacio debajo de la barra inferior. iOS lee este ajuste al agregar la app a la pantalla de inicio: tras cambiarlo, hay que quitarla y volverla a agregar.
 
 - `cn` se importa siempre de `@/lib/utils`, que conoce los tamaños de letra propios.
 - El dinero y las fechas se muestran con `lib/format.ts`, nunca con `Intl` directo. `formatDateHour` da fecha y hora de Colombia: `5 oct 2026 · 3:42 p. m.`.
