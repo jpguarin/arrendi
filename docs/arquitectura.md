@@ -128,7 +128,7 @@ El nombre `arrendi-api` está escrito en `apps/web/next.config.ts`: la web lo us
 
 - **Punto de entrada de la API:** Vercel detecta la instancia `app` en `apps/api/app/main.py`.
 - **Un solo dominio:** Next.js redirige `/api/:ruta*` hacia el proyecto `api` con una regla `rewrites`. El navegador nunca ve dos orígenes, así que no hace falta CORS.
-- **Vistas previas:** cada rama genera un despliegue de vista previa en ambos proyectos. La web de vista previa apunta a la API de la misma rama mediante "Related Projects" de Vercel: `relatedProjects` en `apps/web/vercel.json` y el paquete `@vercel/related-projects`. `API_URL` es el valor por defecto, para local. Ambas usan la base de datos de desarrollo.
+- **Vistas previas:** cada rama genera un despliegue de vista previa en ambos proyectos. La web de vista previa apunta a la API de la misma rama mediante "Related Projects" de Vercel: `relatedProjects` en `apps/web/vercel.json` y el paquete `@vercel/related-projects`. Si `API_URL` está definida, tiene prioridad y la web apunta a esa API fija (por ejemplo un dominio propio). Sin ella, en Vercel manda el proyecto relacionado y en local se usa `http://localhost:8000`. Ambas usan la base de datos de desarrollo.
 - **Proyectos sin cambios:** Vercel omite el despliegue del proyecto que un commit no toca. Requiere que cada aplicación tenga un `package.json` con nombre único; el de `apps/api` lo cumple.
 - **Tarea diaria:** un Cron Job en `apps/api/vercel.json` llama a `/api/cron/daily` a las 11:00 UTC, que son las 6:00 a. m. en Colombia.
 - **Tiempo máximo:** cada llamada tiene un límite de duración, configurable en `vercel.json` con la clave `functions` y la entrada `app/main.py`. La tarea diaria procesa por lotes.
@@ -147,7 +147,7 @@ Se hace una vez. Los pasos en Vercel y Supabase los hace el fundador en sus cuen
 4. **Proyecto `arrendi-web` en Vercel.** Importar el mismo repositorio con carpeta raíz `apps/web` y el tipo Next.js.
    - Variables de producción, de `arrendi-prod`: `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
    - Variables de vista previa, de `arrendi-dev`: las mismas dos.
-   - `API_URL` no se define en Vercel.
+   - `API_URL` no se define en Vercel, salvo que un ambiente deba apuntar a una API fija (en vista previa, con dominio propio). Cambiarla exige un despliegue nuevo: se aplica al compilar.
 5. **Direcciones de retorno en Supabase.** Agregar el dominio de producción de la web en `arrendi-prod`, y el patrón de las vistas previas de la web en `arrendi-dev`.
 6. **Comprobar.** `https://<dominio de la web>/api/health` debe responder `{"status":"ok"}`: prueba que la web llega a la API.
 
@@ -202,7 +202,7 @@ Fuera de producción, la API nunca envía correo a arrendatarios reales: todo de
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clave publicable de Supabase (`sb_publishable_...`) |
-| `API_URL` | Destino de la redirección de `/api` |
+| `API_URL` | Destino de la redirección de `/api`. Tiene prioridad sobre el proyecto relacionado de Vercel |
 | `NEXT_PUBLIC_SENTRY_DSN` | Monitoreo |
 
 Solo las variables con prefijo `NEXT_PUBLIC_` llegan al navegador. La clave secreta nunca va en la web.
