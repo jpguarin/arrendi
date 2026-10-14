@@ -3,6 +3,8 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+/* The app opened from the home screen, not from the browser. */
+@custom-variant standalone (@media (display-mode: standalone));
 
 /*
  * Colors from docs/diseno.md, built on the brand of docs/new-brand-design. Components use

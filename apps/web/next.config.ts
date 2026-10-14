@@ -15,6 +15,9 @@ const apiUrl =
   });
 
 const nextConfig: NextConfig = {
+  // Which environment this build is (lib/environment.ts). Vercel sets VERCEL_ENV on every
+  // build, so production can never show the banner; elsewhere it is "local".
+  env: { NEXT_PUBLIC_APP_ENV: process.env.VERCEL_ENV ?? "local" },
   // The end-to-end run builds into its own folder, next to a `pnpm dev` that is open.
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   // CLAUDE.md is the only rules file for agents in this repository.

@@ -207,6 +207,8 @@ Fuera de producción, la API nunca envía correo a arrendatarios reales: todo de
 
 Solo las variables con prefijo `NEXT_PUBLIC_` llegan al navegador. La clave secreta nunca va en la web.
 
+`NEXT_PUBLIC_APP_ENV` no se define a mano: `next.config.ts` la calcula al compilar desde `VERCEL_ENV`, que Vercel pone en cada despliegue (`production` o `preview`). Fuera de Vercel vale `local`. De ella salen la franja y la pestaña que identifican el ambiente (`docs/diseno.md`).
+
 Supabase retira las claves antiguas `anon` y `service_role` a finales de 2026; por eso se usan la publicable y la secreta.
 
 ## PWA
@@ -218,7 +220,7 @@ Supabase retira las claves antiguas `anon` y `service_role` a finales de 2026; p
 - **Tema:** el color de la barra del sistema (`theme-color`) cambia con el tema claro u oscuro.
 - **Cámara:** el comprobante y el contrato se adjuntan desde la cámara o los archivos del celular.
 - **Actualizaciones:** al publicar una versión nueva, la aplicación muestra el aviso "Hay una versión nueva de Arrendi." con el botón "Actualizar", y se recarga cuando el propietario lo toca. No se recarga sola, para no interrumpir un formulario a medias.
-- **Íconos:** provisionales, en `apps/web/public/icons/` y `apps/web/app/` (`icon.png`, `apple-icon.png`).
+- **Íconos:** en `apps/web/public/icons/`, declarados en `app/layout.tsx` y `app/manifest.ts` según el ambiente (`lib/environment.ts`). Producción usa `apple-icon.png`, `icon-192.png` e `icon-512.png`; local y pruebas, las versiones `-dev` en ámbar, hechas desde `docs/new-brand-design/app-icon-dev.svg`.
 
 ## Pruebas de extremo a extremo
 
