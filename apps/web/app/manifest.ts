@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { appIcons } from "@/lib/environment";
 import { BACKGROUND_LIGHT } from "@/lib/theme";
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -13,9 +14,9 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: BACKGROUND_LIGHT,
     theme_color: BACKGROUND_LIGHT,
     icons: [
-      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
-      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: appIcons.small, sizes: "192x192", type: "image/png" },
+      { src: appIcons.large, sizes: "512x512", type: "image/png" },
+      { src: appIcons.large, sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

@@ -26,5 +26,21 @@ export const ENVIRONMENTS = {
 
 export const PRODUCTION_FAVICON = "/icons/favicon.png";
 
+/** The icon of the app added to the home screen. Local and preview share the amber one. */
+export const APP_ICONS = {
+  production: {
+    apple: "/icons/apple-icon.png",
+    small: "/icons/icon-192.png",
+    large: "/icons/icon-512.png",
+  },
+  test: {
+    apple: "/icons/apple-icon-dev.png",
+    small: "/icons/icon-dev-192.png",
+    large: "/icons/icon-dev-512.png",
+  },
+} as const;
+
 // Read by its full name so Next.js inlines it.
 export const currentEnvironment = appEnvironment(process.env.NEXT_PUBLIC_APP_ENV);
+
+export const appIcons = APP_ICONS[currentEnvironment === "production" ? "production" : "test"];
