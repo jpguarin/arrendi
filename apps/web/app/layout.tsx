@@ -4,7 +4,7 @@ import { PwaProvider } from "@/components/PwaProvider";
 import { QueryProvider } from "@/components/QueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { EnvironmentBanner } from "@/components/EnvironmentBanner";
-import { currentEnvironment, ENVIRONMENTS, PRODUCTION_FAVICON } from "@/lib/environment";
+import { appIcons, currentEnvironment, ENVIRONMENTS, PRODUCTION_FAVICON } from "@/lib/environment";
 import { BACKGROUND_DARK, BACKGROUND_LIGHT } from "@/lib/theme";
 import "./globals.css";
 
@@ -18,15 +18,25 @@ const redHatDisplay = Red_Hat_Display({
 });
 
 // Outside production the tab starts with the environment's emoji and has its own icon,
-// to tell open tabs apart (lib/environment.ts). The pages' titles go through the template.
+// to tell open tabs apart, and the app on the home screen is amber (lib/environment.ts).
+// The pages' titles go through the template.
 const environment = currentEnvironment === "production" ? null : ENVIRONMENTS[currentEnvironment];
 const tabPrefix = environment ? `${environment.emoji} ` : "";
 
 export const metadata: Metadata = {
   title: { default: `${tabPrefix}Arrendi`, template: `${tabPrefix}%s` },
-  icons: { icon: environment?.favicon ?? PRODUCTION_FAVICON },
+  icons: {
+    icon: environment?.favicon ?? PRODUCTION_FAVICON,
+    apple: { url: appIcons.apple, sizes: "180x180", type: "image/png" },
+  },
   description: "Genera tus cuentas de cobro cada mes, envíalas por correo y sabe quién te debe.",
-  appleWebApp: { capable: true, title: "Arrendi", statusBarStyle: "default" },
+  // Outside production the installed app draws under the status bar, so the environment
+  // banner can paint it (components/EnvironmentBanner.tsx). Production stays as it was.
+  appleWebApp: {
+    capable: true,
+    title: "Arrendi",
+    statusBarStyle: environment ? "black-translucent" : "default",
+  },
 };
 
 export const viewport: Viewport = {
@@ -36,6 +46,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  ...(environment && { viewportFit: "cover" }),
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: BACKGROUND_LIGHT },
     { media: "(prefers-color-scheme: dark)", color: BACKGROUND_DARK },
