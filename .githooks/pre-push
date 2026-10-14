@@ -1,0 +1,21 @@
+#!/bin/sh
+# Rejects any push that updates or deletes main or develop: they only change through
+# pull requests (docs/flujo-de-trabajo-git.md). GitHub's free plan cannot protect them
+# in a private repository, so this guards against mistakes from this computer.
+#
+# Enable once per clone:  git config core.hooksPath .githooks
+# Emergency only (e.g. restoring a deleted main):  git push --no-verify ...
+
+status=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main | refs/heads/develop)
+      branch=${remote_ref#refs/heads/}
+      echo "pre-push: no se sube directo a '$branch'. Abre un PR desde una rama feat/, fix/, docs/ o hotfix/." >&2
+      echo "pre-push: ver docs/flujo-de-trabajo-git.md" >&2
+      status=1
+      ;;
+  esac
+done
+
+exit $status
