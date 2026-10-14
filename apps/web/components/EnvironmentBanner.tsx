@@ -9,7 +9,13 @@ const TONES = {
   info: "bg-info text-white dark:text-rail",
 } as const;
 
-/** A strip across the top that says which environment this is. Never in production. */
+/**
+ * A strip across the top that says which environment this is. Never in production.
+ *
+ * On an iPhone, iOS 26 blurs the top of the app opened from the home screen, a little
+ * below the status bar, and there is no way to turn it off. There the strip grows upward
+ * so its color fills the blurred band and the label sits below it, sharp.
+ */
 export function EnvironmentBanner() {
   if (currentEnvironment === "production") return null;
   const { label, tone } = ENVIRONMENTS[currentEnvironment];
@@ -17,7 +23,7 @@ export function EnvironmentBanner() {
     <div
       role="status"
       className={cn(
-        "flex h-6 items-center justify-center text-badge font-semibold tracking-wide uppercase",
+        "box-content flex h-6 items-center justify-center text-badge font-semibold tracking-wide uppercase standalone:pt-8",
         TONES[tone],
       )}
     >
