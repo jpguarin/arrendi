@@ -55,6 +55,8 @@
 | Mes de un pago | El de su cuenta, no el de la fecha en que se recibió |
 | Eliminar un pago | Borrado real, con su comprobante. Junto con `lease_items`, cuya lista se reemplaza al editar el contrato, son las únicas tablas donde la API borra |
 | PDF | ReportLab con Helvetica, que ya trae; no se empaqueta Figtree |
+| Flujo de Git | `main` es producción y `develop` es pruebas. Features y bugs salen de `develop` y vuelven por PR; `develop` se promueve a `main` por PR; el hotfix sale de `main` y se lleva de vuelta a `develop`. Todo se fusiona con commit de fusión, nunca *squash*, para que las dos ramas no diverjan. Detalle en `docs/flujo-de-trabajo-git.md` |
+| Migraciones entre ambientes | Manuales, con checklist en el PR de promoción: a `arrendi-dev` al fusionar en `develop` y a `arrendi-prod` antes de fusionar en `main`. Siempre compatibles hacia atrás, porque el código viejo corre un rato contra el esquema nuevo |
 
 ## Provisionales
 
