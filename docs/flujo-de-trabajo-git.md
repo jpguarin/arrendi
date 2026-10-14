@@ -33,7 +33,7 @@ docs/<nombre> ──PR──►    │                          │
 4. **Se fusiona con commit de fusión** (*Create a merge commit*) en todos los PR. Nunca *squash*, y menos en la promoción o el hotfix: `main` y `develop` divergerían y cada promoción traería conflictos.
 5. **Commits** pequeños, en español, un cambio lógico por commit.
 6. **La rama se borra al fusionar.**
-7. **Antes de abrir un PR** pasan `pnpm lint`, `pnpm test` y `pnpm build`. Cuando exista el CI (ver abajo), lo comprueba en cada PR.
+7. **Antes de abrir un PR** pasan `pnpm lint`, `pnpm test` y `pnpm build`. El CI (ver abajo) lo comprueba en cada PR.
 
 ## Feature (nuevo)
 
@@ -103,15 +103,32 @@ Una migración ya aplicada a una base compartida no se edita: se crea otra.
 Se configura a mano en GitHub, en Settings → Branches (o Rulesets), para `main` y `develop`:
 
 - Exigir PR antes de fusionar, con 0 aprobaciones (trabaja una sola persona).
-- Exigir que pase el check de CI, cuando exista.
+- Exigir que pase el check `ci` del workflow CI. GitHub solo lo ofrece en la lista después de que haya corrido una vez.
 - Bloquear los *force push* y el borrado de la rama.
 - En Settings → General: permitir solo *merge commits* y activar el borrado automático de la rama al fusionar.
+- En Settings → General → Default branch: **`develop` como rama por defecto.** Así cada PR nuevo apunta a `develop` desde el inicio. Solo la promoción y el hotfix cambian la base a `main` a mano. Con `main` por defecto, un PR de feature termina fusionado en producción sin pasar por pruebas si se olvida cambiar la base.
 
 Si el plan de GitHub no impone reglas en repositorios privados, el flujo queda por convención. Se confirma en su documentación vigente.
 
 ## CI
 
-Pendiente de construir, en su propia rama `feat/ci`: un workflow de GitHub Actions que en cada PR hacia `develop` y `main` corra `pnpm lint`, `pnpm test` y `pnpm build`, con un PostgreSQL de servicio para `TEST_DATABASE_URL`. Playwright queda fuera de la primera versión. Mientras no exista, las tres comprobaciones se corren en local.
+`.github/workflows/ci.yml` corre en GitHub Actions en cada PR hacia `develop` y `main`. También se puede lanzar a mano desde la pestaña Actions. Un push nuevo al mismo PR cancela la ejecución anterior.
+
+Pasos, en una máquina Linux limpia:
+
+1. Instala Node 22 con pnpm (la versión de `packageManager`) y Python 3.12, con caché de las dependencias.
+2. `pnpm install` y un `apps/api/.venv` con `requirements.txt` y `requirements-dev.txt`, igual que en el computador.
+3. `pnpm lint`, `pnpm test` y `pnpm build`.
+4. `pnpm gen:api` y comprueba que no cambie nada: si se cambió una ruta o un esquema sin regenerar los tipos, falla.
+
+Detalles:
+
+- **Base de pruebas:** un PostgreSQL 17 de servicio, que vive solo durante la ejecución. `TEST_DATABASE_URL` apunta a él; nunca a Supabase.
+- **`turbo.json`** deja pasar `TEST_DATABASE_URL` a la tarea `test` (`passThroughEnv`). Sin eso, Turborepo la filtra y pytest no la ve.
+- **Sin secretos.** La compilación de la web recibe valores falsos de `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: solo necesita que existan.
+- **Fuera:** Playwright (`pnpm e2e`), las migraciones a las bases de la nube y el despliegue, que sigue haciendo Vercel.
+
+Para reproducirlo en local antes de abrir un PR: `pnpm lint && pnpm test && pnpm build`.
 
 ## Quién hace qué
 
