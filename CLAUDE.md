@@ -22,6 +22,7 @@ Lee el documento que corresponda antes de tocar esa parte del sistema. Si el có
 | `docs/etapa-4.md` | Guía paso a paso de la etapa 4 (correo y tarea diaria), ya cerrada. Sirve de registro de lo decidido |
 | `docs/etapa-5.md` | Guía paso a paso de la etapa 5 (pagos e inicio), ya cerrada. Sirve de registro de lo decidido |
 | `docs/etapa-7.md` | Plan de la etapa 7 (piloto), propuesto y sin empezar |
+| `docs/flujo-de-trabajo-git.md` | Ramas, PR, hotfix, promoción a producción y migraciones entre ambientes |
 | `docs/guia-supabase-vercel.md` | Paso a paso para crear `arrendi-prod` en Supabase y configurar Producción y Preview en Vercel |
 | `docs/new-brand-design/` | Marca nueva: colores, fuentes, logo y los mocks de la etapa 6. La propuesta elegida es `mockups/propuesta-b-libro.html` |
 | `docs/decisiones.md` | Decisiones tomadas, provisionales y pendientes |
@@ -141,7 +142,7 @@ alembic revision --autogenerate -m "descripcion"
 ## Forma de trabajo
 
 - Trabaja **una etapa a la vez**, en el orden de `docs/plan.md`. No adelantes etapas.
-- Cuando el pedido diga "new feature" o "nuevo feature", **crea una rama** `feat/<nombre-corto>` desde `main` antes de tocar código y trabaja ahí. No la fusiones ni la subas sin que te lo pidan. Los arreglos pequeños siguen directo en `main`.
+- Sigue `docs/flujo-de-trabajo-git.md`: `main` es producción y `develop` es pruebas, y nada se sube directo a ninguna. Cuando el pedido diga "new feature" o "nuevo feature", **crea una rama** `feat/<nombre-corto>` desde `develop` antes de tocar código y trabaja ahí. Los bugs van en `fix/<nombre>` y los documentos en `docs/<nombre>`, también desde `develop`. Un hotfix sale de `main` como `hotfix/<nombre>`. Todo entra por PR. No fusiones ni subas sin que te lo pidan.
 - Antes de escribir código en una etapa, **propón el plan** de archivos y pasos, y espera confirmación.
 - En lo delicado (consecutivo, estados, tarea diaria, aislamiento) **escribe primero la prueba**.
 - Las pruebas nunca se conectan a un proyecto de Supabase: usan `TEST_DATABASE_URL`, que apunta al PostgreSQL local.
