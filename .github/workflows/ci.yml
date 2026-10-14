@@ -1,0 +1,81 @@
+# Lint, tests and build on every pull request, as docs/flujo-de-trabajo-git.md requires.
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # The API tests run against a local PostgreSQL, never against Supabase.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: arrendi_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/arrendi_test
+      # The build only needs them to exist; nothing connects to Supabase here.
+      NEXT_PUBLIC_SUPABASE_URL: https://ci.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: apps/api/requirements*.txt
+
+      - name: Install web dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The API scripts call apps/api/.venv, as on a developer's machine.
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      # A change to a route or schema must ship with its regenerated types.
+      - name: Generated API types are up to date
+        run: |
+          pnpm gen:api
+          git diff --exit-code -- apps/api/openapi.json apps/web/lib/api
