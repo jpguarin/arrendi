@@ -144,6 +144,7 @@ Fuera de producción, la web dice dónde está, para no confundir ambientes con 
 - **Pestaña:** el título empieza con 🧪 en pruebas y 💻 en local, y el favicon lleva un punto ámbar o azul (`public/icons/favicon-preview.png`, `favicon-local.png`).
 - **Producción:** sin franja, título `Arrendi` y el favicon de siempre (`public/icons/favicon.png`).
 - Las vistas previas de cualquier rama cuentan como pruebas y dicen "ENV · develop", aunque la rama sea otra.
+- **App instalada en el iPhone:** iOS desenfoca lo que queda justo debajo de la barra de estado. Fuera de producción la app se dibuja detrás de la barra de estado (`viewport-fit=cover` y `black-translucent`), la franja pinta esa zona con el color fuerte del tono (`warning` o `info`, para que la hora en blanco se lea) y el texto empieza debajo, donde no hay desenfoque. Producción conserva `default` y no se dibuja detrás de la barra.
 
 - `cn` se importa siempre de `@/lib/utils`, que conoce los tamaños de letra propios.
 - El dinero y las fechas se muestran con `lib/format.ts`, nunca con `Intl` directo. `formatDateHour` da fecha y hora de Colombia: `5 oct 2026 · 3:42 p. m.`.

@@ -26,7 +26,13 @@ export const metadata: Metadata = {
   title: { default: `${tabPrefix}Arrendi`, template: `${tabPrefix}%s` },
   icons: { icon: environment?.favicon ?? PRODUCTION_FAVICON },
   description: "Genera tus cuentas de cobro cada mes, envíalas por correo y sabe quién te debe.",
-  appleWebApp: { capable: true, title: "Arrendi", statusBarStyle: "default" },
+  // Outside production the installed app draws under the status bar, so the environment
+  // banner can paint it (components/EnvironmentBanner.tsx). Production stays as it was.
+  appleWebApp: {
+    capable: true,
+    title: "Arrendi",
+    statusBarStyle: environment ? "black-translucent" : "default",
+  },
 };
 
 export const viewport: Viewport = {
@@ -36,6 +42,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  ...(environment && { viewportFit: "cover" }),
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: BACKGROUND_LIGHT },
     { media: "(prefers-color-scheme: dark)", color: BACKGROUND_DARK },
