@@ -89,6 +89,7 @@ pnpm install
 cd apps/api && python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt -r requirements-dev.txt
 pnpm --filter e2e exec playwright install chromium   # el navegador de las pruebas de extremo a extremo
+git config core.hooksPath .githooks                  # bloquea el push directo a main y develop
 
 # Todo el proyecto, con Turborepo (desde la raíz)
 pnpm dev             # web en :3000 y API en :8000; la web redirige /api a la API (sin service worker)
