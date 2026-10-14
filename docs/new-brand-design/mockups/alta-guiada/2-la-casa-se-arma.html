@@ -42,12 +42,21 @@
 .intro p { font-size: 15px; color: var(--muted-foreground); }
 .footer-row { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
 
-@media (min-width: 1024px) {
-  .shell { display: grid; grid-template-columns: minmax(380px, 44%) minmax(0, 1fr); }
-  .stage { position: sticky; top: 0; height: 100dvh; padding: 28px 40px; justify-content: space-between; }
-  .house { width: min(70%, 400px); }
+/* Tablet (768+): the house moves to a navy panel on the left; desktop (1024+) widens it. */
+@media (min-width: 768px) {
+  .shell { display: grid; grid-template-columns: minmax(300px, 40%) minmax(0, 1fr); }
+  .stage { position: sticky; top: 0; height: 100dvh; padding: 24px 28px; justify-content: space-between; }
+  .house { width: min(78%, 400px); }
   .stage-cap { font-size: 15px; }
-  .flow { max-width: 600px; padding-top: 40px; }
+  .flow { max-width: 600px; padding-top: 24px; }
+  .body { padding: 28px; }
+  .flow .action-footer { padding-left: 28px; padding-right: 28px; }
+}
+@media (min-width: 1024px) {
+  .shell { grid-template-columns: minmax(380px, 44%) minmax(0, 1fr); }
+  .stage { padding: 28px 40px; }
+  .house { width: min(70%, 400px); }
+  .flow { padding-top: 40px; }
   .body { padding: 32px 40px; }
   .flow .action-footer { padding-left: 40px; padding-right: 40px; }
 }
@@ -56,6 +65,7 @@
 .types { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .type { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-height: 92px; padding: 14px; border-radius: 14px; border: 1px solid var(--input); background: var(--card); text-align: left; font-weight: 600; font-size: 15px; transition: border-color .15s ease, background-color .15s ease; }
 .type:hover { background: var(--muted); }
+@media (min-width: 1024px) { .types { grid-template-columns: repeat(4, 1fr); } }
 .type .ic { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--muted); color: var(--foreground); }
 .type[aria-checked="true"] { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); background: var(--accent); }
 .type[aria-checked="true"] .ic { background: var(--primary); color: var(--primary-foreground); }

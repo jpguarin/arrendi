@@ -120,7 +120,7 @@ h1 { font-family: var(--font-heading); font-weight: 800; letter-spacing: -.02em;
 .brand svg .win { fill: var(--brand-green); }
 
 /* ---------- Buttons (Button: default 48, md 44, sm 44/36) ---------- */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px; border-radius: 10px; border: 1px solid transparent; font-size: 16px; font-weight: 600; white-space: nowrap; transition: background-color .15s ease, opacity .15s ease, transform .1s ease; }
+.btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px; border-radius: 10px; border: 1px solid transparent; font-size: 16px; font-weight: 600; white-space: nowrap; transition: background-color .15s ease, opacity .15s ease, transform .1s ease; }
 .btn:active { transform: scale(.98); }
 .btn svg { width: 18px; height: 18px; }
 .btn-primary { background: var(--primary); color: var(--primary-foreground); }

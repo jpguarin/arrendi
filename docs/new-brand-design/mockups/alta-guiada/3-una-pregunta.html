@@ -11,7 +11,35 @@
 <link rel="stylesheet" href="base.css">
 <style>
 body { background: var(--card); }
+/* Phone: the question alone. Tablet (768+): a wider, centered question.
+   Desktop (1024+): an outline of the whole alta on the left, with the answers so far. */
+.layout { min-height: 100dvh; }
 .flow { min-height: 100dvh; display: flex; flex-direction: column; width: 100%; max-width: 600px; margin: 0 auto; }
+.outline { display: none; }
+@media (min-width: 768px) {
+  .flow { max-width: 680px; }
+  .q { padding-left: 40px; padding-right: 40px; }
+  .trail { padding-left: 40px; padding-right: 40px; }
+  .bar { padding-left: 32px; padding-right: 40px; }
+  .choices.grid-2-md { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 1024px) {
+  .layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); }
+  .outline { display: flex; flex-direction: column; gap: 22px; position: sticky; top: 0; height: 100dvh; overflow-y: auto; padding: 28px 24px; background: var(--background); border-right: 1px solid var(--border); }
+  .trail { display: none; }
+}
+.ol-part h2 { font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 6px; }
+.ol-item { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; width: 100%; padding: 8px 10px; border-radius: 10px; text-align: left; min-height: 44px; }
+button.ol-item:hover { background: var(--muted); }
+.ol-item .dot { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--input); display: grid; place-items: center; margin-top: 1px; }
+.ol-item .dot svg { width: 12px; height: 12px; }
+.ol-item.done .dot { background: var(--positive-tint); border-color: transparent; color: var(--positive-ink); }
+.ol-item.now { background: var(--accent); }
+.ol-item.now .dot { border-color: var(--primary); box-shadow: inset 0 0 0 4px var(--card); background: var(--primary); }
+.ol-item b { display: block; font-size: 14px; font-weight: 600; }
+.ol-item span { display: block; font-size: 13px; color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ol-item.skip { opacity: .5; }
+.ol-foot { margin-top: auto; font-size: 13px; color: var(--muted-foreground); }
 
 /* ---------- Top: back, progress and what has been answered ---------- */
 .bar { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 12px 0 8px; min-height: 56px; }
@@ -77,6 +105,16 @@ body { background: var(--card); }
 .big-mark { color: var(--foreground); }
 .ok { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--positive-tint); color: var(--positive-ink); }
 .ok svg { width: 32px; height: 32px; }
+
+/* ---------- Responsive overrides (after the base rules, so they win) ---------- */
+@media (min-width: 768px) {
+  .q { padding: 40px 40px 12vh; }
+  .trail { padding-left: 40px; padding-right: 40px; }
+}
+@media (min-width: 1024px) {
+  .trail { display: none; }
+  .flow { max-width: 720px; }
+}
 </style>
 </head>
 <body>
@@ -153,7 +191,7 @@ const S = {
     </form>${footer()}`,
   'has-lease': () => `${bar()}<div class="q ${enterClass()}">
       ${head('Tu primer contrato', `¿Ya tienes arrendatario en alguna de tus ${draft.units.length} unidades?`, 'Si lo agregas ahora, Arrendi genera su cuenta cada mes.')}
-      <div class="choices" role="radiogroup">
+      <div class="choices grid-2-md" role="radiogroup">
         <button class="choice" role="radio" aria-checked="${draft.withLease}" data-choose="withLease" data-value="yes"><span class="ic">${icon('user', 22)}</span><span>Sí, agreguémoslo<small>5 preguntas más</small></span>${choiceKey(0)}</button>
         <button class="choice" role="radio" aria-checked="false" data-choose="withLease" data-value="no"><span class="ic">${icon('clock', 22)}</span><span>Lo hago después<small>Desde cada unidad, en Inmuebles</small></span>${choiceKey(1)}</button>
       </div>
@@ -210,9 +248,29 @@ const S = {
 };
 const rv = (label, value, screen) => `<div class="rv"><div><dt>${label}</dt><dd>${value}</dd></div><button class="btn-link" data-edit="${screen}">Cambiar</button></div>`;
 
+/* ---------- Outline (desktop): every question, with its answer once given ---------- */
+const OUTLINE = [
+  ['Tu inmueble', [['type', 'Tipo', () => typeLabel(draft.property.type)], ['property', 'Nombre', () => draft.property.name], ['address', 'Dirección', () => [draft.property.address, draft.property.city].filter(Boolean).join(', ')]]],
+  ['Sus unidades', [['units', 'Unidades', () => draft.units.filter((u) => u.name).map((u) => u.name).join(', ')]]],
+  ['Tu primer contrato', [['has-lease', '¿Ya tienes arrendatario?', () => (ORDER.indexOf(current) > 5 || current === 'review' ? (draft.withLease ? 'Sí' : 'Después') : '')], ['lease', 'Arrendatario', () => draft.lease.tenant_name], ['rent', 'Canon y día de pago', () => (draft.lease.rent ? `${pesos(draft.lease.rent)} · el ${draft.lease.due_day}` : '')], ['dates', 'Vigencia', () => (draft.lease.start_date ? `Desde ${fullDate(draft.lease.start_date)}` : '')], ['document', 'Documento', () => draft.lease.file || '']]],
+  ['Final', [['review', 'Revisión', () => '']]],
+];
+function outline() {
+  const at = ORDER.indexOf(current);
+  return `${brand(24)}${OUTLINE.map(([title, items]) => `<div class="ol-part"><h2>${title}</h2>${items.map(([key, label, value]) => {
+    const i = ORDER.indexOf(key);
+    const skipped = !draft.withLease && i > 5 && i < 10;
+    const done = (i < at || current === 'done') && !skipped;
+    const now = key === current;
+    const v = done ? value() : '';
+    const tag = done && current !== 'done' ? 'button' : 'div';
+    return `<${tag} class="ol-item${done ? ' done' : ''}${now ? ' now' : ''}${skipped ? ' skip' : ''}" ${tag === 'button' ? `data-edit-outline="${key}"` : ''} ${now ? 'aria-current="step"' : ''}><span class="dot">${done ? icon('check') : ''}</span><span><b>${label}</b>${v ? `<span>${esc(v)}</span>` : skipped ? '<span>Lo agregas después</span>' : ''}</span></${tag}>`;
+  }).join('')}</div>`).join('')}<p class="ol-foot">Nada se guarda hasta que confirmes en la revisión.</p>`;
+}
+
 /* ---------- Render and actions ---------- */
 function render() {
-  document.getElementById('app').innerHTML = `<div class="flow">${S[current]()}</div>${themeButton()}`;
+  document.getElementById('app').innerHTML = `<div class="layout"><aside class="outline" aria-label="Preguntas del alta">${outline()}</aside><div class="flow">${S[current]()}</div></div>${themeButton()}`;
   // Each question takes the focus on its first field, so typing starts right away.
   if (!['welcome', 'review', 'done', 'type', 'has-lease'].includes(current)) document.querySelector('.q input')?.focus({ preventScroll: true });
 }
@@ -273,6 +331,7 @@ document.addEventListener('click', (event) => {
   if (t.dataset.toggleUse) { const u = draft.units[+t.dataset.toggleUse]; u.use = u.use === 'commercial' ? 'residential' : 'commercial'; render(); return; }
   if (t.dataset.remove) { draft.units.splice(+t.dataset.remove, 1); if (!draft.units.length) draft.units = [{ name: '', use: 'residential' }]; if (draft.lease.unit >= draft.units.length) draft.lease.unit = 0; render(); return; }
   if (t.dataset.edit) { returnToReview = true; back(t.dataset.edit); return; }
+  if (t.dataset.editOutline) { returnToReview = current === 'review'; back(t.dataset.editOutline); return; }
   const act = t.dataset.act;
   if (!act) return;
   event.preventDefault();

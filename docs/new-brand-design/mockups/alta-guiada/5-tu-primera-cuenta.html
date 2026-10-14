@@ -13,10 +13,17 @@
 .shell { min-height: 100dvh; display: grid; }
 .flow { display: flex; flex-direction: column; min-height: 100dvh; width: 100%; max-width: 520px; margin: 0 auto; }
 .stage { display: none; }
+/* Phone: the bill folds above the form. Tablet (768+): form and bill half and half.
+   Desktop (1024+): a fixed form column and the bill centered in the rest. */
+@media (min-width: 768px) {
+  .shell { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .flow { max-width: none; background: var(--card); border-right: 1px solid var(--border); }
+  .stage { display: flex; position: sticky; top: 0; height: 100dvh; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 32px 24px; background: var(--muted); }
+  .stage .cap { text-align: center; justify-content: center; }
+}
 @media (min-width: 1024px) {
   .shell { grid-template-columns: minmax(460px, 540px) minmax(0, 1fr); }
-  .flow { max-width: none; background: var(--card); border-right: 1px solid var(--border); }
-  .stage { display: flex; position: sticky; top: 0; height: 100dvh; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 40px; background: var(--muted); }
+  .stage { padding: 40px; }
 }
 .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px 0 20px; min-height: 58px; }
 .pill { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px; border-radius: 999px; background: var(--muted); font-size: 13px; font-weight: 600; }
@@ -60,7 +67,7 @@
 
 /* Phone: the bill folds into a disclosure above the form */
 .peek { display: block; }
-@media (min-width: 1024px) { .peek { display: none; } }
+@media (min-width: 768px) { .peek, .peek-done { display: none; } }
 .peek summary { list-style: none; display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 56px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); cursor: pointer; }
 .peek summary::-webkit-details-marker { display: none; }
 .peek summary .ic { width: 36px; height: 36px; border-radius: 10px; background: var(--muted); display: grid; place-items: center; }
@@ -79,6 +86,15 @@
 .facts .ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--muted); }
 .mini { transform: scale(.92); transform-origin: top left; }
 @media (max-width: 1023px) { .hero .bill { max-width: none; } }
+
+@media (min-width: 768px) {
+  .body, .hero, .action-footer { padding-left: 28px; padding-right: 28px; }
+  .top { padding-left: 28px; padding-right: 28px; }
+}
+@media (min-width: 1024px) {
+  .body, .hero, .action-footer { padding-left: 40px; padding-right: 40px; }
+  .top { padding-left: 40px; padding-right: 40px; }
+}
 </style>
 </head>
 <body>
@@ -200,7 +216,11 @@ function done() {
 /* ---------- Render and actions ---------- */
 function render() {
   const view = { welcome, property, units, lease, done }[current]();
-  const stage = STEP[current] ? `<p class="cap">${icon('eye')}Tu primera cuenta de cobro, en vivo</p><div id="bill-stage">${bill()}</div><p class="cap" style="font-weight:500">Se llena mientras escribes. El PDF real lleva tus datos de pago y tu firma.</p>` : '';
+  const caption = {
+    welcome: ['Esto es lo que vas a armar', 'Una cuenta de cobro por unidad, cada mes.'],
+    done: [draft.withLease ? 'Tu primera cuenta de cobro' : 'Tu cuenta, cuando tengas arrendatario', 'El PDF real lleva tus datos de pago y tu firma.'],
+  }[current] ?? ['Tu primera cuenta de cobro, en vivo', 'Se llena mientras escribes. El PDF real lleva tus datos de pago y tu firma.'];
+  const stage = `<p class="cap">${icon('eye')}${caption[0]}</p><div id="bill-stage">${bill()}</div><p class="cap" style="font-weight:500">${caption[1]}</p>`;
   document.getElementById('app').innerHTML = `<div class="shell"><div class="flow">${view}</div><aside class="stage" aria-label="Vista previa">${stage}</aside></div>${themeButton()}`;
 }
 function refreshBill() {

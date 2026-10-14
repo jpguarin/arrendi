@@ -4,7 +4,7 @@ Mocks para rehacer el alta guiada (inmueble, unidades y primer contrato) antes d
 
 ## Cómo verlos
 
-Abre `index.html` en el navegador (doble clic; no necesita servidor). Muestra las cinco propuestas en vivo, en celular y escritorio, con un selector de pantalla y el interruptor de tema. Cada una se puede abrir completa y llenar de verdad: valida los campos, avanza, vuelve y termina.
+Abre `index.html` en el navegador (doble clic; no necesita servidor). Muestra las cinco propuestas en vivo, en celular (390), tablet (820) y escritorio (1366), con un selector de pantalla y el interruptor de tema. Cada una se puede abrir completa y llenar de verdad: valida los campos, avanza, vuelve y termina.
 
 | Archivo | Propuesta | Idea |
 | --- | --- | --- |
@@ -15,6 +15,14 @@ Abre `index.html` en el navegador (doble clic; no necesita servidor). Muestra la
 | `5-tu-primera-cuenta.html` | 5 · Tu primera cuenta | La cuenta de cobro se llena en vivo mientras escribes |
 
 Cada pantalla tiene dirección propia: `#welcome`, `#property`, `#units`, `#lease` y `#done`, y `?theme=dark` o `?theme=light` antes del `#`. Abierta directamente en un paso intermedio, la propuesta trae datos de ejemplo; recorrida desde el principio, guarda solo lo que escribes.
+
+## Tamaños
+
+Cada propuesta cambia de composición, no solo de ancho:
+
+- **Celular** (menos de 768 px): una columna, con la acción en el pie fijo.
+- **Tablet** (768 px o más): dos columnas. El formulario y su apoyo visual (vista previa, casa, resumen o cuenta) van lado a lado; la propuesta 3 agranda la pregunta.
+- **Escritorio** (1024 px o más): el formulario en una columna fija y el apoyo visual en el resto; la propuesta 3 suma un índice con las respuestas.
 
 ## Lo que es igual en las cinco
 

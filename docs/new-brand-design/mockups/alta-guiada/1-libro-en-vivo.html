@@ -10,14 +10,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="base.css">
 <style>
-/* ---------- Layout: one column on a phone; form and live preview side by side from 1024 ---------- */
+/* ---------- Layout ----------
+   Phone (< 768): one column, the preview is hidden.
+   Tablet (768+): form and preview half and half; the preview table drops a column.
+   Desktop (1024+): a fixed form column and a wide preview. */
 .shell { min-height: 100dvh; display: grid; }
 .flow { display: flex; flex-direction: column; min-height: 100dvh; width: 100%; max-width: 480px; margin: 0 auto; background: var(--background); }
-.preview { display: none; }
+.preview { display: none; container-type: inline-size; }
+@media (min-width: 768px) {
+  .shell { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .flow { max-width: none; border-right: 1px solid var(--border); background: var(--card); }
+  .preview { display: flex; }
+  .body, .hero { padding-left: 28px; padding-right: 28px; }
+  .steps { padding-left: 28px; padding-right: 28px; }
+  .top { padding-left: 28px; }
+  .action-footer { padding-left: 28px; padding-right: 28px; }
+}
 @media (min-width: 1024px) {
-  .shell.split { grid-template-columns: minmax(480px, 560px) minmax(0, 1fr); }
-  .shell.split .flow { max-width: none; border-right: 1px solid var(--border); background: var(--card); }
-  .shell.split .preview { display: flex; }
+  .shell { grid-template-columns: minmax(480px, 560px) minmax(0, 1fr); }
+  .body, .hero { padding-left: 40px; padding-right: 40px; }
+  .steps { padding-left: 40px; padding-right: 40px; }
+  .top { padding-left: 40px; }
+  .action-footer { padding-left: 40px; padding-right: 40px; }
 }
 
 /* ---------- Header: brand and the named stepper ---------- */
@@ -74,7 +88,10 @@
 .recap dd { font-weight: 600; text-align: right; }
 
 /* ---------- Live preview: the property as Inmuebles will show it ---------- */
-.preview { position: sticky; top: 0; height: 100dvh; flex-direction: column; justify-content: center; gap: 16px; padding: 48px clamp(32px, 5vw, 80px); background: var(--background); }
+.preview { position: sticky; top: 0; height: 100dvh; flex-direction: column; justify-content: center; gap: 16px; padding: 40px clamp(24px, 5vw, 80px); background: var(--background); }
+.pv-welcome { display: flex; flex-direction: column; gap: 6px; max-width: 640px; }
+.pv-welcome h2 { font-family: var(--font-heading); font-size: clamp(22px, 3cqi, 28px); font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }
+.pv-welcome p { color: var(--muted-foreground); font-size: 15px; }
 .preview .cap { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--muted-foreground); }
 .preview .cap svg { width: 16px; height: 16px; }
 .pv { max-width: 640px; width: 100%; overflow: hidden; }
@@ -92,6 +109,29 @@
 .pv-empty { padding: 28px 20px; font-size: 14px; color: var(--muted-foreground); text-align: center; }
 .skeleton { display: inline-block; height: 10px; border-radius: 999px; background: var(--muted); }
 .pv-note { max-width: 640px; font-size: 13px; color: var(--muted-foreground); }
+/* A narrow preview (tablet) leaves out the rent column and stacks the head. */
+@container (max-width: 480px) {
+  .pv-cols, .pv-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto; padding: 0 14px; }
+  .pv-cols > :nth-child(3), .pv-row > :nth-child(3) { display: none; }
+  .pv-head { padding: 14px; }
+  .pv-row .badge { padding: 2px 6px; }
+}
+
+/* ---------- Responsive overrides (after the base rules, so they win) ---------- */
+.unit-list { container-type: inline-size; }
+@container (max-width: 440px) {
+  .unit-row { grid-template-columns: minmax(0, 1fr) 44px; }
+  .unit-row .segmented { grid-column: 1 / 2; grid-row: 2; }
+}
+@media (min-width: 768px) {
+  .body, .hero, .steps, .action-footer { padding-left: 28px; padding-right: 28px; }
+  .top { padding-left: 28px; padding-right: 28px; }
+  .hero { justify-content: center; }
+}
+@media (min-width: 1024px) {
+  .body, .hero, .steps, .action-footer { padding-left: 40px; padding-right: 40px; }
+  .top { padding-left: 40px; padding-right: 40px; }
+}
 </style>
 </head>
 <body>
@@ -114,7 +154,7 @@ const topBar = (right = '') => `<div class="top">${brand(24)}${right}</div>`;
 
 /* ---------- Screens ---------- */
 function welcome() {
-  return `<div class="hero ${enterClass()}">
+  return `${topBar()}<div class="hero ${enterClass()}">
     <div class="intro">
       <p class="eyebrow">Hola, ${OWNER.first}</p>
       <h1 class="font-heading">Organicemos tu primer inmueble</h1>
@@ -197,7 +237,7 @@ function lease() {
 function done() {
   const l = draft.lease;
   const unitName = draft.units[l.unit]?.name;
-  return `<div class="hero ${enterClass()}">
+  return `${topBar()}<div class="hero ${enterClass()}">
     <div class="ok">${icon('check')}</div>
     <div class="intro"><h1 class="font-heading">Listo, ${OWNER.first}</h1><p class="lead">${draft.withLease ? `${esc(draft.property.name)} quedó con ${draft.units.length} unidades y el contrato de ${esc(unitName)}.` : `${esc(draft.property.name)} quedó con ${draft.units.length} unidades. Los contratos los agregas desde cada unidad.`}</p></div>
     <dl class="card recap">
@@ -214,7 +254,7 @@ function previewPanel() {
   const p = draft.property;
   const type = PROPERTY_TYPES.find((t) => t.value === p.type);
   const where = [p.address, p.city].filter(Boolean).join(' · ');
-  const leaseOn = current === 'lease' && draft.withLease;
+  const leaseOn = (current === 'lease' || current === 'done') && draft.withLease;
   const rows = draft.units.map((u, i) => {
     const hasLease = leaseOn && Number(draft.lease.unit) === i;
     const l = draft.lease;
@@ -225,21 +265,25 @@ function previewPanel() {
       <div>${hasLease ? `<span class="badge tone-positive">${icon('check')}Al día</span>` : `<span class="badge tone-neutral">${icon('key')}Disponible</span>`}</div>
     </div>`;
   }).join('');
-  return `<p class="cap">${icon('eye')}Así quedará en Inmuebles</p>
+  const intro = current === 'welcome'
+    ? `<div class="pv-welcome"><h2>Al terminar, tu inmueble se verá así</h2><p>Con sus unidades, quién arrienda cada una y si está al día.</p></div>`
+    : current === 'done'
+      ? `<div class="pv-welcome"><h2>Ya está en Inmuebles</h2><p>Las unidades disponibles esperan su contrato.</p></div>`
+      : `<p class="cap">${icon('eye')}Así quedará en Inmuebles</p>`;
+  return `${intro}
   <div class="card pv" aria-live="polite">
     <div class="pv-head"><span class="pv-ic">${icon(type?.icon ?? 'house', 22)}</span><div><h2>${esc(p.name) || '<span class="skeleton" style="width:160px"></span>'}</h2><p>${type ? type.label : 'Tipo'}${where ? ` · ${esc(where)}` : ''}</p></div></div>
-    ${current === 'property' ? '<p class="pv-empty">En el siguiente paso agregas sus unidades.</p>' : `<div class="pv-cols"><span>Unidad</span><span>Arrendatario</span><span>Canon</span><span>Estado</span></div>${rows}`}
+    ${current === 'welcome' ? `<div class="pv-cols"><span>Unidad</span><span>Arrendatario</span><span>Canon</span><span>Estado</span></div>${[70, 55, 62].map((w) => `<div class="pv-row"><div><span class="skeleton" style="width:${w}%"></span></div><div><span class="skeleton" style="width:60%"></span></div><div><span class="skeleton" style="width:70%"></span></div><div><span class="skeleton" style="width:64px;height:20px"></span></div></div>`).join('')}` : current === 'property' ? '<p class="pv-empty">En el siguiente paso agregas sus unidades.</p>' : `<div class="pv-cols"><span>Unidad</span><span>Arrendatario</span><span>Canon</span><span>Estado</span></div>${rows}`}
   </div>
-  <p class="pv-note">Nada se guarda hasta el último paso: ahí creamos el inmueble, sus unidades y el contrato de una vez.</p>`;
+  ${STEP[current] ? '<p class="pv-note">Nada se guarda hasta el último paso: ahí creamos el inmueble, sus unidades y el contrato de una vez.</p>' : ''}`;
 }
 
 /* ---------- Render and actions ---------- */
 function render() {
   const view = { welcome, property, units, lease, done }[current]();
-  const split = STEP[current] ? ' split' : '';
-  document.getElementById('app').innerHTML = `<div class="shell${split}"><div class="flow">${view}</div><aside class="preview" aria-label="Vista previa">${split ? previewPanel() : ''}</aside></div>${themeButton()}`;
+  document.getElementById('app').innerHTML = `<div class="shell"><div class="flow">${view}</div><aside class="preview" aria-label="Vista previa">${previewPanel()}</aside></div>${themeButton()}`;
 }
-onDraftChange = () => { const pv = document.querySelector('.preview'); if (pv && STEP[current]) pv.innerHTML = previewPanel(); };
+onDraftChange = () => { const pv = document.querySelector('.preview'); if (pv) pv.innerHTML = previewPanel(); };
 
 document.addEventListener('click', (event) => {
   const t = event.target.closest('button, a');

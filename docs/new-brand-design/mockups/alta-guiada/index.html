@@ -44,6 +44,7 @@ header.top { padding: 28px 0 8px; }
 .screen { width: calc(var(--w) * var(--s) * 1px); height: calc(var(--h) * var(--s) * 1px); border: 8px solid var(--rail); border-radius: var(--r, 18px); overflow: hidden; background: var(--card); box-sizing: content-box; box-shadow: var(--shadow-lg); }
 .screen iframe { width: calc(var(--w) * 1px); height: calc(var(--h) * 1px); border: 0; transform: scale(var(--s)); transform-origin: 0 0; display: block; }
 .phone { --w: 390; --h: 800; --s: .72; --r: 34px; }
+.tablet { --w: 820; --h: 1180; --s: .44; --r: 24px; }
 .desktop { --w: 1366; --h: 860; --s: .56; --r: 14px; }
 .tbl { overflow-x: auto; border: 1px solid var(--border); border-radius: 16px; background: var(--card); margin-top: 16px; }
 table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 14px; }
@@ -61,7 +62,7 @@ tbody th { font-weight: 600; color: var(--muted-foreground); width: 130px; }
 <header class="top"><div class="wrap">
   <span class="brand" id="mark"></span>
   <h1 class="hero-title">Alta guiada: cinco propuestas</h1>
-  <p class="lead">El mismo alta (inmueble, unidades y primer contrato), los mismos campos y la misma llamada a la API, con cinco formas distintas de recorrerlo. Todas usan el sistema de diseño actual. Cada marco es la propuesta en vivo: puedes llenarla aquí o abrirla completa.</p>
+  <p class="lead">El mismo alta (inmueble, unidades y primer contrato), los mismos campos y la misma llamada a la API, con cinco formas distintas de recorrerlo. Todas usan el sistema de diseño actual. Cada una cambia de composición en celular, tablet y escritorio, no solo de ancho. Cada marco es la propuesta en vivo: puedes llenarla aquí o abrirla completa y cambiar el ancho de la ventana.</p>
 
   <h2 class="sec-title">Lo que hoy no funciona</h2>
   <ul class="diag" id="diag"></ul>
@@ -83,7 +84,9 @@ tbody th { font-weight: 600; color: var(--muted-foreground); width: 130px; }
       <tr><th scope="row">Idea</th><td>Los tres pasos de hoy, pulidos, con Inmuebles armándose al lado</td><td>La casa del logo crece con cada unidad</td><td>Conversación: una pregunta grande por pantalla</td><td>Checkout: todo en una página, con resumen fijo</td><td>El resultado primero: la cuenta de cobro se llena en vivo</td></tr>
       <tr><th scope="row">Pantallas</th><td>Bienvenida, 3 pasos, final</td><td>Bienvenida, 3 pasos, final</td><td>Bienvenida, 9 preguntas, revisión, final</td><td>1 hoja con 3 partes, final</td><td>Bienvenida, 3 pasos, final</td></tr>
       <tr><th scope="row">Unidades</th><td>Filas con control segmentado; atajos «+ Apartamento», «+ Local»</td><td>Contador − 3 + que nombra solo; se renombran</td><td>Escribes y Enter; el uso se cambia con un toque</td><td>Tabla editable con menú de uso</td><td>Filas con menú de uso (como hoy)</td></tr>
-      <tr><th scope="row">Escritorio</th><td>Formulario + vista previa de Inmuebles</td><td>Panel navy con la casa + formulario</td><td>Columna centrada, con teclado</td><td>Hoja + resumen fijo «Lo que vas a crear»</td><td>Formulario + la cuenta en papel</td></tr>
+      <tr><th scope="row">Celular</th><td>Una columna; pasos con nombre</td><td>La casa arriba, el formulario abajo</td><td>Una pregunta a pantalla completa</td><td>Hoja con pie fijo «Crear»</td><td>La cuenta se despliega arriba del formulario</td></tr>
+      <tr><th scope="row">Tablet</th><td>Formulario y vista previa mitad y mitad</td><td>Panel navy con la casa a la izquierda</td><td>Pregunta más grande, centrada</td><td>Hoja + resumen a la derecha</td><td>Formulario y cuenta mitad y mitad</td></tr>
+      <tr><th scope="row">Escritorio</th><td>Formulario fijo + vista previa amplia de Inmuebles</td><td>Panel navy amplio + formulario; tipos en una fila</td><td>Índice de preguntas con respuestas a la izquierda</td><td>Hoja + resumen fijo «Lo que vas a crear»</td><td>Formulario fijo + la cuenta en papel</td></tr>
       <tr><th scope="row">Revisión</th><td>En la vista previa, de reojo</td><td>En la casa, de reojo</td><td>Pantalla de resumen con «Cambiar»</td><td>Partes cerradas con su resumen</td><td>La cuenta misma</td></tr>
       <tr><th scope="row">Carácter</th><td>Sobria, familiar</td><td>Cálida, de marca</td><td>Tranquila, enfocada</td><td>Rápida, eficiente</td><td>Concreta, orientada al resultado</td></tr>
       <tr><th scope="row">Brilla en</th><td>Escritorio y tablet</td><td>Celular, primera impresión</td><td>Celular, usuarios poco digitales</td><td>Escritorio, usuarios rápidos</td><td>Explicar para qué sirve Arrendi</td></tr>
@@ -146,6 +149,7 @@ function render() {
       </div>
       <div class="devices">
         <figure class="device"><div class="screen phone"><iframe title="${p.name} en celular" loading="lazy" src="${src(p)}"></iframe></div><figcaption>Celular · 390</figcaption></figure>
+        <figure class="device"><div class="screen tablet"><iframe title="${p.name} en tablet" loading="lazy" src="${src(p)}"></iframe></div><figcaption>Tablet · 820</figcaption></figure>
         <figure class="device"><div class="screen desktop"><iframe title="${p.name} en escritorio" loading="lazy" src="${src(p)}"></iframe></div><figcaption>Escritorio · 1366</figcaption></figure>
       </div>
     </div></section>`).join('');
