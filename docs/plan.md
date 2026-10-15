@@ -2,7 +2,7 @@
 
 Siete etapas, en orden. Cada una termina con sus criterios de aceptación cumplidos y sus casillas marcadas. No se empieza una etapa sin cerrar la anterior.
 
-**Etapa en curso: 6**
+**Etapa en curso: 7**
 
 ---
 
