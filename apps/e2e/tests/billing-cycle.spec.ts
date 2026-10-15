@@ -27,24 +27,39 @@ test("onboarding, a bill, a partial payment and the rest", async ({ page }) => {
     await page.getByRole("button", { name: "Ingresar" }).click();
   });
 
-  await test.step("onboarding: property, unit and first lease", async () => {
-    await expect(page.getByRole("heading", { name: "¿Qué inmueble arriendas?" })).toBeVisible();
+  await test.step("onboarding: the property, confirmed part by part", async () => {
+    await expect(page.getByRole("heading", { name: "Configura tu primer inmueble" })).toBeVisible();
+    await expect(page.getByText("Hola, Ana")).toBeVisible();
     await page.getByLabel("Nombre del inmueble").fill("Casa Prueba");
     await page.getByRole("radio", { name: "Casa" }).click();
     await page.getByRole("button", { name: "Continuar" }).click();
+    // The part folds into what it holds, with a way back in.
+    await expect(page.getByRole("link", { name: /Casa Prueba · Casa.*Editar/ })).toBeVisible();
+  });
 
-    await expect(page.getByRole("heading", { name: /espacios arriendas/ })).toBeVisible();
+  await test.step("a reload keeps what was typed", async () => {
     await page.getByRole("textbox", { name: "Unidad 1" }).fill("Apto 1");
+    await page.reload();
+    await expect(page.getByRole("textbox", { name: "Unidad 1" })).toHaveValue("Apto 1");
     await page.getByRole("button", { name: "Continuar" }).click();
+  });
 
-    await expect(page.getByRole("heading", { name: "Tu primer contrato" })).toBeVisible();
+  await test.step("onboarding: the first lease, and creating it all", async () => {
+    // On a phone the summary is the strip at the bottom, with the button that creates it.
+    const summary = page.getByRole("contentinfo");
+    await expect(summary).toContainText("Casa Prueba");
+    await expect(summary).toContainText("1 unidad · 1 contrato");
     await page.getByLabel("Nombre del arrendatario").fill("Carlos Rojas");
     await page.getByLabel("Correo del arrendatario").fill("carlos.rojas@example.com");
     await page.getByLabel("Canon mensual").fill("1000000");
     await page.getByLabel("Día de pago").click();
     await page.getByRole("option", { name: "28 del mes" }).click();
     await page.getByLabel("Inicio", { exact: true }).fill("2026-01-01");
-    await page.getByRole("button", { name: "Crear contrato y terminar" }).click();
+    await page.getByRole("button", { name: "Crear inmueble" }).click();
+
+    await expect(page.getByRole("heading", { name: "Casa Prueba ya está en Arrendi" })).toBeVisible();
+    await expect(page.getByText("1 unidad y el contrato de Carlos Rojas")).toBeVisible();
+    await page.getByRole("button", { name: "Ir al resumen" }).click();
   });
 
   await test.step("the home screen starts empty", async () => {

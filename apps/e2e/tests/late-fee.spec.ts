@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { setUpHouse } from "./onboarding";
+
 // A lease may charge a late fee: a percentage of the rent, once, on the bill of the next
 // month. The bill says so from the start. Which bill charges it, and letting a fee go,
 // depend on the date, so they are tested in the API, where the day is set.
@@ -22,19 +24,13 @@ test("the late fee: set on the lease and announced on the bill", async ({ page }
     await page.getByLabel("Contraseña").fill("una-clave-cualquiera");
     await page.getByRole("button", { name: "Ingresar" }).click();
 
-    await page.getByLabel("Nombre del inmueble").fill("Casa Mora");
-    await page.getByRole("radio", { name: "Casa" }).click();
-    await page.getByRole("button", { name: "Continuar" }).click();
-    await page.getByRole("textbox", { name: "Unidad 1" }).fill("Apto 7");
-    await page.getByRole("button", { name: "Continuar" }).click();
-    await page.getByLabel("Nombre del arrendatario").fill("Iván Soto");
-    await page.getByLabel("Correo del arrendatario").fill("ivan.soto@example.com");
-    await page.getByLabel("Canon mensual").fill("1000000");
-    await page.getByLabel("Día de pago").click();
-    await page.getByRole("option", { name: "28 del mes" }).click();
-    await page.getByLabel("Inicio", { exact: true }).fill("2026-01-01");
-    await page.getByRole("button", { name: "Crear contrato y terminar" }).click();
-    await expect(page.getByLabel("Resumen del mes")).toBeVisible();
+    await setUpHouse(page, {
+      property: "Casa Mora",
+      unit: "Apto 7",
+      tenant: "Iván Soto",
+      email: "ivan.soto@example.com",
+      rent: "1000000",
+    });
   });
 
   await test.step("the lease gets a late fee of 2,5 %", async () => {

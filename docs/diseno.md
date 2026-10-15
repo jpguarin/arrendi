@@ -108,7 +108,7 @@ Los cuatro rellenos se validaron como paleta (separación para daltonismo y cont
 - **Secciones:** Resumen (`/`), Cuentas, Inmuebles y Ajustes. La sección activa lleva una marca verde.
 - **Panel:** en Cuentas e Inmuebles, toda ruta que no sea la lista se dibuja en el panel: el detalle de una cuenta, registrar un pago, el contrato y todos los formularios. Las rutas no cambiaron; lo hace el `layout` de cada sección con `ListDetail`.
 - **Desde el resumen,** abrir una cuenta lleva a Cuentas con esa cuenta en el panel.
-- **Fuera de la estructura:** acceso, alta guiada y la pantalla sin conexión van en una columna centrada de 480 px (`Column`).
+- **Fuera de la estructura:** acceso y la pantalla sin conexión van en una columna centrada de 480 px (`Column`). El alta guiada tiene su propia composición; ver «Alta guiada».
 - **Tablas que se adaptan solas:** una tabla acomoda sus filas según su propio ancho (consultas de contenedor), no el de la ventana. Por eso la misma tabla sirve a todo el ancho y apretada junto al panel: con menos de 600 px cada fila se apila en dos líneas.
 
 ## Componentes
@@ -120,6 +120,7 @@ Se construyen sobre shadcn/ui (con Radix), ajustando variantes y medidas a este 
 | `AppShell` | propio | Riel o barra inferior, y el contenido |
 | `ListDetail`, `ListMain` | propio | Lista y panel de detalle; el cuerpo de una lista |
 | `Column` | propio | Columna centrada de las pantallas fuera de la estructura |
+| `OnboardingSheet`, `OnboardingSection`, `OnboardingSummary` | propio | La hoja del alta guiada, cada una de sus tres partes y el resumen «Lo que vas a crear» |
 | `Brand`, `BrandMark` | propio | Isotipo, solo o con el nombre |
 | `Header` | propio | Título de sección con su acción, o título de un detalle con "volver" |
 | `BillTable`, `BillGroup`, `BillRow` | propio | Tabla de cuentas: encabezados, grupo por mes y fila con barra de estado. La fila abierta queda resaltada. Admite botones por fila |
@@ -161,6 +162,19 @@ Solo en el resumen, hechas con Tailwind, sin librería.
 - **Recaudo por mes:** hasta seis meses; la pista es lo esperado y la barra, lo recaudado, con su valor encima. Se calcula del listado de cuentas.
 - Un solo eje, sin doble escala. Los colores de estado no se usan para otra cosa.
 
+### Alta guiada
+
+Una sola hoja con tres partes (inmueble, unidades y primer contrato), según la propuesta 4 de `docs/new-brand-design/mockups/alta-guiada/`.
+
+- **Arriba:** el saludo («Hola, Ana») justo encima del título, no en la barra.
+- **Partes:** la abierta muestra su formulario y «Continuar». Al confirmarse se pliega en una línea con lo que guarda y «Editar»; las que faltan solo dicen qué piden. Cada parte tiene su ruta, así que «atrás» del navegador funciona.
+- **Unidades:** una tabla de nombre y uso; «Agregar unidad» suma una fila.
+- **Contrato:** un interruptor decide si se crea ahora o después, desde la unidad.
+- **Resumen «Lo que vas a crear»:** a la derecha desde tablet (280 px; 340 px en escritorio), con el botón «Crear inmueble». En celular es un pie fijo con una línea y el mismo botón, solo en la última parte.
+- **Ancho:** hasta 1120 px (`max-w-sheet`), centrado.
+- **Borrador:** lo escrito se guarda en `sessionStorage` (`lib/onboarding-draft.ts`) para que recargar no lo borre. Es del propietario que lo escribió y se borra al crear. El documento del contrato no se guarda: un archivo no cabe ahí.
+- **Cierre:** qué quedó creado y los siguientes pasos (contratos que faltan, datos de pago, día de envío). Si el documento no subió, lo dice.
+
 ### Historial de una cuenta
 
 Línea de tiempo, de lo más antiguo a lo más reciente: generada, cada correo, cada pago y la anulación. Cada evento lleva ícono, texto, y fecha y hora. Un correo que falló o rebotó se marca en tono `alert`.
@@ -170,7 +184,8 @@ Línea de tiempo, de lo más antiguo a lo más reciente: generada, cada correo, 
 | Ruta | Pantalla | Dónde se dibuja |
 | --- | --- | --- |
 | `/login`, `/signup`, `/reset-password`, `/update-password` | Acceso | Columna |
-| `/onboarding/property`, `/onboarding/units`, `/onboarding/lease` | Alta guiada | Columna |
+| `/onboarding/property`, `/onboarding/units`, `/onboarding/lease` | Alta guiada: la misma hoja, con esa parte abierta | Hoja del alta |
+| `/onboarding/done` | Cierre del alta | Hoja del alta |
 | `/` | Resumen | Sección |
 | `/bills` | Cuentas | Sección (lista) |
 | `/bills/new` | Cuenta manual | Panel de Cuentas |

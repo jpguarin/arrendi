@@ -120,6 +120,22 @@ Una variable puede tener un valor distinto por ambiente. Solo se cambia el de **
 
 En `arrendi-dev`, las direcciones de retorno deben incluir `http://localhost:3000/**` y el patrón `https://*-<slug-de-vercel>.vercel.app/**`. El slug es el de `vercel.com/<slug>`.
 
+### Tarea diaria en vista previa
+
+Vercel solo ejecuta los Cron Jobs en Producción. En vista previa, el workflow `.github/workflows/preview-cron.yml` llama a `/api/cron/daily` de la rama `develop` a las 11:00 UTC, con el mismo secreto que exige la API.
+
+1. **Antes de activarlo**, comprobar que `EMAIL_TEST_INBOX` está definida en `arrendi-api` para Preview. Sin ella, la tarea en pruebas les escribe a los arrendatarios que haya en `arrendi-dev`.
+2. En GitHub, **Settings → Secrets and variables → Actions**:
+   - Variable `PREVIEW_API_URL`: el dominio fijo de `develop` en `arrendi-api`, sin barra final (el alias de rama `https://arrendi-api-git-develop-<slug>.vercel.app`, o el dominio propio si `develop` tiene uno). No es el de un despliegue concreto: ese cambia con cada commit.
+   - Secreto `PREVIEW_CRON_SECRET`: el valor de `CRON_SECRET` de `arrendi-api` en Preview.
+3. **Comprobar:** Actions → "Daily task (Preview)" → *Run workflow*. Debe terminar en verde y mostrar el JSON de la tarea. Con 401, el secreto no coincide; con 500, revisar `DATABASE_URL_TASKS` de Preview.
+
+Cuidados:
+- GitHub solo programa el workflow que está en la rama por defecto del repositorio: empieza a correr solo cuando el archivo llega a ella.
+- GitHub puede retrasar los `schedule` varios minutos en horas de carga, y desactiva los programados de un repositorio público tras 60 días sin actividad.
+- Si falla, el workflow queda en rojo y GitHub avisa por correo a quien lo activó.
+- Depende de que la protección de despliegues de `arrendi-api` siga en "ninguna".
+
 ## Cómo comprobar que quedó bien
 
 1. `https://<web-prod>/api/health` responde `{"status":"ok"}`.

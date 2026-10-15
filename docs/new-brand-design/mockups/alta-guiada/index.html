@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alta guiada · Cinco propuestas</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+.wrap { max-width: 1320px; margin: 0 auto; padding: 0 20px; }
+header.top { padding: 28px 0 8px; }
+.hero-title { font-family: var(--font-heading); font-weight: 900; font-size: clamp(32px, 5.5vw, 56px); line-height: 1.04; letter-spacing: -.03em; margin: 32px 0 14px; max-width: 18ch; }
+.lead { font-size: 18px; color: var(--muted-foreground); max-width: 64ch; }
+.diag { margin-top: 32px; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.diag li { padding: 16px; display: flex; gap: 12px; align-items: flex-start; font-size: 15px; }
+.diag li svg { color: var(--alert-ink); margin-top: 2px; }
+.diag b { display: block; }
+.diag span { color: var(--muted-foreground); font-size: 14px; }
+.sec-title { font-family: var(--font-heading); font-weight: 800; font-size: 22px; letter-spacing: -.02em; margin: 44px 0 4px; }
+.controls { position: sticky; top: 0; z-index: 10; background: var(--background); padding: 12px 0; margin-top: 32px; border-bottom: 1px solid var(--border); }
+.controls .wrap { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.segs { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--muted); overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.segs button { min-height: 40px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--muted-foreground); white-space: nowrap; }
+.segs button[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); }
+.controls .lbl { font-size: 13px; font-weight: 600; color: var(--muted-foreground); }
+.controls .icon-btn { margin-left: auto; border-radius: 50%; }
+.proposal { padding: 52px 0 20px; border-bottom: 1px solid var(--border); }
+.p-head { display: grid; gap: 20px; margin-bottom: 26px; }
+@media (min-width: 900px) { .p-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 48px; align-items: end; } }
+.num { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: var(--primary); color: var(--primary-foreground); font-family: var(--font-heading); font-weight: 900; font-size: 22px; margin-bottom: 14px; }
+.p-head h2 { font-family: var(--font-heading); font-weight: 900; font-size: clamp(26px, 3.6vw, 38px); line-height: 1.08; letter-spacing: -.03em; }
+.idea { margin-top: 10px; font-size: 17px; max-width: 48ch; }
+.facts { display: grid; gap: 0; }
+.facts li { display: grid; grid-template-columns: 120px 1fr; gap: 12px; font-size: 15px; padding: 10px 0; border-top: 1px solid var(--border); }
+.facts b { font-weight: 600; color: var(--muted-foreground); }
+.open { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 999px; background: var(--primary); color: var(--primary-foreground); font-weight: 600; margin-top: 18px; text-decoration: none; }
+.open:hover { opacity: .9; }
+.devices { display: flex; gap: 28px; align-items: flex-end; overflow-x: auto; padding: 8px 4px 28px; scrollbar-width: thin; }
+.device { flex: none; }
+.device figcaption { margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--muted-foreground); }
+.screen { width: calc(var(--w) * var(--s) * 1px); height: calc(var(--h) * var(--s) * 1px); border: 8px solid var(--rail); border-radius: var(--r, 18px); overflow: hidden; background: var(--card); box-sizing: content-box; box-shadow: var(--shadow-lg); }
+.screen iframe { width: calc(var(--w) * 1px); height: calc(var(--h) * 1px); border: 0; transform: scale(var(--s)); transform-origin: 0 0; display: block; }
+.phone { --w: 390; --h: 800; --s: .72; --r: 34px; }
+.tablet { --w: 820; --h: 1180; --s: .44; --r: 24px; }
+.desktop { --w: 1366; --h: 860; --s: .56; --r: 14px; }
+.tbl { overflow-x: auto; border: 1px solid var(--border); border-radius: 16px; background: var(--card); margin-top: 16px; }
+table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 16px; border-top: 1px solid var(--border); }
+thead th { border-top: 0; font-family: var(--font-heading); font-weight: 800; font-size: 16px; }
+tbody th { font-weight: 600; color: var(--muted-foreground); width: 130px; }
+.common { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); margin: 16px 0 80px; }
+.common li { padding: 16px; font-size: 15px; display: flex; gap: 12px; }
+.common li svg { color: var(--positive-ink); margin-top: 2px; }
+.common li b { display: block; }
+.common li span { font-size: 14px; color: var(--muted-foreground); }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <span class="brand" id="mark"></span>
+  <h1 class="hero-title">Alta guiada: cinco propuestas</h1>
+  <p class="lead">El mismo alta (inmueble, unidades y primer contrato), los mismos campos y la misma llamada a la API, con cinco formas distintas de recorrerlo. Todas usan el sistema de diseño actual. Cada una cambia de composición en celular, tablet y escritorio, no solo de ancho. Cada marco es la propuesta en vivo: puedes llenarla aquí o abrirla completa y cambiar el ancho de la ventana.</p>
+
+  <h2 class="sec-title">Lo que hoy no funciona</h2>
+  <ul class="diag" id="diag"></ul>
+</div></header>
+
+<div class="controls"><div class="wrap">
+  <span class="lbl">Pantalla</span>
+  <div class="segs" role="group" aria-label="Pantalla que se muestra" id="screens"></div>
+  <button class="icon-btn" data-act="theme" id="theme-btn"></button>
+</div></div>
+
+<main id="list"></main>
+
+<section class="wrap">
+  <h2 class="sec-title">Lado a lado</h2>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>1 · Libro en vivo</th><th>2 · La casa se arma</th><th>3 · Una pregunta a la vez</th><th>4 · Una sola hoja</th><th>5 · Tu primera cuenta</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Idea</th><td>Los tres pasos de hoy, pulidos, con Inmuebles armándose al lado</td><td>La casa del logo crece con cada unidad</td><td>Conversación: una pregunta grande por pantalla</td><td>Checkout: todo en una página, con resumen fijo</td><td>El resultado primero: la cuenta de cobro se llena en vivo</td></tr>
+      <tr><th scope="row">Pantallas</th><td>Bienvenida, 3 pasos, final</td><td>Bienvenida, 3 pasos, final</td><td>Bienvenida, 9 preguntas, revisión, final</td><td>1 hoja con 3 partes, final</td><td>Bienvenida, 3 pasos, final</td></tr>
+      <tr><th scope="row">Unidades</th><td>Filas con control segmentado; atajos «+ Apartamento», «+ Local»</td><td>Contador − 3 + que nombra solo; se renombran</td><td>Escribes y Enter; el uso se cambia con un toque</td><td>Tabla editable con menú de uso</td><td>Filas con menú de uso (como hoy)</td></tr>
+      <tr><th scope="row">Celular</th><td>Una columna; pasos con nombre</td><td>La casa arriba, el formulario abajo</td><td>Una pregunta a pantalla completa</td><td>Hoja con pie fijo «Crear»</td><td>La cuenta se despliega arriba del formulario</td></tr>
+      <tr><th scope="row">Tablet</th><td>Formulario y vista previa mitad y mitad</td><td>Panel navy con la casa a la izquierda</td><td>Pregunta más grande, centrada</td><td>Hoja + resumen a la derecha</td><td>Formulario y cuenta mitad y mitad</td></tr>
+      <tr><th scope="row">Escritorio</th><td>Formulario fijo + vista previa amplia de Inmuebles</td><td>Panel navy amplio + formulario; tipos en una fila</td><td>Índice de preguntas con respuestas a la izquierda</td><td>Hoja + resumen fijo «Lo que vas a crear»</td><td>Formulario fijo + la cuenta en papel</td></tr>
+      <tr><th scope="row">Revisión</th><td>En la vista previa, de reojo</td><td>En la casa, de reojo</td><td>Pantalla de resumen con «Cambiar»</td><td>Partes cerradas con su resumen</td><td>La cuenta misma</td></tr>
+      <tr><th scope="row">Carácter</th><td>Sobria, familiar</td><td>Cálida, de marca</td><td>Tranquila, enfocada</td><td>Rápida, eficiente</td><td>Concreta, orientada al resultado</td></tr>
+      <tr><th scope="row">Brilla en</th><td>Escritorio y tablet</td><td>Celular, primera impresión</td><td>Celular, usuarios poco digitales</td><td>Escritorio, usuarios rápidos</td><td>Explicar para qué sirve Arrendi</td></tr>
+      <tr><th scope="row">Riesgo</th><td>La menos sorprendente</td><td>Con muchas unidades la casa se llena (muestra 12 y «y N más»)</td><td>Más toques en total; lento para quien ya sabe</td><td>En celular es una página larga</td><td>La vista previa no es el PDF real; puede confundir si difiere</td></tr>
+      <tr><th scope="row">Esfuerzo</th><td>Bajo</td><td>Medio (dibujo de la casa)</td><td>Medio (nuevo flujo y rutas)</td><td>Medio (una sola ruta)</td><td>Medio (componente de la cuenta)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 class="sec-title">Lo que es igual en las cinco</h2>
+  <ul class="common" id="common"></ul>
+</section>
+
+<script src="base.js"></script>
+<script>
+const PROPOSALS = [
+  { n: 1, file: '1-libro-en-vivo.html', name: 'Libro en vivo', idea: 'Los tres pasos de hoy, mejor contados: pasos con nombre, bienvenida y cierre. En escritorio, a la derecha, ves cómo queda tu inmueble en Inmuebles mientras escribes.', facts: [['Pasos', 'Bienvenida → Inmueble → Unidades → Contrato → Listo'], ['Novedad', 'Vista previa en vivo; tipo con íconos; unidades con atajos'], ['Brilla en', 'Escritorio y tablet'], ['Riesgo', 'Es la menos distinta a lo que hay']], map: {} },
+  { n: 2, file: '2-la-casa-se-arma.html', name: 'La casa se arma', idea: 'La casa del isotipo es la guía: cada unidad es una ventana que se enciende. Para el contrato tocas la ventana. Las unidades se cuentan con − y + y se nombran solas.', facts: [['Pasos', 'Bienvenida → Inmueble → Unidades → Contrato → Listo'], ['Novedad', 'Contador de unidades; elegir la unidad en la casa'], ['Brilla en', 'Celular; la primera impresión de la marca'], ['Riesgo', 'Con más de 12 unidades la casa se resume']], map: {} },
+  { n: 3, file: '3-una-pregunta.html', name: 'Una pregunta a la vez', idea: 'Una conversación: cada pantalla hace una sola pregunta, grande, y avanzas con Enter. Al final revisas todo y cambias lo que quieras antes de guardar.', facts: [['Pasos', '9 preguntas cortas y una revisión'], ['Novedad', 'Revisión antes de guardar; respuestas a la vista'], ['Brilla en', 'Celular; quien usa poco la tecnología'], ['Riesgo', 'Más pantallas; lento para quien ya sabe']], map: { units: 'units', lease: 'lease' } },
+  { n: 4, file: '4-una-sola-hoja.html', name: 'Una sola hoja', idea: 'Todo en una página, como un checkout: cada parte se cierra con su resumen al completarla y se reabre con «Editar». En escritorio, un resumen fijo dice lo que vas a crear.', facts: [['Pasos', '1 página con 3 partes → Listo'], ['Novedad', 'Ver y editar todo sin perder el resto; siguientes pasos al final'], ['Brilla en', 'Escritorio; quien quiere terminar rápido'], ['Riesgo', 'En celular es una página larga']], map: { welcome: 'property' } },
+  { n: 5, file: '5-tu-primera-cuenta.html', name: 'Tu primera cuenta', idea: 'Empieza por el resultado: mientras llenas, la cuenta de cobro se arma en papel, como el PDF. El final te muestra exactamente lo que le llegará a tu arrendatario.', facts: [['Pasos', 'Bienvenida → Inmueble → Unidades → Arrendatario → Listo'], ['Novedad', 'Cuenta en vivo que resalta el dato que escribes'], ['Brilla en', 'Explicar para qué sirve Arrendi'], ['Riesgo', 'Debe parecerse de verdad al PDF']], map: {} },
+];
+const SCREENS = [['welcome', 'Bienvenida'], ['property', 'Inmueble'], ['units', 'Unidades'], ['lease', 'Contrato'], ['done', 'Final']];
+const DIAG = [
+  ['Arranca sin contexto', 'Llega directo a «Paso 1 de 3», sin decir qué viene ni cuánto toma.'],
+  ['El progreso no nombra los pasos', 'Tres barras sin etiqueta: no sabes qué falta.'],
+  ['Escritorio desaprovechado', 'Una columna de 480 px en medio de una pantalla vacía.'],
+  ['Unidades lentas de crear', 'Cada una es una tarjeta con campo y menú, y el nombre se escribe a mano.'],
+  ['Contrato sin agrupar', 'Ocho campos seguidos, sin grupos; la unidad se elige en un menú.'],
+  ['Sin revisión ni cierre', 'Al crear salta al inicio sin confirmar qué quedó guardado.'],
+  ['Recargar borra todo', 'El borrador vive en memoria: un recargo te devuelve al paso 1.'],
+];
+const COMMON = [
+  ['La misma API', 'POST /api/onboarding con inmueble, unidades y un contrato opcional. Sin rutas ni reglas nuevas.'],
+  ['Los mismos campos', 'Los de PropertyForm y LeaseForm, con sus mensajes de error. Nada se guarda hasta el final.'],
+  ['El sistema actual', 'Tokens, tipos y medidas de docs/diseno.md: campos de 48 px, Red Hat Display en títulos, claro y oscuro.'],
+  ['Bienvenida y cierre', 'Nuevas en todas: dicen qué viene y qué quedó creado.'],
+  ['Contrato opcional', 'Siempre se puede saltar y agregar después desde la unidad.'],
+  ['Accesible', 'Controles de 44 px o más, etiqueta en cada campo, errores junto al campo y foco en el primero.'],
+];
+
+let screen = 'property';
+const theme = () => document.documentElement.dataset.theme;
+const src = (p) => { const s = p.map[screen] ?? screen; return `${p.file}?embed=1&theme=${theme()}&s=${s}#${s}`; };
+
+function render() {
+  document.getElementById('mark').innerHTML = `${isotype(28)}Arrendi`;
+  document.getElementById('diag').innerHTML = DIAG.map(([b, s]) => `<li class="card">${icon('alert')}<p><b>${b}</b><span>${s}</span></p></li>`).join('');
+  document.getElementById('common').innerHTML = COMMON.map(([b, s]) => `<li class="card">${icon('check')}<p><b>${b}</b><span>${s}</span></p></li>`).join('');
+  document.getElementById('screens').innerHTML = SCREENS.map(([k, l]) => `<button aria-pressed="${k === screen}" data-screen="${k}">${l}</button>`).join('');
+  const dark = theme() === 'dark';
+  const btn = document.getElementById('theme-btn');
+  btn.innerHTML = icon(dark ? 'sun' : 'moon');
+  btn.setAttribute('aria-label', dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro');
+  document.getElementById('list').innerHTML = PROPOSALS.map((p) => `
+    <section class="proposal" id="p${p.n}"><div class="wrap">
+      <div class="p-head">
+        <div><span class="num">${p.n}</span><h2>${p.name}</h2><p class="idea">${p.idea}</p>
+          <a class="open" href="${p.file}?theme=${theme()}" target="_blank" rel="noopener">Abrir completa ${icon('arrow-right', 18)}</a></div>
+        <ul class="facts">${p.facts.map(([k, v]) => `<li><b>${k}</b><span>${v}</span></li>`).join('')}</ul>
+      </div>
+      <div class="devices">
+        <figure class="device"><div class="screen phone"><iframe title="${p.name} en celular" loading="lazy" src="${src(p)}"></iframe></div><figcaption>Celular · 390</figcaption></figure>
+        <figure class="device"><div class="screen tablet"><iframe title="${p.name} en tablet" loading="lazy" src="${src(p)}"></iframe></div><figcaption>Tablet · 820</figcaption></figure>
+        <figure class="device"><div class="screen desktop"><iframe title="${p.name} en escritorio" loading="lazy" src="${src(p)}"></iframe></div><figcaption>Escritorio · 1366</figcaption></figure>
+      </div>
+    </div></section>`).join('');
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-screen]');
+  if (b) { screen = b.dataset.screen; render(); }
+});
+render();
+</script>
+</body>
+</html>

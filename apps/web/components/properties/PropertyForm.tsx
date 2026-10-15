@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -23,19 +24,27 @@ type PropertyFormProps = {
   id: string;
   defaultValues?: Partial<PropertyValues>;
   onSubmit: (values: PropertyValues) => void | Promise<void>;
+  /** Called with what is typed, as it is typed: the onboarding keeps it as a draft. */
+  onValuesChange?: (values: Partial<PropertyValues>) => void;
 };
 
 /** Name, address, city and type of a property. Used by the onboarding and by Inmuebles. */
-export function PropertyForm({ id, defaultValues, onSubmit }: PropertyFormProps) {
+export function PropertyForm({ id, defaultValues, onSubmit, onValuesChange }: PropertyFormProps) {
   const {
     register,
     control,
     handleSubmit,
+    subscribe,
     formState: { errors },
   } = useForm<PropertyValues>({
     resolver: zodResolver(schema),
     defaultValues: { name: "", address: "", city: "", ...defaultValues },
   });
+
+  useEffect(() => {
+    if (!onValuesChange) return;
+    return subscribe({ formState: { values: true }, callback: ({ values }) => onValuesChange(values) });
+  }, [subscribe, onValuesChange]);
 
   return (
     <form id={id} onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">

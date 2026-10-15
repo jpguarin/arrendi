@@ -47,3 +47,7 @@ La propuesta B, la elegida, tiene además el panel de unidad y contrato (`#unit/
 
 - El logotipo se dibuja con el isotipo de `../arrendi-logo.svg` y el nombre en Red Hat Display 900; no es el archivo final del logo.
 - Los archivos son autónomos: estilos, datos e íconos van dentro de cada HTML.
+
+## Alta guiada
+
+Cinco propuestas para el alta guiada, en `alta-guiada/`. Se abren con `alta-guiada/index.html`; el detalle está en `alta-guiada/LEEME.md`.

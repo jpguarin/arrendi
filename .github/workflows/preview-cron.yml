@@ -1,0 +1,32 @@
+# Vercel only runs Cron Jobs in Production: this calls the daily task of the Preview
+# environment (branch develop) at the same hour. See docs/guia-supabase-vercel.md.
+name: Daily task (Preview)
+
+on:
+  schedule:
+    - cron: "0 11 * * *" # 6:00 a. m. in Colombia, as in Production
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: preview-cron
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call /api/cron/daily
+        env:
+          API_URL: ${{ vars.PREVIEW_API_URL }}
+          CRON_SECRET: ${{ secrets.PREVIEW_CRON_SECRET }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Define the PREVIEW_API_URL variable and the PREVIEW_CRON_SECRET secret."
+            exit 1
+          fi
+          # The task stops itself at 50 seconds; the margin covers a cold start.
+          curl --fail-with-body --silent --show-error --max-time 90 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "${API_URL%/}/api/cron/daily"
