@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -119,6 +120,8 @@ type LeaseFormProps = {
   /** How to pay this lease's bills, when it is not as Ajustes says. */
   showPaymentDetails?: boolean;
   onSubmit: (values: LeaseValues) => void | Promise<void>;
+  /** Called with what is typed, as it is typed: the onboarding keeps it as a draft. */
+  onValuesChange?: (values: Partial<LeaseValues>) => void;
   /** Shown after the fields, inside the form: the document picker. */
   children?: React.ReactNode;
 };
@@ -135,12 +138,14 @@ export function LeaseForm({
   showTenantDocument = false,
   showPaymentDetails = false,
   onSubmit,
+  onValuesChange,
   children,
 }: LeaseFormProps) {
   const {
     register,
     control,
     handleSubmit,
+    subscribe,
     formState: { errors },
   } = useForm<LeaseValues>({
     resolver: zodResolver(schema),
@@ -165,6 +170,11 @@ export function LeaseForm({
       ...defaultValues,
     },
   });
+
+  useEffect(() => {
+    if (!onValuesChange) return;
+    return subscribe({ formState: { values: true }, callback: ({ values }) => onValuesChange(values) });
+  }, [subscribe, onValuesChange]);
 
   const isNit = useWatch({ control, name: "tenant_document_type" }) === "nit";
   const hasDeposit = Boolean(useWatch({ control, name: "deposit" }));

@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { setUpHouse } from "./onboarding";
+
 // The deposit of a lease is charged once: as its own item, next to the rent, on the first
 // bill of the month. It runs with its own owner, apart from the billing cycle.
 
@@ -12,19 +14,13 @@ test("the first bill of the month charges the deposit as its own item", async ({
     await page.getByLabel("Contraseña").fill("una-clave-cualquiera");
     await page.getByRole("button", { name: "Ingresar" }).click();
 
-    await page.getByLabel("Nombre del inmueble").fill("Casa Depósito");
-    await page.getByRole("radio", { name: "Casa" }).click();
-    await page.getByRole("button", { name: "Continuar" }).click();
-    await page.getByRole("textbox", { name: "Unidad 1" }).fill("Apto 5");
-    await page.getByRole("button", { name: "Continuar" }).click();
-    await page.getByLabel("Nombre del arrendatario").fill("Pedro Ruiz");
-    await page.getByLabel("Correo del arrendatario").fill("pedro.ruiz@example.com");
-    await page.getByLabel("Canon mensual").fill("900000");
-    await page.getByLabel("Día de pago").click();
-    await page.getByRole("option", { name: "28 del mes" }).click();
-    await page.getByLabel("Inicio", { exact: true }).fill("2026-01-01");
-    await page.getByRole("button", { name: "Crear contrato y terminar" }).click();
-    await expect(page.getByLabel("Resumen del mes")).toBeVisible();
+    await setUpHouse(page, {
+      property: "Casa Depósito",
+      unit: "Apto 5",
+      tenant: "Pedro Ruiz",
+      email: "pedro.ruiz@example.com",
+      rent: "900000",
+    });
   });
 
   await test.step("the lease gets a deposit, to be charged", async () => {

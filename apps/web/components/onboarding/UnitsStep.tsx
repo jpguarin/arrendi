@@ -2,17 +2,14 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, X } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { OnboardingScreen } from "@/components/onboarding/OnboardingScreen";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -28,6 +25,8 @@ import { useOnboarding } from "./OnboardingContext";
 const FORM_ID = "onboarding-units";
 // The API takes up to 50 in one go; more can be added later from Inmuebles.
 const MAX_UNITS = 50;
+const ERROR_ID = "units-error";
+const ROW = "grid grid-cols-[minmax(0,1fr)_8.5rem_2.75rem] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_9.5rem_2.75rem]";
 
 const schema = z.object({
   units: z
@@ -41,131 +40,134 @@ const schema = z.object({
 });
 type Values = z.infer<typeof schema>;
 
+/** Second part of the sheet: the units, as a small table of name and use. */
 export function UnitsStep() {
   const router = useRouter();
   const { draft, update } = useOnboarding();
+  // A shop is one commercial unit far more often than a home.
+  const firstUse = draft.property?.type === "shop" ? "commercial" : "residential";
   const {
     register,
     control,
     handleSubmit,
-    getValues,
+    subscribe,
     formState: { errors },
   } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { units: draft.units ?? [{ name: "", use: "residential" }] },
+    defaultValues: { units: draft.unitsInput ?? draft.units ?? [{ name: "", use: firstUse }] },
   });
   const { fields, append, remove } = useFieldArray({ control, name: "units" });
+  const missingName = errors.units?.some?.((unit) => unit?.name);
 
-  // The steps keep their answers in memory: after a reload there is no property to add
-  // units to, so start over.
-  useEffect(() => {
-    if (!draft.property) router.replace("/onboarding/property");
-  }, [draft.property, router]);
-  if (!draft.property) return null;
+  useEffect(
+    () =>
+      subscribe({
+        formState: { values: true },
+        callback: ({ values }) => update({ unitsInput: values.units }),
+      }),
+    [subscribe, update],
+  );
 
   return (
-    <OnboardingScreen
-      step={2}
-      title={`¿Qué espacios arriendas en ${draft.property.name}?`}
-      description="Cada espacio que cobras por separado es una unidad."
-      footer={
-        <div className="grid grid-cols-[1fr_2fr] gap-2">
-          <Button asChild variant="outline">
-            {/* Keeps what is typed so far, so going back does not lose it. */}
-            <Link href="/onboarding/property" onClick={() => update({ units: getValues("units") })}>
-              Atrás
-            </Link>
-          </Button>
-          <Button type="submit" form={FORM_ID}>
-            Continuar
-          </Button>
-        </div>
-      }
+    <form
+      id={FORM_ID}
+      noValidate
+      className="flex flex-col gap-4"
+      onSubmit={handleSubmit(({ units }) => {
+        // The lease may point at a unit that is no longer there.
+        const unit = Number(draft.lease?.unit);
+        const lease = unit < units.length ? draft.lease : { ...draft.lease, unit: "0" };
+        update({ units, unitsInput: undefined, lease });
+        router.push("/onboarding/lease");
+      })}
     >
-      <form
-        id={FORM_ID}
-        noValidate
-        className="flex flex-col gap-2.5"
-        onSubmit={handleSubmit(({ units }) => {
-          // The lease may point at a unit that is no longer there.
-          update({ units, lease: undefined });
-          router.push("/onboarding/lease");
-        })}
-      >
+      <p className="-mt-1 text-support text-muted-foreground">
+        Cada espacio que cobras por separado es una unidad.
+      </p>
+      <div role="table" aria-label="Unidades" className="overflow-hidden rounded-lg border border-border">
+        <div role="row" className={`${ROW} bg-muted py-2 pr-1.5 pl-3.5 text-badge font-semibold text-muted-foreground`}>
+          <span role="columnheader">Nombre</span>
+          <span role="columnheader">Uso</span>
+          <span role="columnheader">
+            <span className="sr-only">Quitar</span>
+          </span>
+        </div>
         {fields.map((field, index) => {
-          const error = errors.units?.[index]?.name?.message;
+          const invalid = Boolean(errors.units?.[index]?.name);
           return (
-            <div
-              key={field.id}
-              className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3"
-            >
-              <div className="flex items-end gap-2">
-                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  <Label htmlFor={`unit-${index}`} className="text-badge text-muted-foreground">
-                    Unidad {index + 1}
-                  </Label>
-                  <Input
-                    id={`unit-${index}`}
-                    className="h-11"
-                    placeholder="Apto 1"
-                    autoComplete="off"
-                    aria-invalid={Boolean(error)}
-                    aria-describedby={error ? `unit-${index}-error` : undefined}
-                    {...register(`units.${index}.name`)}
-                  />
-                </div>
-                <div className="flex w-32 flex-col gap-1.5">
-                  <Label htmlFor={`use-${index}`} className="text-badge text-muted-foreground">
-                    Uso
-                  </Label>
-                  <Controller
-                    control={control}
-                    name={`units.${index}.use`}
-                    render={({ field: use }) => (
-                      <Select value={use.value} onValueChange={use.onChange}>
-                        <SelectTrigger id={`use-${index}`} className="h-11 px-3">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {UNIT_USE_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
+            <div key={field.id} role="row" className={`${ROW} border-t border-border py-1.5 pr-1.5 pl-1.5`}>
+              <span role="cell" className="min-w-0">
+                <label htmlFor={`unit-${index}`} className="sr-only">
+                  Unidad {index + 1}
+                </label>
+                <Input
+                  id={`unit-${index}`}
+                  className="h-11 border-transparent bg-transparent hover:border-border"
+                  placeholder={`Apto ${index + 1}`}
+                  autoComplete="off"
+                  aria-invalid={invalid}
+                  aria-describedby={invalid ? ERROR_ID : undefined}
+                  {...register(`units.${index}.name`)}
+                />
+              </span>
+              <span role="cell">
+                <Controller
+                  control={control}
+                  name={`units.${index}.use`}
+                  render={({ field: use }) => (
+                    <Select value={use.value} onValueChange={use.onChange}>
+                      <SelectTrigger
+                        className="h-11 px-3"
+                        aria-label={`Uso de la unidad ${index + 1}`}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {UNIT_USE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </span>
+              <span role="cell">
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="-mr-1 text-muted-foreground"
+                  className="text-muted-foreground"
                   aria-label={`Quitar unidad ${index + 1}`}
-                  // An inmueble needs at least one unit.
+                  // A property needs at least one unit.
                   disabled={fields.length === 1}
                   onClick={() => remove(index)}
                 >
                   <X aria-hidden />
                 </Button>
-              </div>
-              {error && <FieldError id={`unit-${index}-error`}>{error}</FieldError>}
+              </span>
             </div>
           );
         })}
+      </div>
+      {missingName && <FieldError id={ERROR_ID}>Escribe el nombre de cada unidad.</FieldError>}
+      <div className="flex flex-wrap gap-2">
         {fields.length < MAX_UNITS && (
           <Button
             type="button"
             variant="dashed"
             size="md"
-            onClick={() => append({ name: "", use: "residential" })}
+            onClick={() => append({ name: "", use: firstUse })}
           >
             <Plus aria-hidden />
-            Agregar otra unidad
+            Agregar unidad
           </Button>
         )}
-      </form>
-    </OnboardingScreen>
+        <Button type="submit" size="md">
+          Continuar
+        </Button>
+      </div>
+    </form>
   );
 }

@@ -1,5 +1,5 @@
 /**
- * One phone-sized column, centered: the screens outside the shell (sign-in, onboarding,
+ * One phone-sized column, centered: the screens outside the shell (sign-in,
  * offline), which are a single task with nothing next to it.
  */
 export function Column({ children }: { children: React.ReactNode }) {

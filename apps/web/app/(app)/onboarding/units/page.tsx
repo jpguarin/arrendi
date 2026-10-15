@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
-import { UnitsStep } from "@/components/onboarding/UnitsStep";
+import { OnboardingSheet } from "@/components/onboarding/OnboardingSheet";
 
 export const metadata: Metadata = { title: "Tus unidades · Arrendi" };
 
-export default function OnboardingUnitsStepPage() {
-  return <UnitsStep />;
+export default function OnboardingUnitsPage() {
+  return <OnboardingSheet open="units" />;
 }

@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { setUpHouse } from "./onboarding";
+
 // The owner's signature closes every bill. It is uploaded or drawn in Ajustes, and a bill
 // keeps the one it was issued with. It runs with its own owner.
 
@@ -14,19 +16,13 @@ test("the signature: uploaded, on the bill, drawn and taken away", async ({ page
     await page.getByLabel("Contraseña").fill("una-clave-cualquiera");
     await page.getByRole("button", { name: "Ingresar" }).click();
 
-    await page.getByLabel("Nombre del inmueble").fill("Casa Firma");
-    await page.getByRole("radio", { name: "Casa" }).click();
-    await page.getByRole("button", { name: "Continuar" }).click();
-    await page.getByRole("textbox", { name: "Unidad 1" }).fill("Apto 3");
-    await page.getByRole("button", { name: "Continuar" }).click();
-    await page.getByLabel("Nombre del arrendatario").fill("Hugo Paz");
-    await page.getByLabel("Correo del arrendatario").fill("hugo.paz@example.com");
-    await page.getByLabel("Canon mensual").fill("700000");
-    await page.getByLabel("Día de pago").click();
-    await page.getByRole("option", { name: "28 del mes" }).click();
-    await page.getByLabel("Inicio", { exact: true }).fill("2026-01-01");
-    await page.getByRole("button", { name: "Crear contrato y terminar" }).click();
-    await expect(page.getByLabel("Resumen del mes")).toBeVisible();
+    await setUpHouse(page, {
+      property: "Casa Firma",
+      unit: "Apto 3",
+      tenant: "Hugo Paz",
+      email: "hugo.paz@example.com",
+      rent: "700000",
+    });
   });
 
   await test.step("a bill issued before there is a signature leaves a line to sign", async () => {
