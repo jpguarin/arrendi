@@ -12,7 +12,8 @@
 <style>
 .page { min-height: 100dvh; display: flex; flex-direction: column; }
 .top { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--card); border-bottom: 1px solid var(--border); }
-.top .who { font-size: 13px; color: var(--muted-foreground); }
+/* The greeting goes right above the title, where the eye starts, not in the corner of the bar. */
+.greet, .intro .greet { font-size: 16px; font-weight: 600; color: var(--foreground-soft); }
 .wrap { flex: 1; width: 100%; max-width: 1120px; margin: 0 auto; padding: 24px 16px 32px; display: grid; gap: 24px; align-items: start; }
 /* Tablet (768+): the summary moves to a column on the right; desktop (1024+) widens it. */
 @media (min-width: 768px) { .wrap { grid-template-columns: minmax(0, 1fr) 280px; padding: 32px 24px; gap: 24px; } }
@@ -87,8 +88,8 @@
 /* Done: message and next steps side by side from the tablet up */
 @media (min-width: 768px) {
   .done-box { max-width: 1040px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 48px; align-items: start; padding: 72px 32px; }
-  .done-box > .ok, .done-box > h1, .done-box > p, .done-box > .btn { grid-column: 1; }
-  .done-box > .next-steps { grid-column: 2; grid-row: 1 / span 4; }
+  .done-box > .ok, .done-box > .greet, .done-box > h1, .done-box > p, .done-box > .btn { grid-column: 1; }
+  .done-box > .next-steps { grid-column: 2; grid-row: 1 / span 5; }
   .done-box > .btn { justify-self: start; }
 }
 </style>
@@ -151,7 +152,7 @@ const leaseBody = () => `
 function checklist() {
   const items = [
     { ok: DONE.property || validName(), title: draft.property.name || 'Tu inmueble', sub: typeLabel(draft.property.type) || 'Nombre y tipo' },
-    { ok: DONE.units, title: `${draft.units.filter((u) => u.name).length || 0} ${draft.units.filter((u) => u.name).length === 1 ? 'unidad' : 'unidades'}`, sub: unitsSum() || 'Sus nombres y uso' },
+    { ok: DONE.units, title: ((n) => (n ? `${n} ${n === 1 ? 'unidad' : 'unidades'}` : 'Unidades'))(draft.units.filter((u) => u.name).length), sub: unitsSum() || 'Sus nombres y uso' },
     { ok: DONE.lease || (current === 'lease' && (!draft.withLease || Object.keys(validateLease()).length === 0)), title: draft.withLease ? 'Primer contrato' : 'Sin contrato por ahora', sub: draft.withLease ? (leaseSum() || 'Arrendatario y canon') : 'Lo agregas desde la unidad' },
   ];
   return `<ul class="checklist">${items.map((i) => `<li class="${i.ok ? 'is-ok' : ''}"><span class="tick">${icon('check')}</span><p><b>${esc(i.title)}</b><span>${esc(i.sub)}</span></p></li>`).join('')}</ul>`;
@@ -161,10 +162,10 @@ const canCreate = () => DONE.property && DONE.units;
 
 function sheet() {
   return `<div class="page">
-    <div class="top">${brand(24)}<span class="who">Hola, ${OWNER.first}</span></div>
+    <div class="top">${brand(24)}</div>
     <div class="wrap">
       <div>
-        <div class="intro"><h1 class="text-title-onboarding">Configura tu primer inmueble</h1><p>Tres partes en una sola hoja. Puedes volver a cualquiera antes de guardar.</p></div>
+        <div class="intro"><p class="greet">Hola, ${OWNER.first}</p><h1 class="text-title-onboarding">Configura tu primer inmueble</h1><p>Tres partes en una sola hoja. Puedes volver a cualquiera antes de guardar.</p></div>
         <form class="sections" novalidate>
           ${section('property', 1, 'Inmueble', 'Nombre, tipo y dirección', propertySum(), propertyBody)}
           ${section('units', 2, 'Unidades', 'Cada espacio que cobras por separado', unitsSum(), unitsBody)}
@@ -182,9 +183,10 @@ function sheet() {
   </div>`;
 }
 function doneScreen() {
-  return `<div class="page"><div class="top">${brand(24)}<span class="who">Hola, ${OWNER.first}</span></div>
+  return `<div class="page"><div class="top">${brand(24)}</div>
   <div class="done-box ${enterClass()}">
     <div class="ok">${icon('check')}</div>
+    <p class="greet">Listo, ${OWNER.first}</p>
     <h1 class="font-heading">${esc(draft.property.name)} quedó creado</h1>
     <p class="muted">${draft.units.length} unidades${draft.withLease ? ` y el contrato de ${esc(draft.lease.tenant_name)}` : ''}. Lo que sigue, cuando quieras:</p>
     <nav class="card next-steps" aria-label="Siguientes pasos">
