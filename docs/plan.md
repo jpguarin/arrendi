@@ -150,6 +150,7 @@ Objetivo: llevar la marca nueva y el diseño elegido (propuesta B, "Libro", en `
 - [x] API: PDF de la cuenta de cobro con la marca.
 - [x] API: plantillas de correo con la marca.
 - [x] Prueba de extremo a extremo al día con la navegación nueva.
+- [x] Web: alta guiada en una sola hoja (propuesta 4 de `docs/new-brand-design/mockups/alta-guiada/`), responsive, con borrador que sobrevive a recargar y pantalla de cierre.
 
 **Criterios de aceptación**
 

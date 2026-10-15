@@ -15,7 +15,7 @@ Arrendi es una aplicación web instalable (PWA) para que un arrendador pequeño 
 ### Entra
 
 - Registro e inicio de sesión con Google o con correo y contraseña, con los datos de cada propietario aislados.
-- Alta guiada en tres pasos: inmueble, unidades y primer contrato.
+- Alta guiada en una sola hoja de tres partes: inmueble, unidades y primer contrato.
 - Inmuebles, unidades, arrendatarios y contratos, con el contrato firmado como archivo adjunto.
 - Generación mensual de la cuenta de cobro en PDF, con consecutivo.
 - Envío por correo y dos recordatorios de vencimiento.
@@ -74,7 +74,8 @@ Hay que construirlos siguiendo el mismo sistema visual:
 2. Crea su primer inmueble.
 3. Define las unidades del inmueble.
 4. Crea el primer contrato y, si quiere, sube el documento firmado. Este paso se puede saltar.
-5. Llega al inicio. Los demás contratos se agregan desde cada unidad.
+   Las tres partes van en una sola hoja: cada una se confirma con «Continuar» y se puede volver a abrir antes de crear. Nada se guarda hasta «Crear inmueble»; recargar la página no borra lo escrito.
+5. Ve qué quedó creado y los siguientes pasos, y llega al inicio. Los demás contratos se agregan desde cada unidad.
 
 ### Ciclo mensual de cobro
 
