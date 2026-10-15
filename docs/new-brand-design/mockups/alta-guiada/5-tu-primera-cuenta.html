@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alta guiada · 5 · Tu primera cuenta</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+.shell { min-height: 100dvh; display: grid; }
+.flow { display: flex; flex-direction: column; min-height: 100dvh; width: 100%; max-width: 520px; margin: 0 auto; }
+.stage { display: none; }
+/* Phone: the bill folds above the form. Tablet (768+): form and bill half and half.
+   Desktop (1024+): a fixed form column and the bill centered in the rest. */
+@media (min-width: 768px) {
+  .shell { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .flow { max-width: none; background: var(--card); border-right: 1px solid var(--border); }
+  .stage { display: flex; position: sticky; top: 0; height: 100dvh; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 32px 24px; background: var(--muted); }
+  .stage .cap { text-align: center; justify-content: center; }
+}
+@media (min-width: 1024px) {
+  .shell { grid-template-columns: minmax(460px, 540px) minmax(0, 1fr); }
+  .stage { padding: 40px; }
+}
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px 0 20px; min-height: 58px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px; border-radius: 999px; background: var(--muted); font-size: 13px; font-weight: 600; }
+.pill .n { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: var(--primary-foreground); font-size: 12px; }
+.body { flex: 1; display: flex; flex-direction: column; gap: 22px; padding: 24px 20px 32px; }
+.intro { display: flex; flex-direction: column; gap: 8px; }
+.intro h1 { font-weight: 700; }
+.intro p { font-size: 15px; color: var(--muted-foreground); }
+.footer-row { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
+.unit-row { display: grid; grid-template-columns: minmax(0, 1fr) 140px 44px; gap: 8px; align-items: center; }
+.unit-list { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------- The bill: always on paper, like the PDF ---------- */
+.bill { width: 100%; max-width: 440px; background: var(--paper); color: var(--ink); border-radius: 6px; box-shadow: 0 1px 0 var(--paper-line), var(--shadow-lg); overflow: hidden; font-size: 13px; }
+.bill-band { height: 10px; background: var(--ink); }
+.bill-in { padding: 22px 24px 18px; display: flex; flex-direction: column; gap: 16px; }
+.bill-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.bill-head h3 { font-family: var(--font-heading); font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+.bill-head .no { text-align: right; font-size: 12px; color: var(--ink-soft); }
+.bill-head .no b { display: block; font-size: 14px; color: var(--ink); }
+.bill-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 12px 0; border-top: 1px solid var(--paper-line); border-bottom: 1px solid var(--paper-line); }
+.bill-parties dt, .bill-meta dt { font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft); }
+.bill-parties dd { font-weight: 600; line-height: 1.35; }
+.bill-parties dd small { display: block; font-weight: 400; color: var(--ink-soft); }
+.bill-items { display: flex; flex-direction: column; }
+.bill-items div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.bill-total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 10px; border-top: 2px solid var(--ink); }
+.bill-total span { font-weight: 600; }
+.bill-total b { font-family: var(--font-heading); font-size: 22px; font-weight: 800; }
+.bill-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.bill-meta dd { font-weight: 600; }
+.bill-foot { display: flex; justify-content: center; padding: 4px 0 2px; }
+.bill-foot svg .house { fill: var(--ink); }
+.bill-foot svg .win { fill: var(--brand-green); }
+/* A blank line on the paper, and the line that the focused field fills. */
+.blank { display: inline-block; height: 9px; width: 70%; border-radius: 999px; background: var(--paper-line); vertical-align: middle; }
+.slot { border-radius: 4px; transition: background-color .2s ease, box-shadow .2s ease; }
+.slot.live { background: var(--paper-highlight); box-shadow: 0 0 0 4px var(--paper-highlight); }
+.stage .cap { font-size: 13px; font-weight: 600; color: var(--muted-foreground); display: flex; align-items: center; gap: 8px; }
+.stage .cap svg { width: 16px; height: 16px; }
+
+/* Phone: the bill folds into a disclosure above the form */
+.peek { display: block; }
+@media (min-width: 768px) { .peek, .peek-done { display: none; } }
+.peek summary { list-style: none; display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 56px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); cursor: pointer; }
+.peek summary::-webkit-details-marker { display: none; }
+.peek summary .ic { width: 36px; height: 36px; border-radius: 10px; background: var(--muted); display: grid; place-items: center; }
+.peek summary b { display: block; font-size: 14px; }
+.peek summary small { font-size: 13px; color: var(--muted-foreground); }
+.peek summary > svg:last-child { margin-left: auto; transition: transform .2s ease; }
+.peek[open] summary > svg:last-child { transform: rotate(180deg); }
+.peek .bill { margin-top: 10px; max-width: none; }
+
+/* ---------- Welcome and done ---------- */
+.hero { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 24px; padding: 32px 20px; }
+.hero h1 { font-size: 30px; line-height: 1.15; font-weight: 800; }
+.hero .lead { color: var(--muted-foreground); }
+.facts { display: grid; gap: 10px; }
+.facts li { display: flex; gap: 12px; align-items: center; font-size: 15px; }
+.facts .ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--muted); }
+.mini { transform: scale(.92); transform-origin: top left; }
+@media (max-width: 1023px) { .hero .bill { max-width: none; } }
+
+@media (min-width: 768px) {
+  .body, .hero, .action-footer { padding-left: 28px; padding-right: 28px; }
+  .top { padding-left: 28px; padding-right: 28px; }
+}
+@media (min-width: 1024px) {
+  .body, .hero, .action-footer { padding-left: 40px; padding-right: 40px; }
+  .top { padding-left: 40px; padding-right: 40px; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="base.js"></script>
+<script>
+const ORDER = ['welcome', 'property', 'units', 'lease', 'done'];
+const STEP = { property: 1, units: 2, lease: 3 };
+const STEP_NAMES = { property: 'Tu inmueble', units: 'Unidades', lease: 'Arrendatario' };
+const OWNER_FULL = 'Carolina Vélez Ruiz';
+let liveSlot = null;
+
+/* ---------- The bill, filled with whatever the draft has ---------- */
+function billPeriod() {
+  const start = draft.lease.start_date;
+  return start && start > TODAY ? start.slice(0, 7) : TODAY.slice(0, 7);
+}
+function bill() {
+  const p = draft.property, l = draft.lease;
+  const unit = draft.units[l.unit];
+  const period = billPeriod();
+  const blank = (w = 70) => `<span class="blank" style="width:${w}%"></span>`;
+  const slot = (key, html) => `<span class="slot${liveSlot === key ? ' live' : ''}" data-slot="${key}">${html}</span>`;
+  const due = l.due_day ? `${period}-${String(l.due_day).padStart(2, '0')}` : '';
+  const where = [unit?.name, p.name].filter(Boolean).join(' · ');
+  return `<article class="bill" aria-label="Vista previa de la cuenta de cobro">
+    <div class="bill-band"></div>
+    <div class="bill-in">
+      <div class="bill-head"><h3>Cuenta de cobro</h3><p class="no"><b>N.º 0001</b>${fullDate(`${period}-01`)}</p></div>
+      <dl class="bill-parties">
+        <div><dt>De</dt><dd>${OWNER_FULL}<small>Arrendador</small></dd></div>
+        <div><dt>Para</dt><dd>${slot('tenant_name', esc(l.tenant_name) || blank(80))}<small>${slot('tenant_email', esc(l.tenant_email) || blank(90))}</small></dd></div>
+      </dl>
+      <div>
+        <dl class="bill-meta" style="margin-bottom:10px"><div><dt>Inmueble</dt><dd>${slot('where', esc(where) || blank())}</dd></div><div><dt>Dirección</dt><dd>${slot('address', esc([p.address, p.city].filter(Boolean).join(', ')) || blank())}</dd></div></dl>
+        <div class="bill-items"><div><span>Canon de arrendamiento · ${monthYear(`${period}-01`)}</span>${slot('rent', l.rent ? pesos(l.rent) : blank(40))}</div></div>
+        <div class="bill-total"><span>Total</span><b>${slot('rent2', l.rent ? pesos(l.rent) : '$ —')}</b></div>
+      </div>
+      <dl class="bill-meta"><div><dt>Vence</dt><dd>${slot('due_day', due ? fullDate(due) : blank(50))}</dd></div><div><dt>Paga a</dt><dd style="font-weight:400;color:var(--ink-soft)">Tus datos de pago, de Ajustes</dd></div></dl>
+      <div class="bill-foot">${isotype(22)}</div>
+    </div>
+  </article>`;
+}
+const SLOT_OF = { 'lease.tenant_name': 'tenant_name', 'lease.tenant_email': 'tenant_email', 'lease.rent': 'rent', 'lease.due_day': 'due_day', 'property.name': 'where', 'property.address': 'address', 'property.city': 'address', 'lease.unit': 'where' };
+
+/* ---------- Screens ---------- */
+const topBar = (step) => `<div class="top">${brand(24)}${step ? `<span class="pill"><span class="n">${step}</span>${STEP_NAMES[current]} · de 3</span>` : ''}</div>`;
+const peek = () => `<details class="peek"><summary><span class="ic">${icon('receipt')}</span><span><b>Tu cuenta de cobro</b><small>${draft.lease.rent ? `${pesos(draft.lease.rent)} · ` : ''}mira cómo va quedando</small></span>${icon('chevron-down')}</summary>${bill()}</details>`;
+
+function welcome() {
+  return `${topBar()}<div class="hero ${enterClass()}">
+    <div class="intro"><p class="eyebrow">Hola, ${OWNER.first}</p><h1 class="font-heading">En 3 pasos tienes tu primera cuenta de cobro</h1>
+    <p class="lead">Cuéntanos qué arriendas y a quién. Arrendi arma la cuenta, la envía cada mes y te dice quién te debe.</p></div>
+    <ul class="facts">
+      <li><span class="ic">${icon('house')}</span>Tu inmueble y sus unidades</li>
+      <li><span class="ic">${icon('user')}</span>Tu primer arrendatario y su canon</li>
+      <li><span class="ic">${icon('send')}</span>La cuenta sale sola cada mes, por correo</li>
+    </ul>
+  </div>
+  <div class="action-footer"><a class="btn btn-primary" href="#property">Empezar ${icon('arrow-right')}</a></div>`;
+}
+function property() {
+  return `${topBar(1)}<form class="body ${enterClass()}" novalidate>
+    <div class="intro"><h1 class="text-title-onboarding">¿Qué inmueble arriendas?</h1><p>Su nombre y dirección salen en la cuenta.</p></div>
+    ${peek()}
+    ${field({ path: 'property.name', label: 'Nombre del inmueble', placeholder: 'Casa La Soledad', help: 'Un nombre corto para reconocerlo.' })}
+    ${toggleGroup({ path: 'property.type', label: 'Tipo', options: PROPERTY_TYPES, cols: 2, withIcons: true })}
+    ${field({ path: 'property.address', label: 'Dirección', placeholder: 'Calle, número y barrio', optional: true, autocomplete: 'street-address' })}
+    ${field({ path: 'property.city', label: 'Ciudad', optional: true, autocomplete: 'address-level2' })}
+  </form>
+  <div class="action-footer"><button class="btn btn-primary" data-act="next">Continuar</button></div>`;
+}
+function units() {
+  return `${topBar(2)}<form class="body ${enterClass()}" novalidate>
+    <div class="intro"><h1 class="text-title-onboarding">¿Qué espacios cobras por separado?</h1><p>Cada uno tiene su propia cuenta cada mes.</p></div>
+    <div class="unit-list">${draft.units.map((u, i) => `<div class="field"><div class="unit-row">
+      <label class="sr-only" for="units-${i}-name">Nombre de la unidad ${i + 1}</label>
+      <input class="input" id="units-${i}-name" data-bind="units.${i}.name" value="${esc(u.name)}" placeholder="Apto ${i + 1}" autocomplete="off" ${invalid(`units.${i}.name`)}>
+      <label class="sr-only" for="units-${i}-use">Uso</label>
+      <select class="select" id="units-${i}-use" data-bind="units.${i}.use">${UNIT_USES.map((o) => `<option value="${o.value}" ${u.use === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}</select>
+      <button type="button" class="icon-btn" data-remove="${i}" aria-label="Quitar ${esc(u.name || `la unidad ${i + 1}`)}" ${draft.units.length === 1 ? 'disabled' : ''}>${icon('x')}</button>
+    </div>${errorText(`units.${i}.name`)}</div>`).join('')}</div>
+    <button type="button" class="btn btn-dashed btn-md" data-act="add">${icon('plus')}Agregar otra unidad</button>
+  </form>
+  <div class="action-footer"><div class="footer-row"><button class="btn btn-outline" data-act="back">Atrás</button><button class="btn btn-primary" data-act="next">Continuar</button></div></div>`;
+}
+function lease() {
+  return `${topBar(3)}<form class="body ${enterClass()}" novalidate>
+    <div class="intro"><h1 class="text-title-onboarding">¿A quién le cobras?</h1><p>Con esto completamos su cuenta de cobro.</p></div>
+    ${peek()}
+    ${draft.units.length > 1 ? selectField({ path: 'lease.unit', label: 'Unidad', options: draft.units.map((u, i) => ({ value: String(i), label: u.name })) }) : ''}
+    ${field({ path: 'lease.tenant_name', label: 'Nombre del arrendatario', placeholder: 'Nombre completo o razón social' })}
+    ${field({ path: 'lease.tenant_email', label: 'Correo del arrendatario', type: 'email', inputmode: 'email', placeholder: 'nombre@correo.com', help: 'A este correo le llega la cuenta.' })}
+    <div class="row-2">${moneyField({ path: 'lease.rent', label: 'Canon mensual' })}${selectField({ path: 'lease.due_day', label: 'Día de pago', options: DUE_DAYS, placeholder: 'Elige' })}</div>
+    <div class="row-2">${field({ path: 'lease.start_date', label: 'Inicio', type: 'date' })}${field({ path: 'lease.end_date', label: 'Fin', type: 'date', optional: true })}</div>
+    ${documentPicker()}
+  </form>
+  <div class="action-footer">
+    <div class="footer-row"><button class="btn btn-outline" data-act="back">Atrás</button><button class="btn btn-primary" data-act="finish">Crear y terminar</button></div>
+    <button class="btn btn-ghost btn-sm" data-act="skip">Aún no tengo arrendatario</button>
+  </div>`;
+}
+function done() {
+  if (!draft.withLease) {
+    return `${topBar()}<div class="hero ${enterClass()}">
+      <div class="intro"><p class="eyebrow">Todo guardado</p><h1 class="font-heading">${esc(draft.property.name)} ya está en Arrendi</h1><p class="lead">Con ${draft.units.length} unidades. Cuando tengas el primer arrendatario, agrégalo desde su unidad y su cuenta quedará lista.</p></div>
+    </div><div class="action-footer"><button class="btn btn-primary" data-act="home">Ir al resumen</button></div>`;
+  }
+  const first = draft.lease.tenant_name.split(' ')[0];
+  return `${topBar()}<div class="hero ${enterClass()}">
+    <div class="intro"><p class="eyebrow">${icon('check', 16, 'style="display:inline;vertical-align:-3px;color:var(--positive-ink)"')} Todo guardado</p><h1 class="font-heading">Así le llegará la cuenta a ${esc(first)}</h1>
+    <p class="lead">Arrendi la genera y se la envía el día de envío de cada mes, con el PDF adjunto. Si no paga a tiempo, le recuerda.</p></div>
+    <div class="peek-done">${bill()}</div>
+    <div class="message tone-info">${icon('info')}<span>El día de envío y tus datos de pago están en Ajustes. Revísalos antes de la primera cuenta.</span></div>
+  </div>
+  <div class="action-footer"><button class="btn btn-primary" data-act="home">Ir al resumen</button><button class="btn btn-ghost btn-sm" data-act="home">Revisar Ajustes</button></div>`;
+}
+
+/* ---------- Render and actions ---------- */
+function render() {
+  const view = { welcome, property, units, lease, done }[current]();
+  const caption = {
+    welcome: ['Esto es lo que vas a armar', 'Una cuenta de cobro por unidad, cada mes.'],
+    done: [draft.withLease ? 'Tu primera cuenta de cobro' : 'Tu cuenta, cuando tengas arrendatario', 'El PDF real lleva tus datos de pago y tu firma.'],
+  }[current] ?? ['Tu primera cuenta de cobro, en vivo', 'Se llena mientras escribes. El PDF real lleva tus datos de pago y tu firma.'];
+  const stage = `<p class="cap">${icon('eye')}${caption[0]}</p><div id="bill-stage">${bill()}</div><p class="cap" style="font-weight:500">${caption[1]}</p>`;
+  document.getElementById('app').innerHTML = `<div class="shell"><div class="flow">${view}</div><aside class="stage" aria-label="Vista previa">${stage}</aside></div>${themeButton()}`;
+}
+function refreshBill() {
+  const target = document.getElementById('bill-stage');
+  if (target) target.innerHTML = bill();
+  const peekBill = document.querySelector('.peek .bill');
+  if (peekBill) peekBill.outerHTML = bill();
+}
+onDraftChange = (path) => { liveSlot = SLOT_OF[path] ?? liveSlot; refreshBill(); };
+document.addEventListener('focusin', (e) => {
+  const path = e.target.dataset?.bind || e.target.dataset?.money;
+  const slot = SLOT_OF[path] ?? null;
+  if (slot !== liveSlot) { liveSlot = slot; refreshBill(); }
+});
+
+document.addEventListener('click', (event) => {
+  const t = event.target.closest('button, a');
+  if (!t) return;
+  if (t.dataset.remove) { draft.units.splice(+t.dataset.remove, 1); if (draft.lease.unit >= draft.units.length) draft.lease.unit = 0; errors = {}; render(); return; }
+  const act = t.dataset.act;
+  if (!act) return;
+  event.preventDefault();
+  if (act === 'add') { draft.units.push({ name: suggestUnitName('residential', draft.units), use: 'residential' }); render(); document.getElementById(`units-${draft.units.length - 1}-name`).select(); }
+  if (act === 'back') back(ORDER[ORDER.indexOf(current) - 1]);
+  if (act === 'next') { if (validate(current)) go(ORDER[ORDER.indexOf(current) + 1]); else { render(); focusFirstError(); } }
+  if (act === 'finish') { draft.withLease = true; if (validate('lease')) { liveSlot = null; go('done'); } else { render(); focusFirstError(); } }
+  if (act === 'skip') { draft.withLease = false; go('done'); }
+  if (act === 'home') toast('Aquí la app abre esa pantalla.');
+});
+document.addEventListener('submit', (event) => { event.preventDefault(); document.querySelector('[data-act="next"], [data-act="finish"]')?.click(); });
+
+startRouter(ORDER, { welcome: 0, property: 1, units: 2, lease: 3, done: 3 });
+</script>
+</body>
+</html>

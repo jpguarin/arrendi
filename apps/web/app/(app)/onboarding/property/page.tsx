@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
-import { PropertyStep } from "@/components/onboarding/PropertyStep";
+import { OnboardingSheet } from "@/components/onboarding/OnboardingSheet";
 
 export const metadata: Metadata = { title: "Tu inmueble · Arrendi" };
 
-export default function OnboardingPropertyStepPage() {
-  return <PropertyStep />;
+export default function OnboardingPropertyPage() {
+  return <OnboardingSheet open="property" />;
 }

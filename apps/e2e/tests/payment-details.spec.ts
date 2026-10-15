@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { setUpHouse } from "./onboarding";
+
 // How to pay: what Ajustes says, unless the lease has its own, unless the bill has its
 // own. It runs with its own owner, apart from the billing cycle.
 
@@ -17,19 +19,13 @@ test("payment details: from Ajustes, from the lease and from the bill itself", a
     await page.getByLabel("Contraseña").fill("una-clave-cualquiera");
     await page.getByRole("button", { name: "Ingresar" }).click();
 
-    await page.getByLabel("Nombre del inmueble").fill("Casa Pagos");
-    await page.getByRole("radio", { name: "Casa" }).click();
-    await page.getByRole("button", { name: "Continuar" }).click();
-    await page.getByRole("textbox", { name: "Unidad 1" }).fill("Local 1");
-    await page.getByRole("button", { name: "Continuar" }).click();
-    await page.getByLabel("Nombre del arrendatario").fill("Marta Díaz");
-    await page.getByLabel("Correo del arrendatario").fill("marta.diaz@example.com");
-    await page.getByLabel("Canon mensual").fill("800000");
-    await page.getByLabel("Día de pago").click();
-    await page.getByRole("option", { name: "28 del mes" }).click();
-    await page.getByLabel("Inicio", { exact: true }).fill("2026-01-01");
-    await page.getByRole("button", { name: "Crear contrato y terminar" }).click();
-    await expect(page.getByLabel("Resumen del mes")).toBeVisible();
+    await setUpHouse(page, {
+      property: "Casa Pagos",
+      unit: "Local 1",
+      tenant: "Marta Díaz",
+      email: "marta.diaz@example.com",
+      rent: "800000",
+    });
   });
 
   await test.step("Ajustes holds the default", async () => {
