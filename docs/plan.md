@@ -175,6 +175,7 @@ Objetivo: usarlo con los 3 arrendatarios reales durante al menos un ciclo de cob
 - [ ] Lista de ajustes surgidos del uso real, priorizada.
 - [x] Ajuste del piloto: correos en copia por contrato (hasta 3, en CC, con todos los correos del arrendatario).
 - [x] Ajuste del piloto: pie de página en el PDF, con el número y la fecha de la cuenta, la página con el total y el isotipo.
+- [x] Ajuste del piloto: en Cuentas, ordenar por vencimiento o por estado desde los encabezados de la tabla.
 
 **Criterios de aceptación**
 
