@@ -52,6 +52,11 @@ def _replace_items(session: Session, lease: Lease, items: list[dict]) -> None:
     session.flush()
 
 
+def _without_the_tenant(cc_emails: list[str], tenant_email: str) -> list[str]:
+    """The copies of a lease: the tenant already gets every email, so not in copy too."""
+    return [email for email in cc_emails if email.lower() != tenant_email.lower()]
+
+
 def lease_response(session: Session, lease: Lease) -> LeaseResponse:
     unit = session.get_one(Unit, lease.unit_id)
     parent = session.get_one(Property, unit.property_id)
@@ -73,6 +78,7 @@ def lease_response(session: Session, lease: Lease) -> LeaseResponse:
             for item in lease_items(session, lease.id)
         ],
         auto_send=lease.auto_send,
+        cc_emails=lease.cc_emails,
         payment_details=lease.payment_details,
         document_name=lease.document_path.rsplit("/", 1)[-1] if lease.document_path else None,
         document_uploaded_at=lease.document_uploaded_at,
@@ -113,18 +119,22 @@ def create_lease_for_unit(
     _check_dates(terms.start_date, terms.end_date)
 
     if tenant is not None:
-        new_tenant = Tenant(owner_id=unit.owner_id, **tenant.model_dump())
-        session.add(new_tenant)
+        the_tenant = Tenant(owner_id=unit.owner_id, **tenant.model_dump())
+        session.add(the_tenant)
         session.flush()
-        tenant_id = new_tenant.id
-    elif session.get(Tenant, tenant_id) is None:
-        raise not_found()
+        tenant_id = the_tenant.id
+    else:
+        found = session.get(Tenant, tenant_id)
+        if found is None:
+            raise not_found()
+        the_tenant = found
 
     lease = Lease(
         owner_id=unit.owner_id,
         unit_id=unit.id,
         tenant_id=tenant_id,
-        **terms.model_dump(include=set(LeaseTerms.model_fields) - {"items"}),
+        **terms.model_dump(include=set(LeaseTerms.model_fields) - {"items", "cc_emails"}),
+        cc_emails=_without_the_tenant(terms.cc_emails, the_tenant.email),
     )
     session.add(lease)
     try:
@@ -164,10 +174,11 @@ def update_lease(session: Session, lease_id: UUID, data: LeaseUpdate) -> LeaseRe
             422, "Escribe el porcentaje del recargo por mora.", "late_fee_percent_required"
         )
 
-    if tenant_changes:
-        tenant = session.get_one(Tenant, lease.tenant_id)
-        for field, value in tenant_changes.items():
-            setattr(tenant, field, value)
+    tenant = session.get_one(Tenant, lease.tenant_id)
+    for field, value in (tenant_changes or {}).items():
+        setattr(tenant, field, value)
+    # Also when only the tenant's address changed: it may be one of the copies.
+    lease.cc_emails = _without_the_tenant(lease.cc_emails, tenant.email)
 
     session.flush()
     # Only the bills still to come: the ones already issued keep their own items.
