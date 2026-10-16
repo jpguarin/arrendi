@@ -165,6 +165,8 @@ En Resend → **Webhooks** → *Add endpoint*:
 - Evento: solo `email.bounced`. La API ignora los demás (`apps/api/app/routes/system.py`).
 - El *Signing secret* (`whsec_…`) va a `EMAIL_WEBHOOK_SECRET`.
 
+**Se comprueba** enviando con la API de Resend (paso 9) un correo a `bounced@resend.dev`, su dirección para simular rebotes. En Resend → Webhooks, el intento de `email.bounced` debe responder **200**: la firma coincide. Un **401** es que el secreto de Vercel no es el de Resend o que falta volver a desplegar. La API no marca nada, porque ese correo no es de ninguna cuenta.
+
 Resend manda a cada webhook los avisos de toda la cuenta. Con un solo secreto compartido, el webhook apunta a Producción; en `develop` los rebotes no quedan marcados.
 
 ## Paso 8: variables de `arrendi-api` en Vercel
@@ -211,6 +213,7 @@ curl -s https://api.resend.com/emails \
 | Envío directo a Gmail | ✅ SPF, DKIM y DMARC `pass` |
 | Recuperar contraseña desde `develop` | ✅ SPF, DKIM y DMARC `pass`, desde `no-reply@arrendi.jpgstudio.net`. ⚠️ Salió de `arrendi-dev` con la plantilla por defecto y un enlace a `localhost` (ver pendientes) |
 | Recuperar contraseña desde Producción, plantilla por defecto | ✅ Salió de `arrendi-prod` (`izgnyyhlfotpfqieifit`), con SPF, DKIM y DMARC `pass` y retorno a `arrendi.jpgstudio.net`. ❌ Abierto en el celular: "El enlace no es válido o ya venció", por el enlace `pkce` |
+| Rebote simulado a `bounced@resend.dev` | ✅ El webhook de Producción respondió 200 |
 | Recuperar contraseña desde Producción, plantillas del paso 6b | ✅ Pedido en el computador y abierto en el celular: llevó a elegir la contraseña nueva |
 | Cuenta de cobro desde `develop`, desviada a Gmail | ✅ SPF, DKIM y DMARC `pass`, `Reply-To` del propietario, prefijo `[Para …]` |
 | Cuenta de cobro desde local, desviada a Outlook | ✅ Bandeja de entrada, todas las comprobaciones `pass` |
@@ -228,7 +231,7 @@ Fuera de Producción, la API no envía si falta `EMAIL_TEST_INBOX`: responde `EM
 - [x] Recuperar contraseña desde `https://arrendi.jpgstudio.net`, con las plantillas en español en `arrendi-prod`.
 - [x] `arrendi-dev`: plantillas del paso 6b.
 - [x] `arrendi-dev`: `https://arrendi-dev.jpgstudio.net/**` en las direcciones de retorno.
-- [ ] Webhook de rebotes de Producción y su `EMAIL_WEBHOOK_SECRET`.
+- [x] Webhook de rebotes de Producción y su `EMAIL_WEBHOOK_SECRET`.
 - [ ] Paso 7.5 de `docs/etapa-7.md`: arrendatario falso y, si llega bien, quitar `EMAIL_TEST_INBOX` de Production.
 - [ ] Subir DMARC a `p=quarantine` cuando todos los envíos pasen.
 - [ ] Claves separadas por ambiente, si se quiere poder revocar una sin afectar la otra.
