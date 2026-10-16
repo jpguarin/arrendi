@@ -91,6 +91,17 @@ def test_onboarding_lease_takes_its_copies(api: TestClient, ana: dict[str, str])
     assert response.json()["lease"]["cc_emails"] == ["pedro@example.com"]
 
 
+def test_onboarding_takes_the_country_of_the_property(api: TestClient, ana: dict[str, str]) -> None:
+    response = api.post(
+        "/api/onboarding",
+        json={"property": PROPERTY | {"country": "EC"}, "units": UNITS},
+        headers=ana,
+    )
+
+    assert response.status_code == 201, response.text
+    assert response.json()["property"]["country"] == "EC"
+
+
 def test_onboarding_without_a_lease(
     api: TestClient, ana: dict[str, str], new_user_ids: tuple[UUID, UUID], admin_engine: Engine
 ) -> None:

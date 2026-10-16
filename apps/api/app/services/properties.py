@@ -81,6 +81,7 @@ def _property_responses(session: Session, properties: list[Property]) -> list[Pr
             name=p.name,
             address=p.address,
             city=p.city,
+            country=p.country,
             type=p.type,
             units=units_by_property[p.id],
         )
