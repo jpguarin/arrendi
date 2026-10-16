@@ -40,6 +40,8 @@ class EmailMessage:
     html: str
     text: str
     attachments: list[Attachment] = field(default_factory=list)
+    # Others on the lease who get the same email, in plain sight of the tenant.
+    cc: list[str] = field(default_factory=list)
     bcc: str | None = None
     # The same key twice sends one email, so a retry cannot repeat it.
     idempotency_key: str | None = None
@@ -75,6 +77,8 @@ class ResendSender:
             "html": message.html,
             "text": message.text,
         }
+        if message.cc:
+            body["cc"] = list(message.cc)
         if message.bcc:
             body["bcc"] = [message.bcc]
         attachments = [
@@ -122,7 +126,8 @@ class DivertingSender:
             replace(
                 message,
                 to=self.test_inbox,
-                # The copy would be a second email to a real person.
+                # The copies would be more emails to real people.
+                cc=[],
                 bcc=None,
                 subject=f"[Para {message.to}] {message.subject}",
             )
