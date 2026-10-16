@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from app.schemas.common import Name, OptionalText, PatchModel
+from app.schemas.countries import DEFAULT_COUNTRY, Country
 
 PropertyType = Literal["house", "building", "apartment", "shop"]
 UnitUse = Literal["residential", "commercial"]
@@ -42,15 +43,17 @@ class PropertyCreate(BaseModel):
     name: Name
     address: OptionalText = None
     city: OptionalText = None
+    country: Country = DEFAULT_COUNTRY
     type: PropertyType
 
 
 class PropertyUpdate(PatchModel):
-    not_nullable = ("name", "type")
+    not_nullable = ("name", "type", "country")
 
     name: Name | None = None
     address: OptionalText = None
     city: OptionalText = None
+    country: Country | None = None
     type: PropertyType | None = None
 
 
@@ -59,5 +62,6 @@ class PropertyResponse(BaseModel):
     name: str
     address: str | None
     city: str | None
+    country: Country
     type: PropertyType
     units: list[UnitResponse]

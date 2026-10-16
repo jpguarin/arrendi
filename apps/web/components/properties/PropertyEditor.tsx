@@ -72,6 +72,7 @@ export function EditPropertyScreen({ propertyId }: { propertyId: string }) {
           name: property.name,
           address: property.address ?? "",
           city: property.city ?? "",
+          country: property.country,
           type: property.type,
         }}
         onSubmit={(values: PropertyValues) =>
