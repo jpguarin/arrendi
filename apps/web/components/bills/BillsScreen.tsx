@@ -21,7 +21,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { errorMessage } from "@/lib/api/errors";
 import { type BillFilters, useBills, useProperties } from "@/lib/api/queries";
 import type { components } from "@/lib/api/schema";
-import { monthOf } from "@/lib/bills";
+import { type BillSort, monthOf, sortBills } from "@/lib/bills";
 import { formatMonth, formatPesos } from "@/lib/format";
 
 type Bill = components["schemas"]["BillSummary"];
@@ -59,6 +59,8 @@ export function BillsScreen() {
     if (linkedUnit) setUnitId(linkedUnit);
   }
   const [status, setStatus] = useState<StatusFilter>(ALL);
+  // None: the bills by month, as they come. Not kept: a reload goes back to the months.
+  const [sort, setSort] = useState<BillSort | null>(null);
   const filtered = unitId !== ALL || status !== ALL;
   const {
     data: bills,
@@ -144,20 +146,23 @@ export function BillsScreen() {
           ))}
 
         {bills && bills.length > 0 && (
-          <BillTable>
-            {byMonth(bills).flatMap(([month, monthBills]) => [
-              <BillGroup
-                key={month}
-                title={formatMonth(month)}
-                // Collected of expected: the same figures the summary shows.
-                detail={
-                  status === "voided"
-                    ? formatPesos(sum(monthBills, (bill) => bill.total))
-                    : `${formatPesos(sum(monthBills, (bill) => bill.total - bill.balance))} de ${formatPesos(sum(monthBills, (bill) => bill.total))}`
-                }
-              />,
-              ...monthBills.map((bill) => <BillRow key={bill.id} bill={bill} />),
-            ])}
+          <BillTable sort={sort} onSort={setSort}>
+            {/* In an order of its own the table is one list: the months would split it. */}
+            {sort
+              ? sortBills(bills, sort).map((bill) => <BillRow key={bill.id} bill={bill} />)
+              : byMonth(bills).flatMap(([month, monthBills]) => [
+                  <BillGroup
+                    key={month}
+                    title={formatMonth(month)}
+                    // Collected of expected: the same figures the summary shows.
+                    detail={
+                      status === "voided"
+                        ? formatPesos(sum(monthBills, (bill) => bill.total))
+                        : `${formatPesos(sum(monthBills, (bill) => bill.total - bill.balance))} de ${formatPesos(sum(monthBills, (bill) => bill.total))}`
+                    }
+                  />,
+                  ...monthBills.map((bill) => <BillRow key={bill.id} bill={bill} />),
+                ])}
           </BillTable>
         )}
       </ListMain>
