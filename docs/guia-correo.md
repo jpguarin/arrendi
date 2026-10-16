@@ -111,7 +111,51 @@ En cada proyecto (`arrendi-prod` y `arrendi-dev`): Supabase → **Authentication
 - Al activarlo, Supabase limita los correos de acceso a 30 por hora. Para el piloto sobra; se cambia en Authentication → Rate Limits.
 - En la misma sección de Authentication, revisar:
   - **URL Configuration:** *Site URL* y *Redirect URLs* del dominio de ese ambiente (`https://arrendi.jpgstudio.net/**` en `arrendi-prod`; `https://arrendi-dev.jpgstudio.net/**` y `http://localhost:3000/**` en `arrendi-dev`).
-  - **Emails → Templates:** las plantillas de confirmar registro y recuperar contraseña de `docs/guia-supabase-vercel.md`, paso 5. Con las plantillas por defecto, en inglés, el enlace solo funciona en el mismo navegador donde se pidió.
+  - **Emails → Templates:** las plantillas en español del paso 6b.
+
+## Paso 6b: plantillas de los correos de acceso
+
+Supabase trae plantillas en inglés cuyo enlace usa `token=pkce_…`, que solo funciona en el navegador donde se pidió. Al abrir el correo en el celular falla con "El enlace no es válido o ya venció". Las nuestras llevan el enlace directo a `/auth/confirm` con `token_hash`, que funciona en cualquier navegador (`apps/web/app/auth/confirm/route.ts`).
+
+En cada proyecto (`arrendi-prod` y `arrendi-dev`): Supabase → **Authentication → Emails → Templates**.
+
+1. Abrir la plantilla, cambiar el **Subject**, pasar el **Message body** a **Source**, borrar todo y pegar el HTML.
+2. **Save changes** y esperar el aviso de guardado.
+3. Abrirla de nuevo y comprobar que el `href` empieza exactamente por `{{ .RedirectTo }}&token_hash={{ .TokenHash }}`. Va `&` y no `?` porque `RedirectTo` ya trae `?next=…`.
+
+Los colores son los del correo de la cuenta de cobro.
+
+### Confirm signup
+
+Asunto: `Confirma tu correo en Arrendi`
+
+```html
+<div style="background:#F5F6F9;padding:24px 16px;font-family:Helvetica,Arial,sans-serif;color:#14264C;font-size:16px;line-height:1.5">
+  <div style="max-width:480px;margin:0 auto;background:#FFFFFF;border:1px solid #DFE3EC;border-radius:14px;padding:24px">
+    <p style="margin:0 0 16px"><strong>Confirma tu correo</strong></p>
+    <p style="margin:0 0 20px">Gracias por registrarte en Arrendi. Para activar tu cuenta, confirma que este correo es tuyo.</p>
+    <p style="margin:0 0 20px"><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email" style="display:inline-block;background:#14264C;color:#FFFFFF;text-decoration:none;padding:12px 20px;border-radius:8px">Confirmar mi correo</a></p>
+    <p style="margin:0;font-size:13px;color:#55607A">Si no creaste una cuenta en Arrendi, ignora este mensaje.</p>
+  </div>
+</div>
+```
+
+### Reset password
+
+Asunto: `Recupera tu contraseña de Arrendi`
+
+```html
+<div style="background:#F5F6F9;padding:24px 16px;font-family:Helvetica,Arial,sans-serif;color:#14264C;font-size:16px;line-height:1.5">
+  <div style="max-width:480px;margin:0 auto;background:#FFFFFF;border:1px solid #DFE3EC;border-radius:14px;padding:24px">
+    <p style="margin:0 0 16px"><strong>Recupera tu contraseña</strong></p>
+    <p style="margin:0 0 20px">Recibimos una solicitud para cambiar la contraseña de tu cuenta en Arrendi. Abre este enlace para elegir una nueva.</p>
+    <p style="margin:0 0 20px"><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=recovery" style="display:inline-block;background:#14264C;color:#FFFFFF;text-decoration:none;padding:12px 20px;border-radius:8px">Elegir una contraseña nueva</a></p>
+    <p style="margin:0;font-size:13px;color:#55607A">Si no lo pediste, ignora este mensaje: tu contraseña no cambia.</p>
+  </div>
+</div>
+```
+
+**Se comprueba** pidiendo el enlace en el computador y abriéndolo en el celular, sin tocarlo antes en el computador: debe llevar a la pantalla para elegir la contraseña nueva.
 
 ## Paso 7: aviso de rebotes
 
@@ -166,6 +210,8 @@ curl -s https://api.resend.com/emails \
 | --- | --- |
 | Envío directo a Gmail | ✅ SPF, DKIM y DMARC `pass` |
 | Recuperar contraseña desde `develop` | ✅ SPF, DKIM y DMARC `pass`, desde `no-reply@arrendi.jpgstudio.net`. ⚠️ Salió de `arrendi-dev` con la plantilla por defecto y un enlace a `localhost` (ver pendientes) |
+| Recuperar contraseña desde Producción, plantilla por defecto | ✅ Salió de `arrendi-prod` (`izgnyyhlfotpfqieifit`), con SPF, DKIM y DMARC `pass` y retorno a `arrendi.jpgstudio.net`. ❌ Abierto en el celular: "El enlace no es válido o ya venció", por el enlace `pkce` |
+| Recuperar contraseña desde Producción, plantillas del paso 6b | ✅ Pedido en el computador y abierto en el celular: llevó a elegir la contraseña nueva |
 | Cuenta de cobro desde `develop`, desviada a Gmail | ✅ SPF, DKIM y DMARC `pass`, `Reply-To` del propietario, prefijo `[Para …]` |
 | Cuenta de cobro desde local, desviada a Outlook | ✅ Bandeja de entrada, todas las comprobaciones `pass` |
 
@@ -179,8 +225,8 @@ Fuera de Producción, la API no envía si falta `EMAIL_TEST_INBOX`: responde `EM
 
 ## Pendientes
 
-- [ ] Recuperar contraseña desde `https://arrendi.jpgstudio.net`: debe salir con `X-Pm-Metadata-Project-Ref: izgnyyhlfotpfqieifit`, la plantilla en español y el enlace al dominio de Producción.
-- [ ] `arrendi-dev`: restaurar las plantillas de correo y agregar `https://arrendi-dev.jpgstudio.net/**` a las direcciones de retorno.
+- [x] Recuperar contraseña desde `https://arrendi.jpgstudio.net`, con las plantillas en español en `arrendi-prod`.
+- [ ] `arrendi-dev`: comprobar las plantillas del paso 6b y agregar `https://arrendi-dev.jpgstudio.net/**` a las direcciones de retorno.
 - [ ] Webhook de rebotes de Producción y su `EMAIL_WEBHOOK_SECRET`.
 - [ ] Paso 7.5 de `docs/etapa-7.md`: arrendatario falso y, si llega bien, quitar `EMAIL_TEST_INBOX` de Production.
 - [ ] Subir DMARC a `p=quarantine` cuando todos los envíos pasen.
