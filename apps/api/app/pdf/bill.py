@@ -4,6 +4,7 @@ Nothing here reads the database or storage: it turns what it is given into bytes
 """
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 from io import BytesIO
@@ -13,7 +14,13 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen.canvas import FILL_NON_ZERO, Canvas
 
-from app.pdf.format import format_long_date, format_number, format_pesos, late_fee_notice
+from app.pdf.format import (
+    format_long_date,
+    format_number,
+    format_pesos,
+    format_short_date,
+    late_fee_notice,
+)
 from app.pdf.logo import GREEN_PATHS, INK_PATHS, SIZE
 
 # The light palette of docs/diseno.md, on the brand of docs/new-brand-design.
@@ -133,8 +140,47 @@ def _wrapped(text: str, font: str, size: float, width: float) -> list[str]:
     return lines
 
 
-# Below this the page belongs to the brand mark at the foot.
-BOTTOM = MARGIN + 8
+# The foot of every page, from the bottom edge up: the brand mark, the bill and the page,
+# and a rule over them. Below `BOTTOM` the page belongs to it.
+FOOT_MARK = 16
+FOOT_TEXT = 44
+FOOT_RULE = 60
+BOTTOM = FOOT_RULE + 24
+
+
+class _PagedCanvas(Canvas):
+    """Holds every page until the bill ends, so that each foot can say how many there are."""
+
+    def __init__(self, *args, foot: Callable[[Canvas, int], None], **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._foot = foot
+        self._pages: list[dict] = []
+
+    def showPage(self) -> None:
+        self._pages.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self) -> None:
+        for page in self._pages:
+            self.__dict__.update(page)
+            self._foot(self, len(self._pages))
+            super().showPage()
+        super().save()
+
+
+def _foot(canvas: Canvas, bill: BillDocument, pages: int) -> None:
+    """Which bill and which page, under a rule; and the brand, small: the bill is the
+    owner's, Arrendi only issues it."""
+    _rule(canvas, FOOT_RULE)
+    canvas.setFillColor(MUTED)
+    canvas.setFont(REGULAR, 9)
+    canvas.drawString(
+        MARGIN, FOOT_TEXT, f"{format_number(bill.number)} · {format_short_date(bill.issue_date)}"
+    )
+    canvas.drawRightString(RIGHT, FOOT_TEXT, f"Página {canvas.getPageNumber()} de {pages}")
+    mark_height = 14
+    mark_width = SIZE[0] * mark_height / SIZE[1]
+    _brand_mark(canvas, (WIDTH - mark_width) / 2, FOOT_MARK, mark_height)
 
 
 def _open_page(canvas: Canvas) -> float:
@@ -146,25 +192,22 @@ def _open_page(canvas: Canvas) -> float:
 
 
 def _next_page(canvas: Canvas, bill: BillDocument) -> float:
-    """Closes the page and opens another, which says on its own which bill it is part of."""
+    """Closes the page and opens another, which says on its own which bill it is part of.
+
+    Its number is in the foot."""
     _close_page(canvas, bill)
     y = _open_page(canvas)
     canvas.setFillColor(MUTED)
     canvas.setFont(REGULAR, 10)
-    canvas.drawRightString(RIGHT, y, f"Página {canvas.getPageNumber()}")
     whose = f"Cuenta de cobro {format_number(bill.number)} · {bill.owner_name}"
-    canvas.drawString(MARGIN, y, _wrapped(whose, REGULAR, 10, CONTENT - 70)[0])
+    canvas.drawString(MARGIN, y, _wrapped(whose, REGULAR, 10, CONTENT)[0])
     y -= 14
     _rule(canvas, y)
     return y - 28
 
 
 def _close_page(canvas: Canvas, bill: BillDocument) -> None:
-    # The brand, small at the foot: the bill is the owner's, Arrendi only issues it.
-    mark_height = 16
-    mark_width = SIZE[0] * mark_height / SIZE[1]
-    _brand_mark(canvas, (WIDTH - mark_width) / 2, MARGIN / 2 - 4, mark_height)
-
+    # The foot is drawn when the bill ends, once the number of pages is known.
     if bill.voided:
         # Across the page, so no copy of it passes for a bill still owed.
         canvas.saveState()
@@ -242,7 +285,12 @@ def _room(canvas: Canvas, bill: BillDocument, y: float, height: float) -> float:
 def render_bill(bill: BillDocument) -> bytes:
     buffer = BytesIO()
     # Not compressed: the file is small, and its text can be found in it.
-    canvas = Canvas(buffer, pagesize=letter, pageCompression=0)
+    canvas = _PagedCanvas(
+        buffer,
+        pagesize=letter,
+        pageCompression=0,
+        foot=lambda page, pages: _foot(page, bill, pages),
+    )
     canvas.setTitle(f"Cuenta de cobro {format_number(bill.number)}")
     canvas.setAuthor(bill.owner_name)
     # The name of the brand is drawn, not written: this keeps it in the file as text.
