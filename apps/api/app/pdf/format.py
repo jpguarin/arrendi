@@ -28,6 +28,11 @@ def format_long_date(day: date) -> str:
     return f"{day.day} de {MONTHS[day.month - 1]} de {day.year}"
 
 
+def format_short_date(day: date) -> str:
+    """`1 oct 2026`, as the web writes dates: the first three letters of the month."""
+    return f"{day.day} {MONTHS[day.month - 1][:3]} {day.year}"
+
+
 def format_month(day: date) -> str:
     """`Octubre 2026`."""
     return f"{MONTHS[day.month - 1].capitalize()} {day.year}"

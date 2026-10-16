@@ -6,7 +6,13 @@ import pytest
 from PIL import Image, ImageDraw
 
 from app.pdf.bill import BillDocument, BillLine, SignatureError, render_bill
-from app.pdf.format import format_long_date, format_month, format_number, format_pesos
+from app.pdf.format import (
+    format_long_date,
+    format_month,
+    format_number,
+    format_pesos,
+    format_short_date,
+)
 
 BILL = BillDocument(
     number=31,
@@ -34,6 +40,8 @@ def test_dates_are_written_in_spanish() -> None:
     assert format_long_date(date(2026, 10, 5)) == "5 de octubre de 2026"
     assert format_long_date(date(2027, 1, 28)) == "28 de enero de 2027"
     assert format_month(date(2026, 10, 1)) == "Octubre 2026"
+    assert format_short_date(date(2026, 10, 1)) == "1 oct 2026"
+    assert format_short_date(date(2026, 9, 28)) == "28 sep 2026"
 
 
 def test_number_is_padded_to_four_digits() -> None:
@@ -205,6 +213,10 @@ def test_long_names_take_the_lines_they_need_instead_of_running_over_the_title()
     assert pages(pdf) == 1
 
 
+# The heading of every page after the first: where the second page starts in the file.
+SECOND_PAGE = b"(Cuenta de cobro N.\\272 0031 \\267 Ana Gomez) Tj"
+
+
 def test_every_page_after_the_first_says_which_bill_it_belongs_to() -> None:
     lines = [BillLine(f"Concepto {n} " + "muy largo " * 18, 1_000 * n) for n in range(1, 13)]
 
@@ -214,7 +226,8 @@ def test_every_page_after_the_first_says_which_bill_it_belongs_to() -> None:
     # The number and the owner, once in the heading of each page.
     assert pdf.count(b"0031") >= 2
     assert b"Cuenta de cobro N.\\272 0031 \\267 Ana Gomez" in pdf
-    assert b"(P\\341gina 2) Tj" in pdf
+    # The page number is in the foot, not repeated in the heading.
+    assert b"(P\\341gina 2) Tj" not in pdf
 
 
 def test_payment_details_too_long_for_what_is_left_of_the_page_go_on_to_the_next() -> None:
@@ -283,7 +296,7 @@ def test_signature_goes_on_the_last_page_only() -> None:
 
     assert pages(pdf) == 2
     assert IMAGE in pdf and pdf.count(b"(Ana Gomez) Tj") == 2
-    assert pdf.rindex(b"(Ana Gomez) Tj") > pdf.index(b"(P\\341gina 2) Tj")
+    assert pdf.rindex(b"(Ana Gomez) Tj") > pdf.index(SECOND_PAGE)
 
 
 def test_signature_moves_to_a_new_page_when_the_bill_reaches_the_foot() -> None:
@@ -295,7 +308,7 @@ def test_signature_moves_to_a_new_page_when_the_bill_reaches_the_foot() -> None:
 
     assert pages(pdf) == 2
     # The second page carries only its heading and the signature.
-    second = pdf[pdf.index(b"(P\\341gina 2) Tj") :]
+    second = pdf[pdf.index(SECOND_PAGE) :]
     assert IMAGE in pdf and b"(Ana Gomez) Tj" in second and b"Total a pagar" not in second
 
 
@@ -313,3 +326,35 @@ def test_bill_with_a_late_fee_says_what_paying_late_costs_and_from_when() -> Non
 
 def test_bill_without_a_late_fee_says_nothing_about_it() -> None:
     assert b"recargo" not in render_bill(BILL)
+
+
+# The foot of every page: a rule, the number and the date on the left, the page on the
+# right, and the brand mark under them.
+
+FOOT = b"(N.\\272 0031 \\267 1 oct 2026) Tj"
+LONG_LINES = [BillLine(f"Concepto {n} " + "muy largo " * 18, 1_000 * n) for n in range(1, 13)]
+
+
+def test_a_one_page_bill_says_its_number_its_date_and_page_1_of_1_at_the_foot() -> None:
+    pdf = render_bill(BILL)
+
+    assert pdf.count(FOOT) == 1
+    assert b"(P\\341gina 1 de 1) Tj" in pdf
+
+
+def test_every_page_has_its_foot_with_its_place_among_all_the_pages() -> None:
+    pdf = render_bill(replace(BILL, lines=LONG_LINES, total=78_000))
+
+    assert pages(pdf) == 2
+    assert pdf.count(FOOT) == 2
+    first, second = pdf.index(b"(P\\341gina 1 de 2) Tj"), pdf.index(b"(P\\341gina 2 de 2) Tj")
+    # Each foot on its own page: the first before the heading of the second.
+    assert first < pdf.index(SECOND_PAGE) < second
+
+
+def test_a_voided_bill_keeps_its_foot_and_its_mark_on_every_page() -> None:
+    pdf = render_bill(replace(BILL, lines=LONG_LINES, total=78_000, voided=True))
+
+    assert pages(pdf) == 2
+    assert pdf.count(FOOT) == 2 and pdf.count(b"ANULADA") == 2
+    assert b"(P\\341gina 2 de 2) Tj" in pdf
