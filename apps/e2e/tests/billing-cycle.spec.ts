@@ -51,6 +51,9 @@ test("onboarding, a bill, a partial payment and the rest", async ({ page }) => {
     await expect(summary).toContainText("1 unidad · 1 contrato");
     await page.getByLabel("Nombre del arrendatario").fill("Carlos Rojas");
     await page.getByLabel("Correo del arrendatario").fill("carlos.rojas@example.com");
+    // Someone else who gets every email of the lease, in copy.
+    await page.getByRole("button", { name: "Agregar correo en copia" }).click();
+    await page.getByRole("textbox", { name: "Correo en copia" }).fill("marta.rojas@example.com");
     await page.getByLabel("Canon mensual").fill("1000000");
     await page.getByLabel("Día de pago").click();
     await page.getByRole("option", { name: "28 del mes" }).click();
@@ -71,6 +74,7 @@ test("onboarding, a bill, a partial payment and the rest", async ({ page }) => {
     await page.getByRole("link", { name: "Inmuebles" }).click();
     await page.getByRole("link", { name: /Apto 1 · Vivienda/ }).click();
     await expect(page.getByRole("heading", { name: "Contrato · Apto 1" })).toBeVisible();
+    await expect(page.getByText("Copia a marta.rojas@example.com")).toBeVisible();
     await page.getByRole("button", { name: /Generar cuenta de/ }).click();
     await page.getByRole("link", { name: /N\.º 0001/ }).click();
 
