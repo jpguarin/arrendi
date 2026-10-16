@@ -155,12 +155,25 @@ def test_with_a_test_inbox_everything_goes_there(environment: str) -> None:
 
     body = json.loads(requests[0].content)
     assert body["to"] == ["pruebas@example.com"]
-    # The copies are dropped, and the subject says who it was meant for.
+    # The copies are dropped, and the subject says who it was meant for, copies included.
     assert "cc" not in body and "bcc" not in body
-    assert body["subject"] == "[Para carlos@example.com] Cuenta de cobro N.º 0031"
+    assert body["subject"] == (
+        "[Para carlos@example.com · copia a luisa@example.com, empresa@example.com] "
+        "Cuenta de cobro N.º 0031"
+    )
     recipients = json.dumps([body["to"], body.get("cc"), body.get("bcc")])
     for real in ("carlos@example.com", "luisa@example.com", "empresa@example.com"):
         assert real not in recipients
+
+
+def test_a_diverted_email_without_copies_names_only_the_tenant() -> None:
+    transport, requests = recording(httpx2.Response(200, json={"id": "x"}))
+    sender = build_sender(settings(email_test_inbox="pruebas@example.com"), transport)
+
+    sender.send(replace(MESSAGE, cc=[]))
+
+    body = json.loads(requests[0].content)
+    assert body["subject"] == "[Para carlos@example.com] Cuenta de cobro N.º 0031"
 
 
 @pytest.mark.parametrize("environment", ["local", "preview"])

@@ -122,6 +122,10 @@ class DivertingSender:
         self.test_inbox = test_inbox
 
     def send(self, message: EmailMessage) -> str:
+        # The subject still tells who would have got it, so the copies can be checked.
+        meant_for = message.to
+        if message.cc:
+            meant_for += f" · copia a {', '.join(message.cc)}"
         return self.sender.send(
             replace(
                 message,
@@ -129,7 +133,7 @@ class DivertingSender:
                 # The copies would be more emails to real people.
                 cc=[],
                 bcc=None,
-                subject=f"[Para {message.to}] {message.subject}",
+                subject=f"[Para {meant_for}] {message.subject}",
             )
         )
 

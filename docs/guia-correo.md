@@ -204,7 +204,7 @@ curl -s https://api.resend.com/emails \
 | `Return-Path` | `…@rsend.arrendi.jpgstudio.net` |
 | Correos de acceso: `X-Pm-Metadata-Project-Ref` | El `ref` del proyecto de Supabase que lo envió. Así se sabe si salió de `arrendi-prod` o de `arrendi-dev` |
 | Cuentas de cobro: `Reply-To` | El correo del propietario |
-| Cuentas de cobro desviadas: asunto | `[Para <destinatario real>] …` |
+| Cuentas de cobro desviadas: asunto | `[Para <destinatario real>] …`, o `[Para <destinatario> · copia a <copias>] …` si el contrato tiene correos en copia |
 
 ### Resultados del 15 de octubre de 2026
 

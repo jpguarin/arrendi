@@ -104,7 +104,7 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 - **Recordatorios solo de cuentas enviadas:** una cuenta que nunca se le envió al arrendatario no recibe recordatorios automáticos.
 - **Una cuenta anulada no se envía ni se recuerda.**
 - **Envío en dos tiempos:** la notificación se crea `pending` dentro de la transacción y, tras confirmarla, el correo sale y la notificación pasa a `sent` o `failed`. La tarea diaria reintenta los correos automáticos que quedaron `pending` o `failed`.
-- **Desvío:** mientras exista un buzón de pruebas configurado, todo correo va a ese buzón y no al arrendatario, y sin las copias. Ver `docs/arquitectura.md`.
+- **Desvío:** mientras exista un buzón de pruebas configurado, todo correo va a ese buzón y no al arrendatario, y sin las copias. El asunto dice a quién iba y a quién le habría llegado copia: `[Para carlos@… · copia a marta@…] …`. Ver `docs/arquitectura.md`.
 
 ## Tarea diaria
 
