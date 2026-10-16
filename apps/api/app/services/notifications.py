@@ -146,6 +146,7 @@ def _message(
         html=rendered.html,
         text=rendered.text,
         attachments=attachments,
+        cc=list(lease.cc_emails),
         bcc=owner.email if owner.email_copy else None,
         # One email per notification and day: a second run today cannot repeat it, and
         # tomorrow's retry of a failed one is a new attempt.
