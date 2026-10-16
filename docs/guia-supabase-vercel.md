@@ -46,7 +46,7 @@ Antes, comprueba que el `DATABASE_URL_MIGRATIONS` de `apps/api/.env` sea el de `
    - *Site URL:* la URL de producción de `arrendi-web` (en Vercel, en Domains).
    - *Redirect URLs:* `https://<esa URL>/**`.
    - Supabase recomienda rutas exactas en producción y `/**` es amplio. Se deja `/**`, como en la guía de `docs/arquitectura.md`, y se ajusta al terminar las pruebas.
-5. **Plantillas de correo** de confirmar registro y recuperar contraseña, iguales a las de `arrendi-dev`:
+5. **Plantillas de correo** de confirmar registro y recuperar contraseña. El texto completo está en `docs/guia-correo.md`, paso 6b; lo esencial es el enlace:
    - Confirmar registro: `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email`
    - Recuperar contraseña: `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=recovery`
 

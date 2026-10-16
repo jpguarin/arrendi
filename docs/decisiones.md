@@ -43,6 +43,7 @@
 | Depósito en la primera cuenta | El depósito del contrato se cobra una sola vez, como concepto aparte en la primera cuenta mensual, y el total es la suma. Un interruptor en el contrato lo apaga si el arrendatario ya lo pagó por fuera. Los contratos que existían antes quedaron apagados: su depósito se da por cobrado. En el inicio cuenta como cualquier cobro, dentro del total de la cuenta |
 | Datos de pago por contrato y por cuenta | Los de Ajustes son el valor por defecto. Un contrato puede llevar los suyos, al crearlo o al editarlo, y una cuenta manual los suyos. La cuenta guarda los que resultan al emitir (cuenta, contrato, Ajustes) y no cambian después. Las cuentas emitidas antes de esto quedaron con los de Ajustes de ese día |
 | Proveedor de correo | Resend, por su API HTTP con `httpx2`, sin SDK |
+| Dominio de la aplicación y del correo | Provisional: `jpgstudio.net`, del fundador, con el DNS en Route 53. La aplicación en `arrendi.jpgstudio.net` y el correo desde el mismo subdominio, verificado en Resend: así la reputación del correo no toca `jpgstudio.net`. Remitente `cuentas@arrendi.jpgstudio.net`; las respuestas van al propietario por `reply_to`. Se cambia cuando Arrendi tenga dominio propio |
 | Correos hasta la etapa 7 | Todos van al buzón de pruebas (`EMAIL_TEST_INBOX`), también en Producción, con el destinatario real en el asunto. Con el dominio propio, la variable se quita de Producción |
 | Cuenta generada a mano | No se envía sola: queda con el botón "Enviar". Solo la tarea diaria envía sola |
 | Recordatorios | Solo de cuentas que ya se enviaron, y uno por cuenta en cada ejecución de la tarea |
@@ -80,7 +81,6 @@ Hay que resolverlas antes de la etapa indicada.
 
 | Decisión | Antes de |
 | --- | --- |
-| Dominio de envío del correo | Etapa 7 |
 | Plan de Vercel: confirmar si el gratuito admite uso comercial | Etapa 7 |
 | Verificar dominio y registro de marca de Arrendi ante la SIC | Etapa 7 |
 | Confirmar con un contador si basta la cuenta de cobro o hará falta factura electrónica | Etapa 7 |

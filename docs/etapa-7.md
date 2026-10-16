@@ -2,7 +2,7 @@
 
 Guía de trabajo de la etapa 7 (piloto). Las tareas y los criterios de aceptación oficiales están en `docs/plan.md`; este documento detalla el orden, qué hace cada paso y cómo se comprueba. Se marca cada paso al terminarlo.
 
-**Estado:** plan propuesto el 11 de octubre de 2026. No se ha empezado: falta la aprobación del fundador y el nombre del dominio.
+**Estado:** plan propuesto el 11 de octubre de 2026. No se ha empezado: falta la aprobación del fundador. El dominio se definió el 15 de octubre de 2026.
 
 **Objetivo:** usar Arrendi con los 3 arrendatarios reales durante al menos un ciclo de cobro.
 
@@ -19,7 +19,7 @@ Tomadas el 11 de octubre de 2026:
 
 1. **Vercel: Hobby durante el piloto, Pro antes de vender.** Vercel limita Hobby a uso personal no comercial (consultado hoy en sus lineamientos de uso). El piloto es solo tuyo y no le cobra a nadie por la aplicación. Antes de abrir el registro a otros propietarios hay que pasar a Pro. Puedes confirmar tu caso con el soporte de Vercel.
 2. **Supabase gratuito, con copia propia.** El plan gratuito no trae copias automáticas, y ningún plan respalda los archivos de Storage. Un script del repositorio exporta la base y descarga los archivos a una carpeta tuya.
-3. **Dominio propio, que ya tienes.** Para la aplicación y, en un subdominio, para el correo. Falta que me digas cuál es.
+3. **Dominio: `jpgstudio.net`, por el momento.** La aplicación ya responde en `arrendi.jpgstudio.net` (DNS en Route 53, apuntando a Vercel). El correo sale del mismo subdominio, verificado en Resend, con remitente `cuentas@arrendi.jpgstudio.net`. Decidido el 15 de octubre de 2026.
 4. **`arrendi-prod` empieza limpio.** Haces el alta de nuevo con los datos reales; los consecutivos empiezan en 1.
 
 ## Lo que no se resuelve con código
@@ -96,13 +96,16 @@ Sigue la guía de despliegue de `docs/arquitectura.md`:
 
 ### [ ] Paso 7. Dominio y correo real (tú)
 
+El detalle de lo hecho con el correo, y cómo repetirlo con otro dominio, está en `docs/guia-correo.md`.
+
 1. Dominio de la aplicación en `arrendi-web`, con sus registros DNS, y las direcciones de retorno de Supabase y de Google actualizadas.
-2. Subdominio de correo en Resend, con SPF, DKIM y DMARC. Consulto la documentación vigente de Resend para los registros exactos.
+2. ✅ Subdominio de correo en Resend, con SPF, DKIM y DMARC (15 de octubre de 2026). `arrendi.jpgstudio.net` verificado en `us-east-1`, con los registros en Route 53: DKIM en `resend._domainkey.arrendi` (TXT); la ruta de retorno, `send.arrendi` y `rsend.arrendi`, como CNAME hacia `*.forge.rmta.net`, la infraestructura de Resend; DMARC en `_dmarc.arrendi` con `p=none`. Un envío de prueba a Gmail dio `spf=pass`, `dkim=pass` y `dmarc=pass`, alineados con `arrendi.jpgstudio.net`. Una cuenta de cobro desviada a un buzón de Outlook llegó a la bandeja de entrada con todas las comprobaciones aprobadas. Falta subir DMARC a `quarantine` cuando todos los envíos pasen. Por ahora `arrendi-dev` y `arrendi-prod` comparten la configuración de Resend (clave, remitente y SMTP de Supabase); en vista previa el desvío al buzón de pruebas sigue activo. El correo de recuperación de contraseña y la cuenta de cobro se probaron en `develop` (`arrendi-dev.jpgstudio.net`) con las tres comprobaciones aprobadas.
 3. Correos de acceso de `arrendi-prod` por Resend.
 4. `EMAIL_SENDER` con una dirección del dominio; webhook de rebotes de Producción con su secreto; publicar la pantalla de consentimiento de Google para usuarios externos.
-5. **Prueba con un arrendatario falso:** un contrato cuyo correo es otro buzón tuyo. Solo cuando esa cuenta llegue a la bandeja de entrada, y no a spam, se quita `EMAIL_TEST_INBOX` de Producción.
+5. ✅ **Prueba con un arrendatario falso:** un contrato cuyo correo es otro buzón tuyo. Solo cuando esa cuenta llegue a la bandeja de entrada, y no a spam, se quita `EMAIL_TEST_INBOX` de Producción.
 
 - **Se comprueba:** la cuenta de prueba llega a un buzón de Gmail y a uno de Outlook, en la bandeja de entrada, con SPF, DKIM y DMARC aprobados en las cabeceras.
+- **Resultado (15 de octubre de 2026):** con `EMAIL_TEST_INBOX` quitada de Production, la cuenta N.º 0003 de un contrato de prueba llegó directo a `contacto@jpguarin.com` (Zoho Mail), en la bandeja de entrada, sin prefijo, con `dkim=pass`, `spf=pass` y `dmarc=pass` alineados con `arrendi.jpgstudio.net`. Antes se había probado desviada en Gmail y Outlook. Desde aquí Producción le escribe a quien esté en cada contrato. Queda por confirmar en el punto 4 la pantalla de consentimiento de Google, y limpiar `arrendi-prod` antes del paso 8.
 
 ### [ ] Paso 8. Datos reales
 
