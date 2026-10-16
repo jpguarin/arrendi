@@ -227,7 +227,7 @@ Fuera de Producción, la API no envía si falta `EMAIL_TEST_INBOX`: responde `EM
 
 - [x] Recuperar contraseña desde `https://arrendi.jpgstudio.net`, con las plantillas en español en `arrendi-prod`.
 - [x] `arrendi-dev`: plantillas del paso 6b.
-- [ ] `arrendi-dev`: agregar `https://arrendi-dev.jpgstudio.net/**` a las direcciones de retorno.
+- [x] `arrendi-dev`: `https://arrendi-dev.jpgstudio.net/**` en las direcciones de retorno.
 - [ ] Webhook de rebotes de Producción y su `EMAIL_WEBHOOK_SECRET`.
 - [ ] Paso 7.5 de `docs/etapa-7.md`: arrendatario falso y, si llega bien, quitar `EMAIL_TEST_INBOX` de Production.
 - [ ] Subir DMARC a `p=quarantine` cuando todos los envíos pasen.
