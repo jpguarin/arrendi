@@ -173,6 +173,7 @@ Objetivo: usarlo con los 3 arrendatarios reales durante al menos un ciclo de cob
 - [ ] Copia de seguridad de la base de datos verificada con una restauración de prueba.
 - [ ] Revisión de accesibilidad: teclado, contraste en ambos temas y lector de pantalla en las pantallas principales.
 - [ ] Lista de ajustes surgidos del uso real, priorizada.
+- [x] Ajuste del piloto: correos en copia por contrato (hasta 3, en CC, con todos los correos del arrendatario).
 
 **Criterios de aceptación**
 

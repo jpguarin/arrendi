@@ -15,7 +15,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import TIMESTAMP
+from sqlalchemy.dialects.postgresql import ARRAY, TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -54,6 +54,7 @@ class Lease(Base):
             unique=True,
             postgresql_where=text("status = 'active'"),
         ),
+        CheckConstraint("cardinality(cc_emails) <= 3", name="leases_cc_emails_check"),
         Index("leases_tenant_id_idx", "tenant_id"),
     )
 
@@ -71,6 +72,8 @@ class Lease(Base):
     charge_deposit: Mapped[bool] = mapped_column(server_default=text("false"))
     status: Mapped[str] = mapped_column(Text, server_default=text("'active'"))
     auto_send: Mapped[bool] = mapped_column(server_default=text("true"))
+    # Others who get every email of the tenant, in plain sight of the tenant.
+    cc_emails: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
     # Paying the rent late costs this percentage of it, once, after the days of grace.
     late_fee_enabled: Mapped[bool] = mapped_column(server_default=text("false"))
     late_fee_percent: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))

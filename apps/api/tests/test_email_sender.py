@@ -25,6 +25,7 @@ MESSAGE = EmailMessage(
     html="<p>Hola</p>",
     text="Hola",
     attachments=[Attachment("cuenta-0031.pdf", b"%PDF-1.4", "application/pdf")],
+    cc=["luisa@example.com", "empresa@example.com"],
     bcc="ana@example.com",
     idempotency_key="notification-1",
 )
@@ -84,6 +85,7 @@ def test_resend_gets_the_whole_message() -> None:
         "subject": "Cuenta de cobro N.º 0031",
         "html": "<p>Hola</p>",
         "text": "Hola",
+        "cc": ["luisa@example.com", "empresa@example.com"],
         "bcc": ["ana@example.com"],
         "attachments": [
             {
@@ -108,7 +110,10 @@ def test_owner_name_cannot_break_the_from_header() -> None:
 
     ResendSender("re_test", "cuentas@arrendi.test", transport).send(message)
 
-    sender = json.loads(requests[0].content)["from"]
+    body = json.loads(requests[0].content)
+    sender = body["from"]
+    # Nobody else in copy: no empty list for the provider.
+    assert "cc" not in body and "bcc" not in body
     assert sender.endswith(" vía Arrendi <cuentas@arrendi.test>")
     assert sender.count("<") == 1 and "\n" not in sender and '"' not in sender
 
@@ -150,10 +155,25 @@ def test_with_a_test_inbox_everything_goes_there(environment: str) -> None:
 
     body = json.loads(requests[0].content)
     assert body["to"] == ["pruebas@example.com"]
-    # The copy is dropped, and the subject says who it was meant for.
-    assert "bcc" not in body
+    # The copies are dropped, and the subject says who it was meant for, copies included.
+    assert "cc" not in body and "bcc" not in body
+    assert body["subject"] == (
+        "[Para carlos@example.com · copia a luisa@example.com, empresa@example.com] "
+        "Cuenta de cobro N.º 0031"
+    )
+    recipients = json.dumps([body["to"], body.get("cc"), body.get("bcc")])
+    for real in ("carlos@example.com", "luisa@example.com", "empresa@example.com"):
+        assert real not in recipients
+
+
+def test_a_diverted_email_without_copies_names_only_the_tenant() -> None:
+    transport, requests = recording(httpx2.Response(200, json={"id": "x"}))
+    sender = build_sender(settings(email_test_inbox="pruebas@example.com"), transport)
+
+    sender.send(replace(MESSAGE, cc=[]))
+
+    body = json.loads(requests[0].content)
     assert body["subject"] == "[Para carlos@example.com] Cuenta de cobro N.º 0031"
-    assert "carlos@example.com" not in json.dumps([body["to"], body.get("cc"), body.get("bcc")])
 
 
 @pytest.mark.parametrize("environment", ["local", "preview"])
@@ -173,7 +193,11 @@ def test_production_without_a_test_inbox_sends_to_the_tenant() -> None:
     build_sender(settings(environment="production"), transport).send(MESSAGE)
 
     body = json.loads(requests[0].content)
-    assert (body["to"], body["bcc"]) == (["carlos@example.com"], ["ana@example.com"])
+    assert (body["to"], body["cc"], body["bcc"]) == (
+        ["carlos@example.com"],
+        ["luisa@example.com", "empresa@example.com"],
+        ["ana@example.com"],
+    )
 
 
 @pytest.mark.parametrize("missing", ["email_api_key", "email_sender"])

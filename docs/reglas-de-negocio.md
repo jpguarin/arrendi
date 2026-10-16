@@ -94,6 +94,7 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 | `resend` | Cuando el propietario reenvía una cuenta ya enviada | Lo mismo que `bill` | PDF de la cuenta |
 
 - Remitente con el nombre del propietario; las respuestas van al correo del propietario (`Reply-To`).
+- **Copias del contrato:** el contrato puede tener hasta 3 correos más (`cc_emails`), como un codeudor. Reciben en copia visible (CC) todos los correos del arrendatario: cuenta, reenvío, recordatorios y recibo. La notificación sigue siendo del arrendatario. Se leen al enviar: un cambio en la lista vale para los envíos siguientes.
 - El propietario puede activar o desactivar cada recordatorio automático y recibir copia de cada correo.
 - Cada envío crea una fila en `notifications`.
 - Los correos automáticos (`bill`, `reminder_1`, `reminder_2`) salen una sola vez por cuenta. Los manuales y los reenvíos no tienen ese límite.
@@ -103,7 +104,7 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 - **Recordatorios solo de cuentas enviadas:** una cuenta que nunca se le envió al arrendatario no recibe recordatorios automáticos.
 - **Una cuenta anulada no se envía ni se recuerda.**
 - **Envío en dos tiempos:** la notificación se crea `pending` dentro de la transacción y, tras confirmarla, el correo sale y la notificación pasa a `sent` o `failed`. La tarea diaria reintenta los correos automáticos que quedaron `pending` o `failed`.
-- **Desvío:** mientras exista un buzón de pruebas configurado, todo correo va a ese buzón y no al arrendatario. Ver `docs/arquitectura.md`.
+- **Desvío:** mientras exista un buzón de pruebas configurado, todo correo va a ese buzón y no al arrendatario, y sin las copias. El asunto dice a quién iba y a quién le habría llegado copia: `[Para carlos@… · copia a marta@…] …`. Ver `docs/arquitectura.md`.
 
 ## Tarea diaria
 

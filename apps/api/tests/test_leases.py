@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, text
+from sqlalchemy.exc import IntegrityError
 
 from tests.conftest import MakeToken, Tree, bearer
 
@@ -76,6 +77,7 @@ def test_create_a_lease_with_a_new_tenant(
         "end_date": "2026-12-31",
         "deposit": 950000,
         "auto_send": True,
+        "cc_emails": [],
         "charge_deposit": True,
         "items": [],
         "late_fee_enabled": False,
@@ -736,3 +738,125 @@ def test_replacing_the_items_at_once_leaves_one_whole_list(
     # Each one waits for the one before it; none trips over another's rows.
     assert codes == [200] * 6
     assert api.get(path, headers=ana).json()["items"] in lists
+
+
+# Others who get the lease's emails, in copy.
+
+PEDRO = "pedro@example.com"
+EMPRESA = "pagos@empresa.example.com"
+
+
+def test_lease_is_created_with_its_copies(
+    api: TestClient, ana: dict[str, str], vacant_unit: dict
+) -> None:
+    created = api.post(
+        "/api/leases",
+        json=TERMS
+        | {
+            "unit_id": vacant_unit["id"],
+            "tenant": LUISA,
+            # Repeated, or the tenant's own: one copy is enough, and she already gets it.
+            "cc_emails": [f" {PEDRO} ", EMPRESA, "Pedro@Example.com", "LUISA.gomez@example.com"],
+        },
+        headers=ana,
+    )
+
+    assert created.status_code == 201, created.text
+    assert created.json()["cc_emails"] == [PEDRO, EMPRESA]
+
+
+def test_new_lease_has_no_copies_unless_told(
+    api: TestClient, ana: dict[str, str], vacant_unit: dict
+) -> None:
+    created = api.post(
+        "/api/leases", json=TERMS | {"unit_id": vacant_unit["id"], "tenant": LUISA}, headers=ana
+    )
+
+    assert created.json()["cc_emails"] == []
+
+
+def test_update_replaces_the_copies_only_when_they_are_sent(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+    path = f"/api/leases/{anas.lease_id}"
+
+    changed = api.patch(path, json={"cc_emails": [PEDRO, EMPRESA]}, headers=ana)
+    assert changed.json()["cc_emails"] == [PEDRO, EMPRESA]
+    kept = api.patch(path, json={"rent": 1000000}, headers=ana)
+    assert kept.json()["cc_emails"] == [PEDRO, EMPRESA]
+    replaced = api.patch(path, json={"cc_emails": [EMPRESA]}, headers=ana)
+    assert replaced.json()["cc_emails"] == [EMPRESA]
+    cleared = api.patch(path, json={"cc_emails": []}, headers=ana)
+    assert cleared.json()["cc_emails"] == []
+
+
+def test_a_tenant_who_takes_the_address_of_a_copy_is_not_copied_too(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+    path = f"/api/leases/{anas.lease_id}"
+    api.patch(path, json={"cc_emails": [PEDRO, EMPRESA]}, headers=ana)
+
+    changed = api.patch(path, json={"tenant": {"email": PEDRO}}, headers=ana)
+
+    assert changed.json()["tenant"]["email"] == PEDRO
+    assert changed.json()["cc_emails"] == [EMPRESA]
+
+
+@pytest.mark.parametrize(
+    "cc_emails",
+    [
+        ["a@example.com", "b@example.com", "c@example.com", "d@example.com"],
+        ["no-es-un-correo"],
+        [""],
+        None,
+    ],
+)
+def test_copies_are_validated(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], cc_emails: object
+) -> None:
+    anas, _ = trees
+
+    response = api.patch(f"/api/leases/{anas.lease_id}", json={"cc_emails": cc_emails}, headers=ana)
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "validation_error"
+
+
+def test_owner_cannot_read_or_change_another_owners_copies(
+    api: TestClient,
+    ana: dict[str, str],
+    beto: dict[str, str],
+    trees: tuple[Tree, Tree],
+    admin_engine: Engine,
+) -> None:
+    anas, _ = trees
+    api.patch(f"/api/leases/{anas.lease_id}", json={"cc_emails": [PEDRO]}, headers=ana)
+
+    assert api.get(f"/api/leases/{anas.lease_id}", headers=beto).status_code == 404
+    response = api.patch(
+        f"/api/leases/{anas.lease_id}", json={"cc_emails": [EMPRESA]}, headers=beto
+    )
+
+    assert response.status_code == 404
+    with admin_engine.connect() as connection:
+        stored = connection.execute(
+            text("select cc_emails from leases where id = :id"), {"id": anas.lease_id}
+        ).scalar_one()
+    assert stored == [PEDRO]
+
+
+def test_the_table_takes_at_most_three_copies(
+    admin_engine: Engine, trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+
+    with pytest.raises(IntegrityError), admin_engine.begin() as connection:
+        connection.execute(
+            text(
+                "update leases set cc_emails = array['a@x.co','b@x.co','c@x.co','d@x.co'] "
+                "where id = :id"
+            ),
+            {"id": anas.lease_id},
+        )

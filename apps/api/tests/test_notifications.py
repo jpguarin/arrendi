@@ -110,6 +110,50 @@ def test_owner_gets_a_copy_when_they_ask_for_it(
     assert mailer.sent[0].bcc == "ana@example.com"
 
 
+def test_the_copies_of_the_lease_get_every_email_of_the_tenant(
+    api: TestClient,
+    ana: dict[str, str],
+    trees: tuple[Tree, Tree],
+    bill: dict,
+    mailer: FakeEmailSender,
+) -> None:
+    copies = ["pedro@example.com", "pagos@empresa.example.com"]
+    api.patch(f"/api/leases/{trees[0].lease_id}", json={"cc_emails": copies}, headers=ana)
+
+    api.post(f"/api/bills/{bill['id']}/send", headers=ana)
+    api.post(f"/api/bills/{bill['id']}/send", headers=ana)
+    api.post(f"/api/bills/{bill['id']}/remind", headers=ana)
+    api.post(
+        f"/api/bills/{bill['id']}/payments",
+        json={
+            "amount": 400_000,
+            "payment_date": "2026-10-03",
+            "method": "transfer",
+            "send_receipt": True,
+        },
+        headers=ana,
+    )
+
+    assert [message.subject.split(":")[0] for message in mailer.sent] == [
+        "Cuenta de cobro N.º 0001",
+        "Cuenta de cobro N.º 0001",
+        "Recordatorio de pago",
+        "Recibo de pago",
+    ]
+    assert all(message.to == "ana@example.com" for message in mailer.sent)
+    assert all(message.cc == copies for message in mailer.sent)
+    # The notification is still the tenant's.
+    assert {n["recipient"] for n in detail(api, ana, bill)["notifications"]} == {"ana@example.com"}
+
+
+def test_without_copies_the_email_goes_to_the_tenant_alone(
+    api: TestClient, ana: dict[str, str], bill: dict, mailer: FakeEmailSender
+) -> None:
+    api.post(f"/api/bills/{bill['id']}/send", headers=ana)
+
+    assert mailer.sent[0].cc == []
+
+
 def test_manual_reminder_says_the_balance(
     api: TestClient, ana: dict[str, str], bill: dict, mailer: FakeEmailSender
 ) -> None:

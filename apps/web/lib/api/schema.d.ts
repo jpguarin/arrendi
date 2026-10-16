@@ -889,6 +889,11 @@ export interface components {
              */
             auto_send: boolean;
             /**
+             * Cc Emails
+             * @default []
+             */
+            cc_emails: string[];
+            /**
              * Late Fee Enabled
              * @default false
              */
@@ -942,6 +947,8 @@ export interface components {
             items: components["schemas"]["BillItemResponse"][];
             /** Auto Send */
             auto_send: boolean;
+            /** Cc Emails */
+            cc_emails: string[];
             /** Late Fee Enabled */
             late_fee_enabled: boolean;
             /** Late Fee Percent */
@@ -999,6 +1006,8 @@ export interface components {
             items?: components["schemas"]["ItemInput"][] | null;
             /** Auto Send */
             auto_send?: boolean | null;
+            /** Cc Emails */
+            cc_emails?: string[] | null;
             /** Late Fee Enabled */
             late_fee_enabled?: boolean | null;
             /** Late Fee Percent */
@@ -1080,6 +1089,11 @@ export interface components {
              * @default true
              */
             auto_send: boolean;
+            /**
+             * Cc Emails
+             * @default []
+             */
+            cc_emails: string[];
             /**
              * Late Fee Enabled
              * @default false
