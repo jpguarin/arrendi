@@ -21,7 +21,7 @@ Arrendi es una aplicación web instalable (PWA) para que un arrendador pequeño 
 - Envío por correo y dos recordatorios de vencimiento.
 - Registro de pagos totales o parciales, con comprobante adjunto y recibo al arrendatario.
 - Panel de inicio: esperado, recaudado, pendiente y quién está en mora.
-- Listado de cuentas con filtros por unidad y estado.
+- Listado de cuentas con filtros por unidad y estado, y orden por vencimiento o por estado.
 - Configuración de datos del propietario, datos de pago, firma y envíos.
 
 ### Queda fuera
@@ -44,7 +44,7 @@ Las diez pantallas diseñadas están en `docs/mockups/` y descritas en `docs/dis
 | Pantalla | Para qué sirve | Acciones principales |
 | --- | --- | --- |
 | Inicio | Ver el mes de un vistazo: recaudado, pendiente y en mora | Enviar recordatorio, registrar pago, abrir una cuenta |
-| Listado de cuentas | Consultar todas las cuentas, agrupadas por mes | Filtrar por unidad y estado, crear cuenta manual con uno o varios conceptos |
+| Listado de cuentas | Consultar todas las cuentas, agrupadas por mes | Filtrar por unidad y estado, ordenar por vencimiento o por estado (en pantalla ancha), crear cuenta manual con uno o varios conceptos |
 | Detalle de cuenta | Ver el documento, su historial de envíos y el estado de su recargo por mora | Registrar pago, reenviar, descargar PDF, anular, perdonar el recargo o volver a cobrarlo |
 | Registrar pago | Anotar un pago en pocos toques | Valor, fecha, medio, comprobante, enviar recibo |
 | Inmuebles y unidades | Ver cada inmueble con sus unidades y su estado | Agregar inmueble o unidad, abrir el contrato |
