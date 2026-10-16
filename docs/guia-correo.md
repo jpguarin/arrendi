@@ -176,7 +176,7 @@ Resend manda a cada webhook los avisos de toda la cuenta. Con un solo secreto co
 | `EMAIL_API_KEY` | La clave de Resend |
 | `EMAIL_SENDER` | `cuentas@arrendi.jpgstudio.net` |
 | `EMAIL_WEBHOOK_SECRET` | El `whsec_…` del paso 7 |
-| `EMAIL_TEST_INBOX` | `jpguarin@gmail.com`, en Production y en Preview. En Production se quita solo al final del paso 7.5 de `docs/etapa-7.md` |
+| `EMAIL_TEST_INBOX` | `jpguarin@gmail.com`, solo en Preview. En Production se quitó el 15 de octubre de 2026, al cerrar el paso 7.5 de `docs/etapa-7.md` |
 
 Las variables nuevas solo entran con un despliegue nuevo: **Redeploy** después de cambiarlas.
 
@@ -213,6 +213,7 @@ curl -s https://api.resend.com/emails \
 | Envío directo a Gmail | ✅ SPF, DKIM y DMARC `pass` |
 | Recuperar contraseña desde `develop` | ✅ SPF, DKIM y DMARC `pass`, desde `no-reply@arrendi.jpgstudio.net`. ⚠️ Salió de `arrendi-dev` con la plantilla por defecto y un enlace a `localhost` (ver pendientes) |
 | Recuperar contraseña desde Producción, plantilla por defecto | ✅ Salió de `arrendi-prod` (`izgnyyhlfotpfqieifit`), con SPF, DKIM y DMARC `pass` y retorno a `arrendi.jpgstudio.net`. ❌ Abierto en el celular: "El enlace no es válido o ya venció", por el enlace `pkce` |
+| Cuenta de cobro desde Producción, sin desvío, a un buzón de Zoho Mail | ✅ Bandeja de entrada, sin prefijo, con DKIM, SPF y DMARC `pass` |
 | Rebote simulado a `bounced@resend.dev` | ✅ El webhook de Producción respondió 200 |
 | Recuperar contraseña desde Producción, plantillas del paso 6b | ✅ Pedido en el computador y abierto en el celular: llevó a elegir la contraseña nueva |
 | Cuenta de cobro desde `develop`, desviada a Gmail | ✅ SPF, DKIM y DMARC `pass`, `Reply-To` del propietario, prefijo `[Para …]` |
@@ -232,7 +233,7 @@ Fuera de Producción, la API no envía si falta `EMAIL_TEST_INBOX`: responde `EM
 - [x] `arrendi-dev`: plantillas del paso 6b.
 - [x] `arrendi-dev`: `https://arrendi-dev.jpgstudio.net/**` en las direcciones de retorno.
 - [x] Webhook de rebotes de Producción y su `EMAIL_WEBHOOK_SECRET`.
-- [ ] Paso 7.5 de `docs/etapa-7.md`: arrendatario falso y, si llega bien, quitar `EMAIL_TEST_INBOX` de Production.
+- [x] Paso 7.5 de `docs/etapa-7.md`: arrendatario falso y `EMAIL_TEST_INBOX` quitada de Production.
 - [ ] Subir DMARC a `p=quarantine` cuando todos los envíos pasen.
 - [ ] Claves separadas por ambiente, si se quiere poder revocar una sin afectar la otra.
 

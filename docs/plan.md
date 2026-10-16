@@ -166,7 +166,7 @@ Objetivo: llevar la marca nueva y el diseño elegido (propuesta B, "Libro", en `
 Objetivo: usarlo con los 3 arrendatarios reales durante al menos un ciclo de cobro.
 
 - [ ] Proyecto Supabase `arrendi-prod` y variables de Producción en Vercel. Hasta entonces, Producción usa `arrendi-dev` (decisión del 11 de octubre de 2026); sigue la guía de despliegue de `docs/arquitectura.md`.
-- [ ] Dominio propio para la aplicación y para el correo, con SPF, DKIM y DMARC.
+- [x] Dominio propio para la aplicación y para el correo, con SPF, DKIM y DMARC.
 - [ ] Política de tratamiento de datos y autorización en el registro.
 - [ ] Datos reales cargados en producción.
 - [ ] Sentry activo en web y API.
