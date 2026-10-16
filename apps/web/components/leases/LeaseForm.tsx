@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
+import { EmailsField, emailErrors, MAX_CC_EMAILS } from "@/components/EmailsField";
 import { FormField } from "@/components/FormField";
 import { itemErrors, ItemsField, itemsTotal, MAX_ITEMS } from "@/components/ItemsField";
 import { MoneyField } from "@/components/MoneyField";
@@ -27,6 +28,7 @@ const schema = z
     unit: z.string().min(1, "Elige una unidad."),
     tenant_name: requiredText("Escribe el nombre del arrendatario."),
     tenant_email: email,
+    cc_emails: z.array(z.string().trim().pipe(email)).max(MAX_CC_EMAILS),
     tenant_document_type: z.enum(["cc", "nit"]),
     tenant_document_number: optionalText,
     rent: z
@@ -86,6 +88,7 @@ export function leaseTerms(values: LeaseValues) {
     end_date: values.end_date || null,
     deposit: values.deposit,
     charge_deposit: values.charge_deposit,
+    cc_emails: values.cc_emails,
     items: values.items.map((charged) => ({ ...charged, amount: charged.amount ?? 0 })),
     late_fee_enabled: values.late_fee_enabled,
     // With the late fee off these are not checked, so whatever is not valid is left out:
@@ -154,6 +157,7 @@ export function LeaseForm({
       unit: units ? (units[0]?.value ?? "") : "fixed",
       tenant_name: "",
       tenant_email: "",
+      cc_emails: [],
       tenant_document_type: TENANT_DOCUMENT_TYPE,
       tenant_document_number: "",
       rent: null,
@@ -220,6 +224,25 @@ export function LeaseForm({
         error={errors.tenant_email?.message}
         {...register("tenant_email")}
       />
+      <FieldSet>
+        <FieldLegend variant="label">Enviar copia a (opcional)</FieldLegend>
+        <p className="text-support text-muted-foreground">
+          Otras personas que deben recibir lo mismo que el arrendatario, como un codeudor. Todos
+          ven a quién más le llega.
+        </p>
+        <Controller
+          control={control}
+          name="cc_emails"
+          render={({ field }) => (
+            <EmailsField
+              id="cc-email"
+              value={field.value}
+              onChange={field.onChange}
+              errors={emailErrors(errors.cc_emails)}
+            />
+          )}
+        />
+      </FieldSet>
       {showTenantDocument && (
         <>
           <FieldSet>
