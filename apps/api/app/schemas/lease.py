@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import AfterValidator, BaseModel, Field, model_validator
 
 from app.schemas.bill import MAX_ITEMS, BillItemResponse, BillSummary, ItemInput
 from app.schemas.common import (
@@ -25,6 +25,23 @@ DueDay = Annotated[int, Field(strict=True, ge=1, le=28)]
 
 # What the lease charges every month besides the rent, like the building fee.
 LeaseItems = Annotated[list[ItemInput], Field(max_length=MAX_ITEMS)]
+
+
+# Others who get every email of the tenant, in plain sight. One copy per address.
+MAX_CC_EMAILS = 3
+
+
+def _one_per_address(emails: list[str]) -> list[str]:
+    unique: list[str] = []
+    for email in emails:
+        if email.lower() not in {kept.lower() for kept in unique}:
+            unique.append(email)
+    if len(unique) > MAX_CC_EMAILS:
+        raise ValueError(f"at most {MAX_CC_EMAILS} cc emails")
+    return unique
+
+
+CcEmails = Annotated[list[Email], AfterValidator(_one_per_address)]
 
 
 # The late fee: a percentage of the rent, with up to two decimals, and the days after the
@@ -62,6 +79,7 @@ class LeaseTerms(BaseModel):
     # Every monthly bill charges these after the rent, in this order.
     items: LeaseItems = []
     auto_send: bool = True
+    cc_emails: CcEmails = []
     # Paying the rent late costs this percentage of it, once, in the next monthly bill.
     late_fee_enabled: bool = False
     late_fee_percent: LateFeePercent | None = None
@@ -98,6 +116,7 @@ class LeaseUpdate(PatchModel):
         "charge_deposit",
         "items",
         "auto_send",
+        "cc_emails",
         "late_fee_enabled",
         "late_fee_grace_days",
         "tenant",
@@ -112,6 +131,8 @@ class LeaseUpdate(PatchModel):
     # Sent, it replaces the whole list; an empty one removes them all.
     items: LeaseItems | None = None
     auto_send: bool | None = None
+    # Sent, it replaces the whole list; an empty one removes them all.
+    cc_emails: CcEmails | None = None
     late_fee_enabled: bool | None = None
     late_fee_percent: LateFeePercent | None = None
     late_fee_grace_days: GraceDays | None = None
@@ -149,6 +170,8 @@ class LeaseResponse(BaseModel):
     # What every monthly bill charges after the rent, in order.
     items: list[BillItemResponse]
     auto_send: bool
+    # Get every email of the tenant, in copy. Never the tenant's own address.
+    cc_emails: list[str]
     late_fee_enabled: bool
     # Kept when the late fee is turned off, to turn it back on as it was.
     late_fee_percent: Decimal | None

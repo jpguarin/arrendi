@@ -80,6 +80,17 @@ def test_onboarding_with_a_lease_creates_everything(
     }
 
 
+def test_onboarding_lease_takes_its_copies(api: TestClient, ana: dict[str, str]) -> None:
+    lease = LEASE | {"cc_emails": ["pedro@example.com"]}
+
+    response = api.post(
+        "/api/onboarding", json={"property": PROPERTY, "units": UNITS, "lease": lease}, headers=ana
+    )
+
+    assert response.status_code == 201, response.text
+    assert response.json()["lease"]["cc_emails"] == ["pedro@example.com"]
+
+
 def test_onboarding_without_a_lease(
     api: TestClient, ana: dict[str, str], new_user_ids: tuple[UUID, UUID], admin_engine: Engine
 ) -> None:

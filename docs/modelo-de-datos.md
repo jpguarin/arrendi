@@ -118,6 +118,7 @@ En esta tabla, `owner_id` es la propia columna `id`.
 | `charge_deposit` | boolean, por defecto false | Si la primera cuenta mensual cobra el depósito. La API lo enciende en los contratos nuevos, salvo que el propietario diga que no; los anteriores a esta columna quedaron en false |
 | `status` | text | `active`, `ended` |
 | `auto_send` | boolean, por defecto true | |
+| `cc_emails` | text[], por defecto vacío | Correos que reciben en copia visible todo lo que recibe el arrendatario. Hasta 3, sin repetidos y sin el del arrendatario |
 | `late_fee_enabled` | boolean, por defecto false | Si pagar tarde el canon genera recargo por mora |
 | `late_fee_percent` | numeric(5,2), nulo | Porcentaje del canon. Mayor que 0, hasta 100. Obligatorio con el recargo activo; se conserva al apagarlo |
 | `late_fee_grace_days` | smallint, por defecto 0 | Días después del vencimiento antes de que aplique. Entre 0 y 30 |

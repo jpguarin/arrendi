@@ -146,6 +146,7 @@ export function EditLeaseScreen({ leaseId }: { leaseId: string }) {
         defaultValues={{
           tenant_name: lease.tenant.name,
           tenant_email: lease.tenant.email,
+          cc_emails: lease.cc_emails,
           // Without a number saved, the type was never really chosen.
           tenant_document_type: lease.tenant.document_number
             ? lease.tenant.document_type

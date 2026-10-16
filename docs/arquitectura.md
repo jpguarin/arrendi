@@ -173,7 +173,7 @@ Fuentes: <https://vercel.com/docs/frameworks/backend/fastapi>, <https://vercel.c
 | Vista previa | Vercel, por rama | Proyecto Supabase de desarrollo | Desviado a un buzón de pruebas |
 | Producción | Vercel | Proyecto Supabase de producción | Real desde la etapa 7; antes, desviado a un buzón de pruebas |
 
-Fuera de producción, la API nunca envía correo a arrendatarios reales: todo destinatario se reemplaza por el buzón de pruebas (`EMAIL_TEST_INBOX`), y si esa variable falta no se envía nada. En Producción el desvío también aplica mientras la variable tenga valor; se quitó el 15 de octubre de 2026 (etapa 7), con el dominio propio. El desvío vive en un solo lugar, `apps/api/app/email/sender.py`.
+Fuera de producción, la API nunca envía correo a arrendatarios reales: todo destinatario se reemplaza por el buzón de pruebas (`EMAIL_TEST_INBOX`), las copias del contrato se quitan y el asunto las nombra, y si esa variable falta no se envía nada. En Producción el desvío también aplica mientras la variable tenga valor; se quitó el 15 de octubre de 2026 (etapa 7), con el dominio propio. El desvío vive en un solo lugar, `apps/api/app/email/sender.py`.
 
 ## Variables de entorno
 
