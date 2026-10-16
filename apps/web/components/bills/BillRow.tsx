@@ -1,10 +1,12 @@
 "use client";
 
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { BillStatusBadge, TONE_BAR } from "@/components/StatusBadge";
 import type { components } from "@/lib/api/schema";
+import { type BillSort, nextSort } from "@/lib/bills";
 import {
   daysBetween,
   formatBillNumber,
@@ -36,6 +38,45 @@ function situation(bill: Bill): string {
   return `vence el ${formatDayMonth(bill.due_date)}`;
 }
 
+// What a reader hears of each order, after the name of the column.
+const SORT_SAYS: Record<BillSort["by"], Record<BillSort["direction"], string>> = {
+  due: { asc: "de la más antigua a la más reciente", desc: "de la más reciente a la más antigua" },
+  status: { asc: "de la más urgente a la menos urgente", desc: "de la menos urgente a la más urgente" },
+};
+
+/** A column heading that orders the table: up, down, and back to how it was. */
+function SortHeading({
+  by,
+  label,
+  name,
+  sort,
+  onSort,
+}: {
+  by: BillSort["by"];
+  label: string;
+  /** The column as it is said: "vencimiento" reads better than "vence". */
+  name: string;
+  sort: BillSort | null;
+  onSort: (sort: BillSort | null) => void;
+}) {
+  const direction = sort?.by === by ? sort.direction : null;
+  const Icon = direction === "asc" ? ArrowUp : direction === "desc" ? ArrowDown : ArrowUpDown;
+  return (
+    <button
+      type="button"
+      className={cn(
+        "-ml-1 inline-flex min-h-11 items-center gap-1 justify-self-start rounded-md px-1 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+        direction && "text-foreground",
+      )}
+      aria-label={`Ordenar por ${name}, ${direction ? `ahora ${SORT_SAYS[by][direction]}` : "sin ordenar"}`}
+      onClick={() => onSort(nextSort(sort, by))}
+    >
+      {label}
+      <Icon aria-hidden className={cn("size-3.5", !direction && "opacity-60")} />
+    </button>
+  );
+}
+
 /**
  * A table of bills: a card that lays its rows out by its own width, so the same table
  * works full width and squeezed next to an open detail.
@@ -43,28 +84,47 @@ function situation(bill: Bill): string {
 export function BillTable({
   amountLabel = "Valor",
   withActions = false,
+  sort = null,
+  onSort,
   children,
 }: {
   amountLabel?: string;
   /** Leaves room in the headings for the buttons of each row. */
   withActions?: boolean;
+  /** With `onSort`, the due date and status headings order the table. */
+  sort?: BillSort | null;
+  onSort?: (sort: BillSort | null) => void;
   children: React.ReactNode;
 }) {
   return (
     <div className="@container overflow-hidden rounded-xl border border-border bg-card">
       <div
-        aria-hidden
+        // Only the buttons that order are for a reader; the rows say the rest.
+        aria-hidden={!onSort || undefined}
         className={cn(
-          "hidden border-b border-border py-2.5 pr-3.5 pl-4 text-badge font-semibold text-muted-foreground @row:grid",
+          "hidden items-center border-b border-border pr-3.5 pl-4 text-badge font-semibold text-muted-foreground @row:grid",
+          onSort ? "py-0" : "py-2.5",
           COLUMNS,
           withActions && "@row:mr-48",
         )}
       >
-        <span>Unidad y arrendatario</span>
-        <span className="hidden @row-wide:block">Cuenta</span>
-        <span>Vence</span>
-        <span className="text-right">{amountLabel}</span>
-        <span>Estado</span>
+        <span aria-hidden>Unidad y arrendatario</span>
+        <span aria-hidden className="hidden @row-wide:block">
+          Cuenta
+        </span>
+        {onSort ? (
+          <SortHeading by="due" label="Vence" name="vencimiento" sort={sort} onSort={onSort} />
+        ) : (
+          <span>Vence</span>
+        )}
+        <span aria-hidden className="text-right">
+          {amountLabel}
+        </span>
+        {onSort ? (
+          <SortHeading by="status" label="Estado" name="estado" sort={sort} onSort={onSort} />
+        ) : (
+          <span>Estado</span>
+        )}
       </div>
       <ul>{children}</ul>
     </div>

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { useMe } from "@/lib/api/queries";
+import { otherCountry } from "@/lib/countries";
 import { PROPERTY_TYPE_LABELS } from "@/lib/labels";
 
 import { LeaseStep } from "./LeaseStep";
@@ -82,7 +83,13 @@ export function OnboardingSheet({ open }: { open: Part }) {
             step={1}
             title="Inmueble"
             hint="Nombre, tipo y dirección"
-            summary={[property?.name, property && PROPERTY_TYPE_LABELS[property.type], property?.city]
+            summary={[
+              property?.name,
+              property && PROPERTY_TYPE_LABELS[property.type],
+              property?.city,
+              // A draft from before the country existed has none.
+              property?.country && otherCountry(property.country),
+            ]
               .filter(Boolean)
               .join(" · ")}
             state={state("property")}

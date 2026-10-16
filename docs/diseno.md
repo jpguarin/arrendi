@@ -123,7 +123,7 @@ Se construyen sobre shadcn/ui (con Radix), ajustando variantes y medidas a este 
 | `OnboardingSheet`, `OnboardingSection`, `OnboardingSummary` | propio | La hoja del alta guiada, cada una de sus tres partes y el resumen «Lo que vas a crear» |
 | `Brand`, `BrandMark` | propio | Isotipo, solo o con el nombre |
 | `Header` | propio | Título de sección con su acción, o título de un detalle con "volver" |
-| `BillTable`, `BillGroup`, `BillRow` | propio | Tabla de cuentas: encabezados, grupo por mes y fila con barra de estado. La fila abierta queda resaltada. Admite botones por fila |
+| `BillTable`, `BillGroup`, `BillRow` | propio | Tabla de cuentas: encabezados, grupo por mes y fila con barra de estado. La fila abierta queda resaltada. Admite botones por fila. En Cuentas, los encabezados Vence y Estado ordenan |
 | `BillStatusBadge`, `UnitStatusBadge` | `Badge` | Estado con ícono y texto |
 | `Badge` | `Badge` | Pastilla con cinco tonos: `positive`, `warning`, `info`, `alert`, `neutral` |
 | `Button` | `Button` | Tamaños `default` (48 px), `md` (44 px), `sm` (44 px; 36 px con ratón) e `icon`. Variantes `default`, `outline`, `dashed`, `ghost`, `destructive` y `link` |
@@ -208,6 +208,7 @@ Línea de tiempo, de lo más antiguo a lo más reciente: generada, cada correo, 
 - El detalle de cuenta conserva lo que el mock no trae: la vista previa del documento, la sección "Pagos" con comprobante y eliminar, y los botones "Enviar" o "Reenviar", "Recordar", "Descargar PDF" y "Anular" en el pie. "Reenviar" no aparece en una cuenta ya pagada.
 - El contrato conserva "Generar cuenta del mes", "Cobrar otro concepto" y el depósito.
 - En Cuentas, el filtro de estado no lleva contador y tiene "Anuladas" en lugar de "Vencidas".
+- En Cuentas, con la tabla ancha, los encabezados Vence y Estado son botones con una flecha: un clic ordena hacia arriba, otro hacia abajo y el tercero vuelve a la vista por mes. Vence va de la fecha más antigua a la más reciente (en un empate, la de número más alto primero). Estado va por urgencia: Vencida, Parcial, Pendiente, Pagada, Anulada (en un empate, la que vence antes primero). Mientras hay orden, la tabla es una sola lista, sin meses ni sus totales. El orden no se guarda al recargar. En el celular la tabla no tiene encabezados y la lista sigue por mes.
 - En el resumen, una línea dice cuánto se debe de meses anteriores y los correos rebotados salen como aviso. En celular, los botones de cada cuenta por cobrar van bajo la fila, para registrar un pago en dos toques.
 - El PDF sigue en Helvetica, que trae todo lector de PDF: así no viaja ningún archivo de fuente con la API. Lleva la paleta de la marca, una franja navy arriba y, en cada hoja, un pie bajo una línea gris: a la izquierda el número y la fecha de emisión (`N.º 0043 · 1 oct 2026`), a la derecha la página con el total (`Página 1 de 2`) y debajo, centrado, el isotipo sin el nombre, igual que los correos. Como la página va en el pie, el encabezado de las hojas siguientes solo dice de qué cuenta y de quién son.
 - Los correos llevan la paleta de la marca, sin cabecera: son del arrendador. Al pie va el isotipo, centrado. Viaja dentro del correo como imagen incrustada (PNG de `isotype.svg`, en `app/email/assets/`), porque los lectores de correo no dibujan SVG. La versión de texto plano no nombra a Arrendi.

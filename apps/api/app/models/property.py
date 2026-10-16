@@ -15,6 +15,7 @@ class Property(Base):
         CheckConstraint(
             "type in ('house', 'building', 'apartment', 'shop')", name="properties_type_check"
         ),
+        CheckConstraint("country ~ '^[A-Z]{2}$'", name="properties_country_check"),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
@@ -22,6 +23,8 @@ class Property(Base):
     name: Mapped[str] = mapped_column(Text)
     address: Mapped[str | None] = mapped_column(Text)
     city: Mapped[str | None] = mapped_column(Text)
+    # A code of ISO 3166-1 alpha-2. The API checks that it exists.
+    country: Mapped[str] = mapped_column(Text, server_default="CO")
     type: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now()

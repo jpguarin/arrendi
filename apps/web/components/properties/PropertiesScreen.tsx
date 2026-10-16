@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import type { components } from "@/lib/api/schema";
 import { errorMessage } from "@/lib/api/errors";
 import { useProperties } from "@/lib/api/queries";
+import { otherCountry } from "@/lib/countries";
 import { formatPesos } from "@/lib/format";
 import { PROPERTY_TYPE_LABELS, UNIT_STATUS, UNIT_USE_LABELS } from "@/lib/labels";
 import { cn } from "@/lib/utils";
@@ -74,7 +75,12 @@ function UnitRow({ unit }: { unit: Unit }) {
 function PropertyTable({ property }: { property: Property }) {
   const rented = property.units.filter((unit) => unit.active_lease);
   const totalRent = rented.reduce((sum, unit) => sum + (unit.active_lease?.rent ?? 0), 0);
-  const place = [PROPERTY_TYPE_LABELS[property.type], property.address, property.city]
+  const place = [
+    PROPERTY_TYPE_LABELS[property.type],
+    property.address,
+    property.city,
+    otherCountry(property.country),
+  ]
     .filter(Boolean)
     .join(" · ");
 

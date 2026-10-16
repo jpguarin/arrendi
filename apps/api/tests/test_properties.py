@@ -34,7 +34,15 @@ def test_create_a_property(api: TestClient, ana: dict[str, str]) -> None:
     assert response.status_code == 201
     body = response.json()
     assert UUID(body["id"])
-    assert body == CASA | {"id": body["id"], "units": []}
+    # Without a country, Colombia.
+    assert body == CASA | {"id": body["id"], "country": "CO", "units": []}
+
+
+def test_a_property_can_be_in_another_country(api: TestClient, ana: dict[str, str]) -> None:
+    body = create_property(api, ana, city="Ciudad de Panamá", country="PA")
+
+    assert body["country"] == "PA"
+    assert api.get("/api/properties", headers=ana).json()[0]["country"] == "PA"
 
 
 def test_list_returns_properties_with_their_units_in_creation_order(
@@ -92,6 +100,12 @@ def test_optional_fields_can_be_left_out_and_blank_becomes_null(
         {"name": "Casa", "type": "castle"},
         {"name": "Casa"},
         {"name": "x" * 121, "type": "house"},
+        # The country is a code of ISO 3166-1, in capitals, that exists.
+        {"name": "Casa", "type": "house", "country": "XX"},
+        {"name": "Casa", "type": "house", "country": "co"},
+        {"name": "Casa", "type": "house", "country": "Colombia"},
+        {"name": "Casa", "type": "house", "country": ""},
+        {"name": "Casa", "type": "house", "country": None},
     ],
 )
 def test_create_rejects_invalid_data(
@@ -115,7 +129,27 @@ def test_update_changes_only_the_fields_sent(api: TestClient, ana: dict[str, str
     assert api.get("/api/properties", headers=ana).json()[0]["name"] == "Casa Grande"
 
 
-@pytest.mark.parametrize("payload", [{"name": None}, {"name": " "}, {"type": None}, {"type": "x"}])
+def test_update_changes_the_country(api: TestClient, ana: dict[str, str]) -> None:
+    casa = create_property(api, ana)
+
+    response = api.patch(f"/api/properties/{casa['id']}", json={"country": "MX"}, headers=ana)
+
+    assert response.status_code == 200
+    assert response.json() == casa | {"country": "MX"}
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"name": None},
+        {"name": " "},
+        {"type": None},
+        {"type": "x"},
+        # A property always has a country: it changes, it is not taken away.
+        {"country": None},
+        {"country": "ZZ"},
+    ],
+)
 def test_update_rejects_invalid_data(
     api: TestClient, ana: dict[str, str], payload: dict[str, object]
 ) -> None:
@@ -261,6 +295,23 @@ def test_owner_cannot_update_another_owners_property(
             text("select name from properties where id = :id"), {"id": anas.property_id}
         ).scalar_one()
     assert name == "Casa ana"
+
+
+def test_owner_cannot_change_the_country_of_another_owners_property(
+    api: TestClient, beto: dict[str, str], trees: tuple[Tree, Tree], admin_engine: Engine
+) -> None:
+    anas, _ = trees
+
+    response = api.patch(
+        f"/api/properties/{anas.property_id}", json={"country": "PA"}, headers=beto
+    )
+
+    assert response.status_code == 404
+    with admin_engine.connect() as connection:
+        country = connection.execute(
+            text("select country from properties where id = :id"), {"id": anas.property_id}
+        ).scalar_one()
+    assert country == "CO"
 
 
 def test_owner_cannot_add_a_unit_to_another_owners_property(
