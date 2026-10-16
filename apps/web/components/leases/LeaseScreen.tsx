@@ -299,6 +299,11 @@ export function LeaseScreen({
           <p className="text-support text-muted-foreground">Arrendatario</p>
           <p className="text-body font-semibold">{lease.tenant.name}</p>
           <p className="truncate text-section text-foreground-soft">{lease.tenant.email}</p>
+          {lease.cc_emails.length > 0 && (
+            <p className="text-support break-all text-muted-foreground">
+              Copia a {lease.cc_emails.join(", ")}
+            </p>
+          )}
           {lease.tenant.document_number && (
             <p className="text-support text-muted-foreground">
               {DOCUMENT_TYPE_LABELS[lease.tenant.document_type]} {lease.tenant.document_number}
