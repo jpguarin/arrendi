@@ -59,6 +59,7 @@
 | PDF | ReportLab con Helvetica, que ya trae; no se empaqueta Figtree |
 | Flujo de Git | `main` es producción y `develop` es pruebas. Features y bugs salen de `develop` y vuelven por PR; `develop` se promueve a `main` por PR; el hotfix sale de `main` y se lleva de vuelta a `develop`. Todo se fusiona con commit de fusión, nunca *squash*, para que las dos ramas no diverjan. Detalle en `docs/flujo-de-trabajo-git.md` |
 | Identificador de ambiente | Franja de color arriba de todas las pantallas ("ENV · develop" o "ENV · local"), emoji en el título de la pestaña y favicon con un punto: ámbar en pruebas, azul en local, nada en producción. El ambiente sale de `VERCEL_ENV` al compilar, no de una variable a mano, para que producción nunca pueda mostrarlo |
+| País del inmueble | Se guarda el código ISO 3166-1 alfa-2, no un texto libre, para que un mismo país no quede escrito de varias formas. Obligatorio, Colombia por defecto; los inmuebles anteriores quedaron en Colombia. La web tiene los nombres en español escritos en `lib/countries.ts`, no pedidos a `Intl`, y su tipo la obliga a tener los mismos códigos que la API. El país solo se muestra fuera del formulario cuando no es Colombia |
 | Migraciones entre ambientes | Manuales, con checklist en el PR de promoción: a `arrendi-dev` al fusionar en `develop` y a `arrendi-prod` antes de fusionar en `main`. Siempre compatibles hacia atrás, porque el código viejo corre un rato contra el esquema nuevo |
 
 ## Provisionales

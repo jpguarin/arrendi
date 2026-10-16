@@ -32,15 +32,15 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 | `GET /api/settings/signature` | Enlace temporal a la firma (`url`, `name` y `expires_in`, 5 minutos). 404 `signature_not_found` |
 | `DELETE /api/settings/signature` | Quita la firma. Las cuentas ya emitidas conservan la suya. Devuelve los ajustes |
 | `GET /api/settings` | Devuelve la configuración. `has_signature` dice si hay firma; la imagen tiene su propia ruta |
-| `POST /api/onboarding` | Crea el primer inmueble (`property`), sus unidades (`units`, de 1 a 50) y, opcionalmente, el arrendatario y el contrato (`lease`, que señala la unidad con `unit_index` y acepta los mismos campos que `POST /api/leases`, como `cc_emails`), en una transacción. 409 `onboarding_already_complete` si el propietario ya tiene un inmueble |
+| `POST /api/onboarding` | Crea el primer inmueble (`property`, con los mismos campos que `POST /api/properties`, como `country`), sus unidades (`units`, de 1 a 50) y, opcionalmente, el arrendatario y el contrato (`lease`, que señala la unidad con `unit_index` y acepta los mismos campos que `POST /api/leases`, como `cc_emails`), en una transacción. 409 `onboarding_already_complete` si el propietario ya tiene un inmueble |
 
 ## Inmuebles y unidades
 
 | Ruta | Qué hace |
 | --- | --- |
 | `GET /api/properties` | Lista los inmuebles con sus unidades, y por unidad el contrato activo y su `status`. `vacant` (sin contrato activo), `overdue` (alguna cuenta vencida), `partial` (alguna parcial) o `up_to_date` |
-| `POST /api/properties` | Crea un inmueble, sin unidades. Responde 201 |
-| `PATCH /api/properties/{id}` | Edita un inmueble. Solo cambian los campos enviados; `address` y `city` se borran con `null` |
+| `POST /api/properties` | Crea un inmueble, sin unidades. `country` es un código ISO 3166-1 alfa-2 (`CO`, `PA`…); si no se envía, `CO`. Un código que no existe da 422. Responde 201 |
+| `PATCH /api/properties/{id}` | Edita un inmueble. Solo cambian los campos enviados; `address` y `city` se borran con `null`. `country` se cambia, no se borra: `null` da 422 |
 | `POST /api/properties/{id}/units` | Agrega una unidad. Responde 201 |
 | `PATCH /api/units/{id}` | Edita una unidad |
 

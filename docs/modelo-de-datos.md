@@ -78,6 +78,7 @@ En esta tabla, `owner_id` es la propia columna `id`.
 | `name` | text | |
 | `address` | text, nulo | |
 | `city` | text, nulo | |
+| `country` | text | Código ISO 3166-1 alfa-2 (`CO`, `PA`…). Por defecto `CO`. La base solo exige dos letras mayúsculas; la API, que el código exista |
 | `type` | text | `house`, `building`, `apartment`, `shop` |
 
 ### units
