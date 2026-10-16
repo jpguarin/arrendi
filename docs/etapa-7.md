@@ -96,6 +96,8 @@ Sigue la guía de despliegue de `docs/arquitectura.md`:
 
 ### [ ] Paso 7. Dominio y correo real (tú)
 
+El detalle de lo hecho con el correo, y cómo repetirlo con otro dominio, está en `docs/guia-correo.md`.
+
 1. Dominio de la aplicación en `arrendi-web`, con sus registros DNS, y las direcciones de retorno de Supabase y de Google actualizadas.
 2. ✅ Subdominio de correo en Resend, con SPF, DKIM y DMARC (15 de octubre de 2026). `arrendi.jpgstudio.net` verificado en `us-east-1`, con los registros en Route 53: DKIM en `resend._domainkey.arrendi` (TXT); la ruta de retorno, `send.arrendi` y `rsend.arrendi`, como CNAME hacia `*.forge.rmta.net`, la infraestructura de Resend; DMARC en `_dmarc.arrendi` con `p=none`. Un envío de prueba a Gmail dio `spf=pass`, `dkim=pass` y `dmarc=pass`, alineados con `arrendi.jpgstudio.net`. Una cuenta de cobro desviada a un buzón de Outlook llegó a la bandeja de entrada con todas las comprobaciones aprobadas. Falta subir DMARC a `quarantine` cuando todos los envíos pasen. Por ahora `arrendi-dev` y `arrendi-prod` comparten la configuración de Resend (clave, remitente y SMTP de Supabase); en vista previa el desvío al buzón de pruebas sigue activo. El correo de recuperación de contraseña y la cuenta de cobro se probaron en `develop` (`arrendi-dev.jpgstudio.net`) con las tres comprobaciones aprobadas.
 3. Correos de acceso de `arrendi-prod` por Resend.
