@@ -131,6 +131,8 @@ Condiciones:
 
 ## Alta guiada
 
+- Antes del primer inmueble, el propietario completa sus datos: número de documento, datos de pago y firma. Sin ellos el alta se rechaza (`profile_incomplete`), porque van en cada cuenta de cobro. El nombre, el tipo de documento y el día de envío siempre tienen valor; el día lo confirma el propietario en el alta.
+- La regla aplica solo al alta, es decir, a quien aún no tiene inmuebles. Un propietario que ya los tiene no está obligado a completar sus datos.
 - Crea el inmueble, sus unidades y, si se completó el paso 3, el arrendatario y el contrato, en una sola transacción.
 - Exige al menos una unidad.
 - Se hace una sola vez. Si el propietario ya tiene un inmueble, el alta se rechaza: los demás inmuebles se crean desde la pantalla de inmuebles. Así un doble toque en el botón no crea el inmueble dos veces.

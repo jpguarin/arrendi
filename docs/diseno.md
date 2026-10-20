@@ -70,7 +70,7 @@ Los cuatro rellenos se validaron como paleta (separación para daltonismo y cont
 - **En oscuro, el botón primario es marfil con texto navy,** al revés que en claro. No escribas texto fijo sobre el primario: usa `primary-foreground`.
 - **PDF y correos:** siempre en claro.
 
-**Papel y tinta.** La firma del propietario es tinta oscura sobre una hoja, como sale en el PDF, que siempre va en tema claro. Por eso la hoja para dibujarla y el recuadro que la muestra en Ajustes usan `--paper` y `--ink`, dos variables que valen lo mismo en los dos temas. No se usan para nada más.
+**Papel y tinta.** La firma del propietario es tinta oscura sobre una hoja, como sale en el PDF, que siempre va en tema claro. Por eso la hoja para dibujarla y el recuadro que la muestra en Ajustes usan `--paper` y `--ink`, variables que valen lo mismo en los dos temas. La vista previa de la cuenta (`BillDocument`, en el detalle y en el alta) también va en papel, con `--ink-soft` para el texto secundario y `--paper-line` para las líneas. No se usan para nada más.
 
 ## Tipografía
 
@@ -123,6 +123,8 @@ Se construyen sobre shadcn/ui (con Radix), ajustando variantes y medidas a este 
 | `PaneResizer` | propio | Borde del panel para cambiar su ancho (`role="separator"`) |
 | `Column` | propio | Columna centrada de las pantallas fuera de la estructura |
 | `OnboardingSheet`, `OnboardingSection`, `OnboardingSummary` | propio | La hoja del alta guiada, cada una de sus tres partes y el resumen «Lo que vas a crear» |
+| `ProfileScreen`, `QuestionFrame`, `SampleBill` | propio | «Tus datos»: el índice y la pregunta abierta, el marco de cada pregunta y la cuenta de ejemplo |
+| `BillDocument` | propio | La cuenta como el PDF; en papel en el detalle y en el alta |
 | `Brand`, `BrandMark` | propio | Isotipo, solo o con el nombre |
 | `Header` | propio | Título de sección con su acción, o título de un detalle con "volver" |
 | `BillTable`, `BillGroup`, `BillRow` | propio | Tabla de cuentas: encabezados, grupo por mes y fila con barra de estado. La fila abierta queda resaltada. Admite botones por fila. En Cuentas, los encabezados Vence y Estado ordenan |
@@ -164,6 +166,18 @@ Solo en el resumen, hechas con Tailwind, sin librería.
 - **Recaudo por mes:** hasta seis meses; la pista es lo esperado y la barra, lo recaudado, con su valor encima. Se calcula del listado de cuentas.
 - Un solo eje, sin doble escala. Los colores de estado no se usan para otra cosa.
 
+### Tus datos
+
+Antes de la hoja del alta, un propietario nuevo responde cuatro preguntas, según la propuesta 2 de `docs/new-brand-design/mockups/tus-datos/`.
+
+- **Bienvenida:** «Primero, preséntate con tus arrendatarios», el tiempo que toma y, al lado (debajo en celular), la cuenta de ejemplo.
+- **Una pregunta por pantalla:** quién cobra, cómo te pagan, tu firma y día de envío. Arriba, el avance («Pregunta 2 de 4») y «Anterior»; la pregunta en grande; «Continuar» o Enter. En celular, «Continuar» es un pie fijo. Cada pregunta tiene su ruta y no se abre antes de responder las anteriores.
+- **Cómo te pagan:** una grilla de bancos y billeteras, el tipo de cuenta (no para billeteras) y el número; debajo, «Así lo leerá tu arrendatario» con el texto que se arma solo. «Prefiero escribirlo yo» cambia a un texto libre.
+- **Firma:** la misma sección de Ajustes. «Continuar» espera a que termine de subir.
+- **Día de envío:** atajos en píldoras (1, 5, 10, 15 y 25; el 1 dice «Sugerido») y «Otro día» en una lista.
+- **Revisión «¿Todo bien?»:** las respuestas con «Cambiar» y, al lado, la cuenta de ejemplo en papel. El botón «Seguir con mi inmueble» va justo debajo de las respuestas.
+- **Escritorio:** a la izquierda, un índice con las preguntas y lo respondido.
+
 ### Alta guiada
 
 Una sola hoja con tres partes (inmueble, unidades y primer contrato), según la propuesta 4 de `docs/new-brand-design/mockups/alta-guiada/`.
@@ -175,7 +189,7 @@ Una sola hoja con tres partes (inmueble, unidades y primer contrato), según la 
 - **Resumen «Lo que vas a crear»:** a la derecha desde tablet (280 px; 340 px en escritorio), con el botón «Crear inmueble». En celular es un pie fijo con una línea y el mismo botón, solo en la última parte.
 - **Ancho:** hasta 1120 px (`max-w-sheet`), centrado.
 - **Borrador:** lo escrito se guarda en `sessionStorage` (`lib/onboarding-draft.ts`) para que recargar no lo borre. Es del propietario que lo escribió y se borra al crear. El documento del contrato no se guarda: un archivo no cabe ahí.
-- **Cierre:** qué quedó creado y los siguientes pasos (contratos que faltan, datos de pago, día de envío). Si el documento no subió, lo dice.
+- **Cierre:** qué quedó creado y los siguientes pasos (contratos que faltan, ver el inmueble). Si el contrato firmado o el inventario no subieron, lo dice.
 
 ### Historial de una cuenta
 
@@ -186,6 +200,8 @@ Línea de tiempo, de lo más antiguo a lo más reciente: generada, cada correo, 
 | Ruta | Pantalla | Dónde se dibuja |
 | --- | --- | --- |
 | `/login`, `/signup`, `/reset-password`, `/update-password` | Acceso | Columna |
+| `/onboarding/profile` | Tus datos: bienvenida | Hoja del alta |
+| `/onboarding/profile/document`, `payment`, `signature`, `send-day`, `review` | Tus datos: cada pregunta y la revisión | Hoja del alta |
 | `/onboarding/property`, `/onboarding/units`, `/onboarding/lease` | Alta guiada: la misma hoja, con esa parte abierta | Hoja del alta |
 | `/onboarding/done` | Cierre del alta | Hoja del alta |
 | `/` | Resumen | Sección |
