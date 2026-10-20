@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tus datos · El inmueble, después de tus datos</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../alta-guiada/base.css">
+<style>
+.page { min-height: 100dvh; display: flex; flex-direction: column; }
+.top { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--card); border-bottom: 1px solid var(--border); }
+/* The greeting goes right above the title, where the eye starts, not in the corner of the bar. */
+.greet, .intro .greet { font-size: 16px; font-weight: 600; color: var(--foreground-soft); }
+.wrap { flex: 1; width: 100%; max-width: 1120px; margin: 0 auto; padding: 24px 16px 32px; display: grid; gap: 24px; align-items: start; }
+/* Tablet (768+): the summary moves to a column on the right; desktop (1024+) widens it. */
+@media (min-width: 768px) { .wrap { grid-template-columns: minmax(0, 1fr) 280px; padding: 32px 24px; gap: 24px; } }
+@media (min-width: 1024px) { .wrap { grid-template-columns: minmax(0, 1fr) 340px; padding: 40px 32px; gap: 32px; } }
+.intro { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.intro h1 { font-weight: 700; }
+.intro p { color: var(--muted-foreground); font-size: 15px; }
+
+/* ---------- Sections: open, done (collapsed with a summary) or waiting ---------- */
+.sections { display: flex; flex-direction: column; gap: 12px; }
+.sec { overflow: hidden; transition: box-shadow .2s ease; }
+.sec-head { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 16px; min-height: 72px; width: 100%; text-align: left; }
+.sec-n { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-heading); font-weight: 800; font-size: 16px; background: var(--muted); color: var(--muted-foreground); }
+.sec.open .sec-n { background: var(--primary); color: var(--primary-foreground); }
+.sec.done .sec-n { background: var(--positive-tint); color: var(--positive-ink); }
+.sec-n svg { width: 18px; height: 18px; }
+.sec-title { font-size: 17px; font-weight: 700; font-family: var(--font-heading); letter-spacing: -.01em; }
+.sec-sum { font-size: 14px; color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sec.wait .sec-title { color: var(--muted-foreground); }
+.sec.open { box-shadow: var(--shadow-lg); border-color: var(--input); }
+.sec-body { padding: 4px 16px 20px 64px; display: flex; flex-direction: column; gap: 18px; }
+@media (max-width: 520px) { .sec-body { padding-left: 16px; } }
+.sec-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* Units as a small table */
+.ut { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.ut-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px 44px; gap: 8px; align-items: center; padding: 6px 6px 6px 8px; border-top: 1px solid var(--border); }
+.ut-row:first-child { border-top: 0; }
+.ut-head { background: var(--muted); font-size: 12px; font-weight: 600; color: var(--muted-foreground); padding: 8px 8px 8px 14px; min-height: 0; }
+.ut-row .input, .ut-row .select { height: 44px; }
+.ut-row .input { border-color: transparent; background: transparent; }
+.ut-row .input:hover { border-color: var(--border); }
+.ut-row .input[aria-invalid="true"] { border-color: var(--destructive); }
+.ut + .error { margin-top: -10px; }
+@media (max-width: 520px) { .ut-row { grid-template-columns: minmax(0, 1fr) 118px 44px; } }
+
+.toggle-line { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border-radius: 12px; background: var(--muted); }
+.toggle-line b { display: block; font-size: 15px; }
+.toggle-line small { font-size: 13px; color: var(--muted-foreground); }
+
+/* ---------- Summary: aside on desktop, sticky footer on a phone ---------- */
+.summary { display: none; }
+@media (min-width: 768px) { .summary { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px; padding: 20px; } }
+.summary h2 { font-family: var(--font-heading); font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+.checklist { display: flex; flex-direction: column; }
+.checklist li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; }
+.checklist li:first-child { border-top: 0; }
+.checklist .tick { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--input); color: transparent; }
+.checklist .tick svg { width: 13px; height: 13px; }
+.checklist li.is-ok .tick { background: var(--positive-tint); border-color: transparent; color: var(--positive-ink); }
+.checklist b { display: block; font-weight: 600; }
+.checklist span { color: var(--muted-foreground); }
+.summary .fine { font-size: 13px; color: var(--muted-foreground); }
+.m-summary { display: flex; flex-direction: row; align-items: center; gap: 12px; }
+.m-summary p { flex: 1; font-size: 13px; color: var(--muted-foreground); line-height: 1.35; }
+.m-summary p b { display: block; color: var(--foreground); font-size: 14px; }
+@media (min-width: 768px) { .action-footer.m-summary { display: none; } }
+
+/* Two fields that share a row from 560 px; on a phone, one under the other. */
+.row-2m { display: grid; gap: 12px; }
+@media (min-width: 560px) { .row-2m { grid-template-columns: 1fr 1fr; } }
+
+/* ---------- Done ---------- */
+.done-box { max-width: 560px; margin: 0 auto; padding: 48px 20px; display: flex; flex-direction: column; gap: 20px; }
+.ok { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--positive-tint); color: var(--positive-ink); }
+.ok svg { width: 32px; height: 32px; }
+.done-box h1 { font-size: 28px; font-weight: 800; line-height: 1.2; }
+.next-steps { display: flex; flex-direction: column; }
+.next-steps a { display: grid; grid-template-columns: 40px minmax(0, 1fr) 20px; gap: 12px; align-items: center; padding: 14px 16px; min-height: 64px; border-top: 1px solid var(--border); text-decoration: none; }
+.next-steps a:first-child { border-top: 0; }
+.next-steps a:hover { background: var(--muted); }
+.next-steps .ic { width: 40px; height: 40px; border-radius: 10px; background: var(--muted); display: grid; place-items: center; }
+.next-steps b { display: block; font-size: 15px; }
+.next-steps span { font-size: 13px; color: var(--muted-foreground); }
+
+/* Done: message and next steps side by side from the tablet up */
+@media (min-width: 768px) {
+  .done-box { max-width: 1040px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 48px; align-items: start; padding: 72px 32px; }
+  .done-box > .ok, .done-box > .greet, .done-box > h1, .done-box > p, .done-box > .btn { grid-column: 1; }
+  .done-box > .next-steps { grid-column: 2; grid-row: 1 / span 5; }
+  .done-box > .btn { justify-self: start; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="../alta-guiada/base.js"></script>
+<script>
+/* The onboarding sheet of today (alta-guiada, proposal 4), brought up to the app: the
+   country of the property and the inventory of the lease. It comes after "tus datos". */
+draft.property.country = 'CO';
+DEMO.property.country = 'CO';
+draft.lease.inventory = null;
+// A few for the mock; the app has every country of ISO 3166-1 (lib/countries.ts).
+const COUNTRIES = [['CO', 'Colombia'], ['AR', 'Argentina'], ['CL', 'Chile'], ['EC', 'Ecuador'], ['ES', 'España'], ['US', 'Estados Unidos'], ['MX', 'México'], ['PA', 'Panamá'], ['PE', 'Perú']].map(([value, label]) => ({ value, label }));
+function inventoryPicker() {
+  const file = draft.lease.inventory;
+  return file
+    ? `<div class="dropzone has-file"><span class="ic">${icon('file')}</span><span style="flex:1;min-width:0"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(file)}</b><small>PDF · 2,4 MB</small></span><button type="button" class="icon-btn" data-act="clear-inventory" aria-label="Quitar el inventario">${icon('x')}</button></div>`
+    : `<button type="button" class="dropzone" data-act="pick-inventory"><span class="ic">${icon('upload')}</span><span><b>Subir el inventario</b><small>Opcional · PDF, JPG o PNG, hasta 10 MB</small></span></button>`;
+}
+/* The hash says which section is open; "done" is the screen after saving. */
+const ORDER = ['property', 'units', 'lease', 'done'];
+const DONE = { property: false, units: false, lease: false };
+
+const countryName = (code) => COUNTRIES.find((c) => c.value === code)?.label ?? '';
+const propertySum = () => [draft.property.name, typeLabel(draft.property.type), draft.property.city, countryName(draft.property.country)].filter(Boolean).join(' · ');
+const unitsSum = () => draft.units.filter((u) => u.name).map((u) => u.name).join(', ');
+const leaseSum = () => (draft.withLease ? [draft.lease.tenant_name, draft.units[draft.lease.unit]?.name, draft.lease.rent && pesos(draft.lease.rent)].filter(Boolean).join(' · ') : 'Lo agregas después');
+
+function section(key, n, title, hint, summary, body) {
+  const open = current === key;
+  const done = DONE[key] && !open;
+  const state = open ? 'open' : done ? 'done' : 'wait';
+  const reachable = done || ORDER.indexOf(key) <= ORDER.indexOf(current) || DONE[ORDER[ORDER.indexOf(key) - 1]];
+  return `<section class="card sec ${state}" aria-labelledby="sec-${key}">
+    <button class="sec-head" ${open ? 'aria-expanded="true"' : `aria-expanded="false" data-open="${key}"`} ${reachable ? '' : 'disabled'}>
+      <span class="sec-n">${done ? icon('check') : n}</span>
+      <span style="min-width:0"><span class="sec-title" id="sec-${key}">${title}</span><span class="sec-sum" style="display:block">${done ? esc(summary) : hint}</span></span>
+      ${done ? '<span class="btn-link" style="font-size:14px;min-height:0">Editar</span>' : ''}
+    </button>
+    ${open ? `<div class="sec-body fade">${body()}</div>` : ''}
+  </section>`;
+}
+
+const propertyBody = () => `
+  ${field({ path: 'property.name', label: 'Nombre del inmueble', placeholder: 'Casa La Soledad', help: 'Un nombre corto para reconocerlo.' })}
+  ${toggleGroup({ path: 'property.type', label: 'Tipo', options: PROPERTY_TYPES, cols: 4 })}
+  <div class="row-2m">${field({ path: 'property.address', label: 'Dirección', placeholder: 'Calle, número y barrio', optional: true, autocomplete: 'street-address' })}${field({ path: 'property.city', label: 'Ciudad', optional: true, autocomplete: 'address-level2' })}</div>
+  ${selectField({ path: 'property.country', label: 'País', options: COUNTRIES })}
+  <div class="sec-actions"><button class="btn btn-primary btn-md" data-act="next">Continuar</button></div>`;
+
+const unitsBody = () => `
+  <p class="help" style="margin-top:-6px">Cada espacio que cobras por separado es una unidad.</p>
+  <div class="ut" role="table" aria-label="Unidades">
+    <div class="ut-row ut-head" role="row"><span role="columnheader">Nombre</span><span role="columnheader">Uso</span><span></span></div>
+    ${draft.units.map((u, i) => `<div class="ut-row" role="row">
+      <span role="cell"><label class="sr-only" for="units-${i}-name">Nombre de la unidad ${i + 1}</label><input class="input" id="units-${i}-name" data-bind="units.${i}.name" value="${esc(u.name)}" placeholder="Apto ${i + 1}" autocomplete="off" ${invalid(`units.${i}.name`)}></span>
+      <span role="cell"><label class="sr-only" for="units-${i}-use">Uso de la unidad ${i + 1}</label><select class="select" id="units-${i}-use" data-bind="units.${i}.use">${UNIT_USES.map((o) => `<option value="${o.value}" ${u.use === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}</select></span>
+      <span role="cell"><button type="button" class="icon-btn" data-remove="${i}" aria-label="Quitar ${esc(u.name || `la unidad ${i + 1}`)}" ${draft.units.length === 1 ? 'disabled' : ''}>${icon('x')}</button></span>
+    </div>`).join('')}
+  </div>
+  ${Object.keys(errors).some((k) => k.startsWith('units.')) ? `<p class="error">${icon('alert', 16)}Escribe el nombre de cada unidad.</p>` : ''}
+  <div class="sec-actions"><button type="button" class="btn btn-dashed btn-md" data-act="add">${icon('plus')}Agregar unidad</button><button class="btn btn-primary btn-md" data-act="next">Continuar</button></div>`;
+
+const leaseBody = () => `
+  <div class="toggle-line"><div><b>Agregar el primer contrato ahora</b><small>Si no, lo agregas desde la unidad.</small></div><button type="button" class="switch" role="switch" aria-checked="${draft.withLease}" aria-label="Agregar el primer contrato ahora" data-act="with-lease"></button></div>
+  ${draft.withLease ? `
+    ${selectField({ path: 'lease.unit', label: 'Unidad', options: draft.units.map((u, i) => ({ value: String(i), label: u.name || `Unidad ${i + 1}` })) })}
+    <div class="row-2m">${field({ path: 'lease.tenant_name', label: 'Arrendatario', placeholder: 'Nombre o razón social' })}${field({ path: 'lease.tenant_email', label: 'Correo', type: 'email', inputmode: 'email', placeholder: 'nombre@correo.com' })}</div>
+    <div class="row-2">${moneyField({ path: 'lease.rent', label: 'Canon mensual' })}${selectField({ path: 'lease.due_day', label: 'Día de pago', options: DUE_DAYS, placeholder: 'Elige' })}</div>
+    <div class="row-2">${field({ path: 'lease.start_date', label: 'Inicio', type: 'date' })}${field({ path: 'lease.end_date', label: 'Fin', type: 'date', optional: true })}</div>
+    ${documentPicker()}
+    ${inventoryPicker()}` : ''}`;
+
+function checklist() {
+  const items = [
+    { ok: DONE.property || validName(), title: draft.property.name || 'Tu inmueble', sub: typeLabel(draft.property.type) || 'Nombre y tipo' },
+    { ok: DONE.units, title: ((n) => (n ? `${n} ${n === 1 ? 'unidad' : 'unidades'}` : 'Unidades'))(draft.units.filter((u) => u.name).length), sub: unitsSum() || 'Sus nombres y uso' },
+    { ok: DONE.lease || (current === 'lease' && (!draft.withLease || Object.keys(validateLease()).length === 0)), title: draft.withLease ? 'Primer contrato' : 'Sin contrato por ahora', sub: draft.withLease ? (leaseSum() || 'Arrendatario y canon') : 'Lo agregas desde la unidad' },
+  ];
+  return `<ul class="checklist">${items.map((i) => `<li class="${i.ok ? 'is-ok' : ''}"><span class="tick">${icon('check')}</span><p><b>${esc(i.title)}</b><span>${esc(i.sub)}</span></p></li>`).join('')}</ul>`;
+}
+const validName = () => Boolean(draft.property.name.trim() && draft.property.type);
+const canCreate = () => DONE.property && DONE.units;
+
+function sheet() {
+  return `<div class="page">
+    <div class="top">${brand(24)}</div>
+    <div class="wrap">
+      <div>
+        <div class="intro"><p class="greet">Hola, ${OWNER.first}</p><h1 class="text-title-onboarding">Configura tu primer inmueble</h1><p>Tus datos ya quedaron. Ahora el inmueble: tres partes en una sola hoja; puedes volver a cualquiera antes de guardar.</p></div>
+        <form class="sections" novalidate>
+          ${section('property', 1, 'Inmueble', 'Nombre, tipo y dirección', propertySum(), propertyBody)}
+          ${section('units', 2, 'Unidades', 'Cada espacio que cobras por separado', unitsSum(), unitsBody)}
+          ${section('lease', 3, 'Primer contrato', 'Opcional: arrendatario, canon y fechas', leaseSum(), leaseBody)}
+        </form>
+      </div>
+      <aside class="card summary" aria-label="Lo que vas a crear">
+        <h2>Lo que vas a crear</h2>
+        <div id="checklist">${checklist()}</div>
+        <button class="btn btn-primary btn-block" data-act="create" ${canCreate() ? '' : 'aria-disabled="true"'}>Crear inmueble</button>
+        <p class="fine">Se crea todo junto. Hasta entonces no se guarda nada.</p>
+      </aside>
+    </div>
+    <div class="action-footer m-summary"><p><b>${esc(draft.property.name) || 'Tu inmueble'}</b>${draft.units.filter((u) => u.name).length} unidades · ${draft.withLease ? '1 contrato' : 'sin contrato'}</p><button class="btn btn-primary" data-act="create" ${canCreate() ? '' : 'aria-disabled="true"'}>Crear</button></div>
+  </div>`;
+}
+function doneScreen() {
+  return `<div class="page"><div class="top">${brand(24)}</div>
+  <div class="done-box ${enterClass()}">
+    <div class="ok">${icon('check')}</div>
+    <p class="greet">Listo, ${OWNER.first}</p>
+    <h1 class="font-heading">${esc(draft.property.name)} quedó creado</h1>
+    <p class="muted">${draft.units.length} unidades${draft.withLease ? ` y el contrato de ${esc(draft.lease.tenant_name)}` : ''}. Lo que sigue, cuando quieras:</p>
+    <nav class="card next-steps" aria-label="Siguientes pasos">
+      ${draft.units.length > 1 ? `<a href="#" data-act="home"><span class="ic">${icon('user')}</span><span><b>Agregar los demás contratos</b><span>${draft.units.length - (draft.withLease ? 1 : 0)} unidades sin contrato</span></span>${icon('chevron-right')}</a>` : ''}
+      <a href="#" data-act="home"><span class="ic">${icon('receipt')}</span><span><b>Ver tu primera cuenta</b><span>Cómo la recibirá tu arrendatario</span></span>${icon('chevron-right')}</a>
+    </nav>
+    <button class="btn btn-primary" data-act="home">Ir al resumen</button>
+  </div></div>`;
+}
+
+/* ---------- Render and actions ---------- */
+function render() {
+  document.getElementById('app').innerHTML = (current === 'done' ? doneScreen() : sheet()) + themeButton();
+}
+onDraftChange = () => { const c = document.getElementById('checklist'); if (c) c.innerHTML = checklist(); };
+
+document.addEventListener('click', (event) => {
+  const t = event.target.closest('button, a');
+  if (!t) return;
+  if (t.dataset.open) { go(t.dataset.open); return; }
+  if (t.dataset.remove) { draft.units.splice(+t.dataset.remove, 1); if (draft.lease.unit >= draft.units.length) draft.lease.unit = 0; errors = {}; render(); return; }
+  const act = t.dataset.act;
+  if (!act) return;
+  event.preventDefault();
+  if (act === 'add') { draft.units.push({ name: suggestUnitName('residential', draft.units), use: 'residential' }); render(); document.getElementById(`units-${draft.units.length - 1}-name`).select(); }
+  if (act === 'with-lease') { draft.withLease = !draft.withLease; render(); }
+  if (act === 'pick-inventory') { draft.lease.inventory = 'Inventario Apto 101.pdf'; render(); }
+  if (act === 'clear-inventory') { draft.lease.inventory = null; render(); }
+  if (act === 'next') {
+    if (validate(current)) { DONE[current] = true; go(ORDER[ORDER.indexOf(current) + 1]); }
+    else { render(); focusFirstError(); }
+  }
+  if (act === 'create') {
+    if (!canCreate()) { toast('Completa el inmueble y sus unidades.'); return; }
+    if (current === 'lease' && !validate('lease')) { render(); focusFirstError(); return; }
+    go('done');
+  }
+  if (act === 'home') toast('Aquí la app abre esa pantalla.');
+});
+document.addEventListener('submit', (event) => { event.preventDefault(); document.querySelector('.sec.open [data-act="next"]')?.click(); });
+
+// Opened directly on a later section, the earlier ones count as done.
+const start = location.hash.slice(1);
+if (start === 'units' || start === 'lease' || start === 'done') DONE.property = true;
+if (start === 'lease' || start === 'done') DONE.units = true;
+if (start === 'done') DONE.lease = true;
+startRouter(ORDER, { property: 1, units: 2, lease: 3, done: 3 });
+</script>
+</body>
+</html>

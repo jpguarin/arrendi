@@ -31,6 +31,19 @@ def get_or_create_owner(session: Session, user: AuthUser) -> Owner:
     return session.get_one(Owner, user.owner_id)
 
 
+# What every bill needs from its owner and has no default, in the order the owner reads it.
+PROFILE = (
+    ("document_number", "número de documento"),
+    ("payment_details", "datos de pago"),
+    ("signature_path", "firma"),
+)
+
+
+def missing_profile(owner: Owner) -> list[str]:
+    """What the owner still has to fill in before their first property, by name."""
+    return [name for column, name in PROFILE if not getattr(owner, column)]
+
+
 def settings_response(owner: Owner) -> SettingsResponse:
     return SettingsResponse(
         name=owner.name,

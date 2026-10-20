@@ -283,8 +283,8 @@ export function useUpdateSettings() {
   return $api.useMutation("patch", "/api/settings", {
     onSuccess: (settings) => {
       client.setQueryData<Settings>(SETTINGS, settings);
-      // The home screen greets the owner by name.
-      client.setQueryData<Me>(ME, (me) => me && { ...me, name: settings.name });
+      // The home screen greets the owner by name, and the onboarding needs their data.
+      client.invalidateQueries({ queryKey: ME });
       // Each bill shows the owner's details as they are now.
       markStale(client, ["get", "/api/bills/{bill_id}"]);
     },
@@ -349,6 +349,8 @@ export function useRefreshSignature() {
       Promise.all([
         client.invalidateQueries({ queryKey: SETTINGS }),
         client.invalidateQueries({ queryKey: SIGNATURE }),
+        // Whether the owner's data is complete depends on the signature too.
+        client.invalidateQueries({ queryKey: ME }),
       ]),
     [client],
   );
@@ -361,6 +363,7 @@ export function useDeleteSignature() {
     onSuccess: (settings) => {
       client.setQueryData<Settings>(SETTINGS, settings);
       client.removeQueries({ queryKey: SIGNATURE });
+      client.invalidateQueries({ queryKey: ME });
     },
   });
 }

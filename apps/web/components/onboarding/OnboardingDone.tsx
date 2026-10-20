@@ -1,6 +1,6 @@
 "use client";
 
-import { Banknote, Check, ChevronRight, Send, UserPlus } from "lucide-react";
+import { Building2, Check, ChevronRight, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -42,8 +42,12 @@ export function OnboardingDone() {
           },
         ]
       : []),
-    { href: "/settings", icon: <Banknote />, title: "Tus datos de pago", detail: "Salen en cada cuenta de cobro" },
-    { href: "/settings", icon: <Send />, title: "Día de envío", detail: "Cuándo sale la cuenta cada mes" },
+    {
+      href: "/properties",
+      icon: <Building2 />,
+      title: "Ver tu inmueble",
+      detail: "Sus unidades y sus contratos",
+    },
   ];
 
   return (
@@ -65,9 +69,15 @@ export function OnboardingDone() {
           {outcome.leaseCreated && tenant ? ` y el contrato de ${tenant}` : ""}. Lo que sigue,
           cuando quieras:
         </p>
-        {outcome.documentFailed && (
+        {(outcome.documentFailed || outcome.inventoryFailed) && (
           <FormMessage tone="error">
-            No pudimos subir el documento del contrato. Puedes subirlo después, desde el contrato.
+            No pudimos subir{" "}
+            {outcome.documentFailed && outcome.inventoryFailed
+              ? "el contrato firmado ni el inventario"
+              : outcome.documentFailed
+                ? "el documento del contrato"
+                : "el inventario"}
+            . Puedes subirlo después, desde el contrato.
           </FormMessage>
         )}
       </div>

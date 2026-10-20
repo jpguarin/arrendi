@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { setUpHouse } from "./onboarding";
+import { fillProfile, setUpHouse } from "./onboarding";
 
 // A property is in Colombia unless the owner says otherwise. Only another country is
 // worth saying next to the city.
@@ -11,15 +11,20 @@ test("a property starts in Colombia and can be moved to another country", async 
     await page.getByLabel("Correo").fill("ines.prueba@example.com");
     await page.getByLabel("Contraseña").fill("una-clave-cualquiera");
     await page.getByRole("button", { name: "Ingresar" }).click();
+    await fillProfile(page);
     await expect(page.getByRole("combobox", { name: "País" })).toHaveText("Colombia");
 
-    await setUpHouse(page, {
-      property: "Casa Sur",
-      unit: "Apto 5",
-      tenant: "Rosa Díaz",
-      email: "rosa.diaz@example.com",
-      rent: "800000",
-    });
+    await setUpHouse(
+      page,
+      {
+        property: "Casa Sur",
+        unit: "Apto 5",
+        tenant: "Rosa Díaz",
+        email: "rosa.diaz@example.com",
+        rent: "800000",
+      },
+      { profileDone: true },
+    );
   });
 
   await test.step("in Colombia, the list does not say so", async () => {

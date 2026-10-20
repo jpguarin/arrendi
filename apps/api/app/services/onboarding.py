@@ -6,7 +6,7 @@ from app.errors import conflict
 from app.models import Owner, Property, Unit
 from app.schemas.onboarding import OnboardingRequest, OnboardingResponse
 from app.services.leases import create_lease_for_unit, lease_response
-from app.services.owners import get_or_create_owner
+from app.services.owners import get_or_create_owner, missing_profile
 from app.services.properties import has_properties, property_response
 
 
@@ -14,6 +14,8 @@ def complete_onboarding(
     session: Session, user: AuthUser, data: OnboardingRequest
 ) -> OnboardingResponse:
     """Creates the first property, its units and, if sent, the first lease.
+
+    Only once the owner's data (document, payment details and signature) is filled in.
 
     It all happens in the request's transaction: if any part fails, nothing is created.
     """
@@ -24,6 +26,15 @@ def complete_onboarding(
         raise conflict(
             "Ya creaste tu primer inmueble. Agrega los demás desde Inmuebles.",
             "onboarding_already_complete",
+        )
+
+    # The owner's data goes on every bill: a new owner fills it in first.
+    missing = missing_profile(owner)
+    if missing:
+        listed = missing[0] if len(missing) == 1 else f"{', '.join(missing[:-1])} y {missing[-1]}"
+        raise conflict(
+            f"Antes de crear tu primer inmueble, completa tus datos: {listed}.",
+            "profile_incomplete",
         )
 
     new_property = Property(owner_id=owner.id, **data.property.model_dump())

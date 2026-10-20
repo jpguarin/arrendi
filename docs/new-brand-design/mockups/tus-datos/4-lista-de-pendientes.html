@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tus datos · 4 · Lista de pendientes</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../alta-guiada/base.css">
+<link rel="stylesheet" href="datos.css">
+<style>
+/* A board of four cards, done in any order. Each opens a short sheet: from the bottom on
+   a phone, a dialog on a tablet, a drawer on the right on a desktop. */
+.board { flex: 1; width: 100%; max-width: 1080px; margin: 0 auto; padding: 24px 16px 32px; display: flex; flex-direction: column; gap: 22px; }
+@media (min-width: 768px) { .board { padding: 40px 24px; gap: 28px; } }
+.board-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: center; }
+.board-head h1 { font-size: 26px; line-height: 1.2; font-weight: 800; }
+@media (min-width: 768px) { .board-head h1 { font-size: 32px; } }
+.ring { position: relative; width: 72px; height: 72px; }
+.ring svg { width: 72px; height: 72px; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 7; }
+.ring .bg { stroke: var(--muted); }
+.ring .fg { stroke: var(--brand-green); stroke-linecap: round; transition: stroke-dashoffset .4s ease; }
+.ring b { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-heading); font-size: 17px; font-weight: 800; }
+.tasks { display: grid; gap: 12px; }
+@media (min-width: 768px) { .tasks { grid-template-columns: 1fr 1fr; gap: 16px; } }
+.task { display: grid; grid-template-columns: 48px minmax(0, 1fr) 24px; gap: 14px; align-items: center; padding: 18px; min-height: 96px; text-align: left; width: 100%; transition: border-color .15s ease, box-shadow .15s ease; }
+.task:hover { border-color: var(--input); box-shadow: var(--shadow-lg); }
+.task .ic { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; background: var(--accent); }
+.task .ic svg { width: 22px; height: 22px; }
+.task.is-done .ic { background: var(--positive-tint); color: var(--positive-ink); }
+.task b { display: block; font-family: var(--font-heading); font-size: 17px; font-weight: 800; letter-spacing: -.01em; }
+.task span.s { display: block; font-size: 14px; color: var(--muted-foreground); white-space: pre-line; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.task img { height: 30px; margin-top: 4px; background: var(--paper); border-radius: 4px; padding: 1px 6px; }
+.task .go { color: var(--muted-foreground); }
+.task .pill { display: inline-flex; margin-top: 6px; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--muted); color: var(--muted-foreground); }
+.next-up { display: flex; flex-direction: column; gap: 12px; padding: 18px; }
+@media (min-width: 768px) { .next-up { flex-direction: row; align-items: center; justify-content: space-between; } }
+.next-up p b { display: block; font-family: var(--font-heading); font-size: 17px; font-weight: 800; }
+.next-up p span { font-size: 14px; color: var(--muted-foreground); }
+.next-up.locked { background: var(--muted); border-style: dashed; }
+
+/* ---------- The sheet ---------- */
+.scrim { position: fixed; inset: 0; z-index: 30; background: var(--overlay); animation: fade .2s ease; }
+.sheet { position: fixed; z-index: 31; left: 0; right: 0; bottom: 0; max-height: 92dvh; display: flex; flex-direction: column; background: var(--card); border-radius: 18px 18px 0 0; box-shadow: var(--shadow-lg); animation: up .28s cubic-bezier(.2, .8, .2, 1); }
+@keyframes up { from { transform: translateY(40px); opacity: 0; } }
+.sheet-head { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 8px; align-items: start; padding: 18px 16px 6px 20px; }
+.sheet-head h2 { font-family: var(--font-heading); font-size: 21px; font-weight: 800; letter-spacing: -.02em; }
+.sheet-head p { font-size: 14px; color: var(--muted-foreground); }
+.sheet-body { overflow-y: auto; padding: 14px 20px 20px; display: flex; flex-direction: column; gap: 18px; }
+.sheet-foot { display: flex; gap: 8px; padding: 12px 20px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); }
+.sheet-foot .btn { flex: 1; }
+.grabber { width: 40px; height: 4px; border-radius: 999px; background: var(--border); margin: 8px auto 0; }
+@media (min-width: 768px) {
+  .sheet { left: 50%; top: 50%; bottom: auto; right: auto; width: min(560px, calc(100vw - 48px)); transform: translate(-50%, -50%); border-radius: 18px; animation: pop .22s ease; }
+  @keyframes pop { from { opacity: 0; transform: translate(-50%, -48%); } }
+  .grabber { display: none; }
+}
+@media (min-width: 1024px) {
+  .sheet { left: auto; right: 0; top: 0; bottom: 0; transform: none; width: 520px; max-height: none; border-radius: 0; animation: side .28s cubic-bezier(.2, .8, .2, 1); }
+  @keyframes side { from { transform: translateX(40px); opacity: 0; } }
+}
+.sheet .bill { max-width: none; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="../alta-guiada/base.js"></script>
+<script src="datos.js"></script>
+<script>
+const TASKS = [
+  { key: 'doc', icon: 'id-card', title: 'Quién cobra', hint: 'Tu nombre y documento', time: '20 s', check: ['name', 'document_number'],
+    sum: () => `${draft.owner.name} · ${docShort(draft.owner.document_type)} ${draft.owner.document_number}`,
+    body: () => `${field({ path: 'owner.name', label: 'Tu nombre o razón social', autocomplete: 'name' })}${documentFields()}` },
+  { key: 'pay', icon: 'landmark', title: 'Cómo te pagan', hint: 'Banco y cuenta', time: '30 s', check: ['payment_details'],
+    sum: () => draft.owner.payment_details, body: () => paymentBuilder({ compact: true }) },
+  { key: 'sign', icon: 'signature', title: 'Tu firma', hint: 'Con el dedo o una foto', time: '15 s', check: ['signature'],
+    sum: () => '', body: () => signaturePad({ big: true }) },
+  { key: 'send', icon: 'calendar-check', title: 'Día de envío', hint: 'Cuándo salen tus cuentas', time: '5 s', check: ['send_day'],
+    sum: () => `El ${draft.owner.send_day} de cada mes`, body: () => sendDayChips() },
+];
+const DONE = {};
+const ORDER = ['hub', ...TASKS.map((t) => t.key), 'done'];
+const doneCount = () => TASKS.filter((t) => DONE[t.key]).length;
+
+function ring() {
+  const c = 2 * Math.PI * 30;
+  const off = c * (1 - doneCount() / TASKS.length);
+  return `<div class="ring" role="img" aria-label="${doneCount()} de ${TASKS.length} listos"><svg viewBox="0 0 72 72"><circle class="bg" cx="36" cy="36" r="30"/><circle class="fg" cx="36" cy="36" r="30" stroke-dasharray="${c}" stroke-dashoffset="${off}"/></svg><b>${doneCount()}/${TASKS.length}</b></div>`;
+}
+function hub() {
+  const all = doneCount() === TASKS.length;
+  return `<div class="page"><div class="top">${brand(24)}</div>
+    <main class="board">
+      <div class="board-head"><div><p class="greet">Hola, ${OWNER.first}</p><h1 class="font-heading">${all ? 'Todo listo para cobrar' : 'Antes de cobrar, deja esto listo'}</h1><p class="lead">${all ? 'Tus cuentas de cobro ya tienen todo lo que necesitan.' : 'Cuatro cosas cortas, en el orden que quieras. Lo que completes queda guardado.'}</p></div>${ring()}</div>
+      <div class="tasks">${TASKS.map((t) => {
+        const ok = DONE[t.key];
+        const sum = t.key === 'sign' && ok ? `<img src="${draft.owner.signature.url}" alt="Tu firma">` : `<span class="s">${esc(ok ? t.sum() : t.hint)}</span>`;
+        return `<button type="button" class="card task ${ok ? 'is-done' : ''}" data-task="${t.key}"><span class="ic">${icon(ok ? 'check' : t.icon)}</span><span style="min-width:0"><b>${t.title}</b>${sum}${ok ? '' : `<span class="pill">${t.time}</span>`}</span><span class="go">${icon(ok ? 'pencil' : 'chevron-right')}</span></button>`;
+      }).join('')}</div>
+      <div class="card next-up ${all ? '' : 'locked'}">
+        <p><b>${all ? 'Ahora, tu primer inmueble' : 'Tu primer inmueble'}</b><span>${all ? 'Sus unidades y, si quieres, el primer contrato.' : `Se abre cuando completes ${TASKS.length - doneCount() === 1 ? 'lo que falta' : `las ${TASKS.length - doneCount()} que faltan`}.`}</span></p>
+        <button class="btn btn-primary" data-act="property" ${all ? '' : 'aria-disabled="true"'}>${all ? '' : icon('lock')}Crear mi inmueble</button>
+      </div>
+    </main>
+  </div>`;
+}
+function sheet(t) {
+  return `<div class="scrim" data-act="close"></div>
+    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div class="grabber"></div>
+      <div class="sheet-head"><div><h2 id="sheet-title">${t.title}</h2><p>${t.hint}</p></div><button type="button" class="icon-btn" data-act="close" aria-label="Cerrar">${icon('x')}</button></div>
+      <form class="sheet-body" novalidate>${t.body()}</form>
+      <div class="sheet-foot"><button class="btn btn-primary" data-act="save">${doneCount() === TASKS.length - 1 && !DONE[t.key] ? 'Guardar · ¡último!' : 'Guardar'}</button></div>
+    </section>`;
+}
+function render() {
+  const t = TASKS.find((x) => x.key === current);
+  const html = current === 'done' ? handoffScreen() : hub() + (t ? sheet(t) : '');
+  document.getElementById('app').innerHTML = html + themeButton();
+  document.body.style.overflow = t ? 'hidden' : '';
+  mountSignature();
+  if (t) document.querySelector('.sheet input, .sheet button.bank, .sheet .chip, .sheet canvas')?.focus({ preventScroll: true });
+}
+onDraftChange = (path) => ownerChanged(path);
+
+function save() {
+  const t = TASKS.find((x) => x.key === current);
+  errors = validateOwner(t.check);
+  if (Object.keys(errors).length) { render(); focusFirstError(); return; }
+  DONE[t.key] = true;
+  toast(`${t.title}: guardado.`);
+  // The next card still pending opens on its own; with none left, back to the board.
+  const nextTask = TASKS.find((x) => !DONE[x.key]);
+  direction = 'back';
+  location.hash = nextTask ? nextTask.key : 'hub';
+}
+document.addEventListener('click', (event) => {
+  const task = event.target.closest('[data-task]');
+  if (task) { go(task.dataset.task); return; }
+  const act = event.target.closest('[data-act]')?.dataset.act;
+  if (act === 'close') { direction = 'back'; location.hash = 'hub'; }
+  if (act === 'save') { event.preventDefault(); save(); }
+  if (act === 'property') { if (doneCount() === TASKS.length) go('done'); else toast('Completa primero tus datos.'); }
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && TASKS.some((t) => t.key === current)) { location.hash = 'hub'; } });
+document.addEventListener('submit', (e) => { e.preventDefault(); save(); });
+
+// Opened directly on a card, the ones before it count as done.
+const start = location.hash.slice(1);
+const at = TASKS.findIndex((t) => t.key === start);
+TASKS.slice(0, at === -1 ? 0 : at).forEach((t) => { DONE[t.key] = true; });
+if (start === 'done') TASKS.forEach((t) => { DONE[t.key] = true; });
+startRouter(ORDER, { hub: 0, doc: 0, pay: 1, sign: 2, send: 3, done: 4 });
+</script>
+</body>
+</html>

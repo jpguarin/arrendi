@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tus datos en el alta · cinco propuestas</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../alta-guiada/base.css">
+<style>
+.wrap { max-width: 1320px; margin: 0 auto; padding: 0 20px; }
+header.top { padding: 28px 0 8px; }
+.hero-title { font-family: var(--font-heading); font-weight: 900; font-size: clamp(32px, 5.5vw, 56px); line-height: 1.04; letter-spacing: -.03em; margin: 32px 0 14px; max-width: 18ch; }
+.lead { font-size: 18px; color: var(--muted-foreground); max-width: 64ch; }
+.diag { margin-top: 32px; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.diag li { padding: 16px; display: flex; gap: 12px; align-items: flex-start; font-size: 15px; }
+.diag li svg { color: var(--alert-ink); margin-top: 2px; }
+.diag b { display: block; }
+.diag span { color: var(--muted-foreground); font-size: 14px; }
+.sec-title { font-family: var(--font-heading); font-weight: 800; font-size: 22px; letter-spacing: -.02em; margin: 44px 0 4px; }
+.controls { position: sticky; top: 0; z-index: 10; background: var(--background); padding: 12px 0; margin-top: 32px; border-bottom: 1px solid var(--border); }
+.controls .wrap { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.segs { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--muted); overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.segs button { min-height: 40px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--muted-foreground); white-space: nowrap; }
+.segs button[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); }
+.controls .lbl { font-size: 13px; font-weight: 600; color: var(--muted-foreground); }
+.controls .icon-btn { margin-left: auto; border-radius: 50%; }
+.proposal { padding: 52px 0 20px; border-bottom: 1px solid var(--border); }
+.p-head { display: grid; gap: 20px; margin-bottom: 26px; }
+@media (min-width: 900px) { .p-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 48px; align-items: end; } }
+.num { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: var(--primary); color: var(--primary-foreground); font-family: var(--font-heading); font-weight: 900; font-size: 22px; margin-bottom: 14px; }
+.p-head h2 { font-family: var(--font-heading); font-weight: 900; font-size: clamp(26px, 3.6vw, 38px); line-height: 1.08; letter-spacing: -.03em; }
+.idea { margin-top: 10px; font-size: 17px; max-width: 48ch; }
+.facts { display: grid; gap: 0; }
+.facts li { display: grid; grid-template-columns: 120px 1fr; gap: 12px; font-size: 15px; padding: 10px 0; border-top: 1px solid var(--border); }
+.facts b { font-weight: 600; color: var(--muted-foreground); }
+.open { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 999px; background: var(--primary); color: var(--primary-foreground); font-weight: 600; margin-top: 18px; text-decoration: none; }
+.open:hover { opacity: .9; }
+.devices { display: flex; gap: 28px; align-items: flex-end; overflow-x: auto; padding: 8px 4px 28px; scrollbar-width: thin; }
+.device { flex: none; }
+.device figcaption { margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--muted-foreground); }
+.screen { width: calc(var(--w) * var(--s) * 1px); height: calc(var(--h) * var(--s) * 1px); border: 8px solid var(--rail); border-radius: var(--r, 18px); overflow: hidden; background: var(--card); box-sizing: content-box; box-shadow: var(--shadow-lg); }
+.screen iframe { width: calc(var(--w) * 1px); height: calc(var(--h) * 1px); border: 0; transform: scale(var(--s)); transform-origin: 0 0; display: block; }
+.phone { --w: 390; --h: 800; --s: .72; --r: 34px; }
+.tablet { --w: 820; --h: 1180; --s: .44; --r: 24px; }
+.desktop { --w: 1366; --h: 860; --s: .56; --r: 14px; }
+.tbl { overflow-x: auto; border: 1px solid var(--border); border-radius: 16px; background: var(--card); margin-top: 16px; }
+table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 16px; border-top: 1px solid var(--border); }
+thead th { border-top: 0; font-family: var(--font-heading); font-weight: 800; font-size: 16px; }
+tbody th { font-weight: 600; color: var(--muted-foreground); width: 130px; }
+.common { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); margin: 16px 0 80px; }
+.common li { padding: 16px; font-size: 15px; display: flex; gap: 12px; }
+.common li svg { color: var(--positive-ink); margin-top: 2px; }
+.common li b { display: block; }
+.common li span { font-size: 14px; color: var(--muted-foreground); }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <span class="brand" id="mark"></span>
+  <h1 class="hero-title">Tus datos en el alta: cinco propuestas</h1>
+  <p class="lead">Antes de crear su primer inmueble, el propietario nuevo deja listos los datos que salen en cada cuenta de cobro: documento, cómo le pagan, firma y día de envío. Son obligatorios, así que la meta es que se sientan cortos y con sentido. Las cinco usan el sistema de diseño actual y los mismos campos de Ajustes; cada marco es la propuesta en vivo. Todas terminan entregando al alta de hoy (Una sola hoja).</p>
+
+  <h2 class="sec-title">Lo que hoy pasa</h2>
+  <ul class="diag" id="diag"></ul>
+</div></header>
+
+<div class="controls"><div class="wrap">
+  <span class="lbl">Pantalla</span>
+  <div class="segs" role="group" aria-label="Pantalla que se muestra" id="screens"></div>
+  <button class="icon-btn" data-act="theme" id="theme-btn"></button>
+</div></div>
+
+<main id="list"></main>
+
+<section class="wrap">
+  <h2 class="sec-title">Lado a lado</h2>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>1 · Así te verán</th><th>2 · Una pregunta a la vez</th><th>3 · La hoja de siempre</th><th>4 · Lista de pendientes</th><th>5 · Toca, no escribas</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Idea</th><td>Un solo formulario en tres bloques; la cuenta en papel se llena al lado</td><td>Conversación: una pregunta grande por pantalla, con Enter</td><td>La hoja de hoy con «Tus datos» como primera parte</td><td>Tablero de cuatro tarjetas, en cualquier orden</td><td>Lo que se puede adivinar viene puesto; tú confirmas</td></tr>
+      <tr><th scope="row">Pantallas</th><td>Bienvenida, 1 formulario, listo</td><td>Bienvenida, 4 preguntas, revisión, listo</td><td>La misma hoja, con 4 partes</td><td>Tablero + 4 hojas cortas, listo</td><td>Bienvenida, 3 pantallas, listo</td></tr>
+      <tr><th scope="row">Datos de pago</th><td>Eliges banco y escribes el número; el texto se arma</td><td>Igual, como pregunta</td><td>Igual, dentro de la parte</td><td>Igual, en su hoja</td><td>Igual; titular puesto desde tu nombre y documento</td></tr>
+      <tr><th scope="row">Firma</th><td>Dibujar o subir foto</td><td>Dibujar o subir foto, en grande</td><td>Dibujar o subir foto</td><td>Dibujar o subir foto, en grande</td><td>Tu nombre en cursiva por defecto; o dibujar, o foto</td></tr>
+      <tr><th scope="row">Día de envío</th><td>Atajos 1, 5, 10, 15, 25 y «Otro día»</td><td>Atajos</td><td>Atajos</td><td>Atajos</td><td>El mes entero para tocar; el 1 ya viene puesto</td></tr>
+      <tr><th scope="row">Celular</th><td>La cuenta se despliega arriba; pie fijo «Guardar»</td><td>Pregunta a pantalla completa</td><td>Hoja larga con pie fijo</td><td>Tarjetas; cada una abre una hoja desde abajo</td><td>Una columna, botones grandes</td></tr>
+      <tr><th scope="row">Tablet</th><td>Formulario y cuenta lado a lado</td><td>Pregunta grande, centrada</td><td>Hoja + resumen a la derecha</td><td>Tarjetas en 2 columnas; la hoja es un diálogo</td><td>Tarjeta centrada</td></tr>
+      <tr><th scope="row">Escritorio</th><td>Formulario fijo + cuenta amplia</td><td>Índice con respuestas a la izquierda</td><td>Hoja + resumen fijo</td><td>La hoja se abre como panel a la derecha</td><td>Tarjeta + «Lo que ya está» a la derecha</td></tr>
+      <tr><th scope="row">Cuándo se guarda</th><td>Al final del formulario</td><td>Al final, tras revisar</td><td>Al continuar la primera parte</td><td>Cada tarjeta, al guardarla</td><td>Al final de las 3 pantallas</td></tr>
+      <tr><th scope="row">Carácter</th><td>Concreta: muestra el porqué</td><td>Tranquila, enfocada</td><td>Familiar: lo de siempre, una parte más</td><td>Libre, con progreso a la vista</td><td>Rápida, casi sin teclado</td></tr>
+      <tr><th scope="row">Riesgo</th><td>Página larga en celular</td><td>Más toques en total</td><td>La hoja crece mucho; el inmueble queda abajo</td><td>Más saltos entre tablero y hojas</td><td>Firma escrita: confirmar que vale como firma</td></tr>
+      <tr><th scope="row">Esfuerzo</th><td>Medio (vista previa de la cuenta)</td><td>Medio (rutas por pregunta)</td><td>Bajo (una parte nueva en lo que hay)</td><td>Medio (hojas y tablero)</td><td>Medio (firma escrita y mes)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 class="sec-title">Lo que es igual en las cinco</h2>
+  <ul class="common" id="common"></ul>
+</section>
+
+<script src="../alta-guiada/base.js"></script>
+<script>
+const PROPOSALS = [
+  { n: 1, file: '1-asi-te-veran.html', name: 'Así te verán', idea: 'Un formulario en tres bloques (quién cobra, cómo te pagan, firma y envío) y, al lado, la cuenta de cobro en papel que se llena mientras escribes. El dato que tocas se ilumina en la cuenta.', facts: [['Pantallas', 'Bienvenida → Tus datos → Sigue el inmueble'], ['Novedad', 'Ves para qué sirve cada dato; datos de pago que se escriben solos'], ['Brilla en', 'Tablet y escritorio'], ['Riesgo', 'En celular la página es larga']], map: { signature: 'data' } },
+  { n: 2, file: '2-una-pregunta.html', name: 'Una pregunta a la vez', idea: 'Cuatro preguntas grandes, una por pantalla, y Enter para seguir. En escritorio, un índice muestra tus respuestas. Antes de guardar, revisas todo junto a la cuenta.', facts: [['Pantallas', 'Bienvenida → 4 preguntas → Revisión → Sigue el inmueble'], ['Novedad', 'Revisión con la cuenta; firma en hoja grande'], ['Brilla en', 'Celular; quien usa poco la tecnología'], ['Riesgo', 'Más toques para quien va rápido']], map: { data: 'pay', signature: 'sign' } },
+  { n: 3, file: '3-la-hoja-de-siempre.html', name: 'La hoja de siempre', idea: 'El alta que ya tienes (Una sola hoja) con una parte nueva al principio: «Tus datos». El inmueble, las unidades y el contrato se abren cuando la guardas.', facts: [['Pantallas', '1 hoja con 4 partes → Listo'], ['Novedad', 'Tus datos se guardan al continuar, aunque no termines el inmueble'], ['Brilla en', 'Continuidad: es lo que la app ya hace'], ['Riesgo', 'La primera parte es la más larga de la hoja']], map: { welcome: 'owner', data: 'owner', signature: 'owner', done: 'property' } },
+  { n: 4, file: '4-lista-de-pendientes.html', name: 'Lista de pendientes', idea: 'Un tablero con cuatro tarjetas y un anillo de progreso. Cada tarjeta abre una hoja corta (desde abajo en celular, a la derecha en escritorio) y se marca al guardarla. El inmueble se desbloquea al final.', facts: [['Pantallas', 'Tablero + 4 hojas → Sigue el inmueble'], ['Novedad', 'Orden libre; cada parte se guarda sola; tiempo estimado en cada tarjeta'], ['Brilla en', 'Quien se interrumpe y vuelve después'], ['Riesgo', 'Ir y venir entre tablero y hojas']], map: { welcome: 'hub', data: 'pay', signature: 'sign' } },
+  { n: 5, file: '5-toca-no-escribas.html', name: 'Toca, no escribas', idea: 'Lo que se puede adivinar viene puesto: tu nombre de Google, el día 1 como sugerido y tu nombre en cursiva como firma. Escribes solo el número de tu documento y de tu cuenta.', facts: [['Pantallas', 'Bienvenida → Tú → Pago → Firma y envío → Sigue el inmueble'], ['Novedad', 'Firma escrita en un toque; el mes entero para elegir el día'], ['Brilla en', 'Celular; terminar en un minuto'], ['Riesgo', 'Hay que confirmar que una firma escrita sirve en la cuenta']], map: { data: 'pago', signature: 'firma' } },
+];
+const SCREENS = [['welcome', 'Bienvenida'], ['data', 'Tus datos'], ['signature', 'Firma'], ['done', 'Final']];
+const DIAG = [
+  ['La cuenta puede salir incompleta', 'Sin documento, datos de pago ni firma, la primera cuenta llega sin decir cómo pagar ni quién cobra.'],
+  ['Los datos viven escondidos en Ajustes', 'Nada en el alta los pide; el cierre solo los sugiere como «siguientes pasos».'],
+  ['El día de envío llega por defecto', 'Todas las cuentas salen el día 1 sin que el propietario lo haya elegido.'],
+  ['Los datos de pago son un texto libre', 'Cada quien los escribe distinto, y es fácil olvidar el tipo de cuenta o el titular.'],
+];
+const COMMON = [
+  ['Antes del inmueble', 'Solo para propietarios nuevos: el alta pide tus datos antes de crear el primer inmueble. Quien ya tiene inmuebles no cambia.'],
+  ['Los campos de Ajustes', 'Nombre, tipo y número de documento, datos de pago, firma y día de envío. Los cinco son obligatorios.'],
+  ['Datos de pago armados', 'Eliges el banco y escribes el número; el texto que lee el arrendatario se arma solo y se puede escribir a mano.'],
+  ['Firma como hoy', 'Dibujada con el dedo o el mouse, o una foto (PNG o JPG, 2 MB). La propuesta 5 suma escribirla.'],
+  ['Se guarda y se cambia', 'Lo guardado no se pierde si sales; todo se cambia después en Ajustes.'],
+  ['Accesible', 'Controles de 44 px o más, etiqueta en cada campo, errores junto al campo y foco en el primero. Claro y oscuro.'],
+];
+
+let screen = 'data';
+const theme = () => document.documentElement.dataset.theme;
+const src = (p) => { const s = p.map[screen] ?? screen; return `${p.file}?embed=1&theme=${theme()}&s=${s}#${s}`; };
+
+function render() {
+  document.getElementById('mark').innerHTML = `${isotype(28)}Arrendi`;
+  document.getElementById('diag').innerHTML = DIAG.map(([b, s]) => `<li class="card">${icon('alert')}<p><b>${b}</b><span>${s}</span></p></li>`).join('');
+  document.getElementById('common').innerHTML = COMMON.map(([b, s]) => `<li class="card">${icon('check')}<p><b>${b}</b><span>${s}</span></p></li>`).join('');
+  document.getElementById('screens').innerHTML = SCREENS.map(([k, l]) => `<button aria-pressed="${k === screen}" data-screen="${k}">${l}</button>`).join('');
+  const dark = theme() === 'dark';
+  const btn = document.getElementById('theme-btn');
+  btn.innerHTML = icon(dark ? 'sun' : 'moon');
+  btn.setAttribute('aria-label', dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro');
+  document.getElementById('list').innerHTML = PROPOSALS.map((p) => `
+    <section class="proposal" id="p${p.n}"><div class="wrap">
+      <div class="p-head">
+        <div><span class="num">${p.n}</span><h2>${p.name}</h2><p class="idea">${p.idea}</p>
+          <a class="open" href="${p.file}?theme=${theme()}" target="_blank" rel="noopener">Abrir completa ${icon('arrow-right', 18)}</a></div>
+        <ul class="facts">${p.facts.map(([k, v]) => `<li><b>${k}</b><span>${v}</span></li>`).join('')}</ul>
+      </div>
+      <div class="devices">
+        <figure class="device"><div class="screen phone"><iframe title="${p.name} en celular" loading="lazy" src="${src(p)}"></iframe></div><figcaption>Celular · 390</figcaption></figure>
+        <figure class="device"><div class="screen tablet"><iframe title="${p.name} en tablet" loading="lazy" src="${src(p)}"></iframe></div><figcaption>Tablet · 820</figcaption></figure>
+        <figure class="device"><div class="screen desktop"><iframe title="${p.name} en escritorio" loading="lazy" src="${src(p)}"></iframe></div><figcaption>Escritorio · 1366</figcaption></figure>
+      </div>
+    </div></section>`).join('');
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-screen]');
+  if (b) { screen = b.dataset.screen; render(); }
+});
+render();
+</script>
+</body>
+</html>

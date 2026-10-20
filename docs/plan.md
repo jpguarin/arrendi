@@ -179,6 +179,7 @@ Objetivo: usarlo con los 3 arrendatarios reales durante al menos un ciclo de cob
 - [x] Ajuste del piloto: país del inmueble, Colombia por defecto.
 - [x] Ajuste del piloto: inventario de la unidad como segundo archivo opcional del contrato.
 - [x] Ajuste del piloto: el panel de detalle se redimensiona arrastrando su borde.
+- [x] Ajuste del piloto: el alta pide primero los datos del propietario (documento, datos de pago, firma y día de envío) y permite subir el inventario.
 
 **Criterios de aceptación**
 

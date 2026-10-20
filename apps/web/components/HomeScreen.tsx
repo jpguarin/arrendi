@@ -318,8 +318,10 @@ export function HomeScreen() {
   const { data: summary, error, refetch } = useSummary();
 
   useEffect(() => {
-    if (onboarding) router.replace("/onboarding/property");
-  }, [onboarding, router]);
+    // A new owner starts with their own data, which goes on every bill.
+    if (onboarding)
+      router.replace(me?.profile_complete ? "/onboarding/property" : "/onboarding/profile");
+  }, [onboarding, me, router]);
 
   return (
     <>

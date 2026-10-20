@@ -9,9 +9,22 @@ import { Button } from "@/components/ui/button";
 import { SIGNATURE_TYPES, uploadSignature } from "@/lib/api/documents";
 import { errorMessage } from "@/lib/api/errors";
 import { useDeleteSignature, useRefreshSignature, useSignatureUrl } from "@/lib/api/queries";
+import { cn } from "@/lib/utils";
 
-/** The signature that closes every bill: see it, upload it, draw it or take it away. */
-export function SignatureSection({ hasSignature }: { hasSignature: boolean }) {
+/**
+ * The signature that closes every bill: see it, upload it, draw it or take it away.
+ * Without `heading`, the screen around it already says what it is for.
+ */
+export function SignatureSection({
+  hasSignature,
+  heading = true,
+  onSavingChange,
+}: {
+  hasSignature: boolean;
+  heading?: boolean;
+  /** Told while a signature goes up, for a screen whose next step needs it. */
+  onSavingChange?: (saving: boolean) => void;
+}) {
   const input = useRef<HTMLInputElement>(null);
   const [drawing, setDrawing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -26,6 +39,7 @@ export function SignatureSection({ hasSignature }: { hasSignature: boolean }) {
     if (sending.current) return;
     sending.current = true;
     setSaving(true);
+    onSavingChange?.(true);
     clearProblems();
     const failed = await uploadSignature(file);
     if (!failed) {
@@ -34,6 +48,7 @@ export function SignatureSection({ hasSignature }: { hasSignature: boolean }) {
     }
     setProblem(failed);
     setSaving(false);
+    onSavingChange?.(false);
     sending.current = false;
   }
 
@@ -54,8 +69,8 @@ export function SignatureSection({ hasSignature }: { hasSignature: boolean }) {
   const busy = saving || remove.isPending;
 
   return (
-    <section aria-labelledby="signature" className="flex flex-col gap-3 pt-4">
-      <div className="flex flex-col gap-0.5">
+    <section aria-labelledby="signature" className={cn("flex flex-col gap-3", heading && "pt-4")}>
+      <div className={cn("flex flex-col gap-0.5", !heading && "sr-only")}>
         <h2 id="signature" className="text-section font-semibold">
           Firma
         </h2>

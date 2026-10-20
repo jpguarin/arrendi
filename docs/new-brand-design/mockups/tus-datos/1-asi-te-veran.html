@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tus datos · 1 · Así te verán</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../alta-guiada/base.css">
+<link rel="stylesheet" href="datos.css">
+<style>
+/* Phone: one column, the bill folds above the form. Tablet: form and bill side by side.
+   Desktop: the form keeps a reading width and the bill gets the rest. */
+.wrap { flex: 1; width: 100%; max-width: 1180px; margin: 0 auto; padding: 20px 16px 32px; display: grid; gap: 20px; align-items: start; }
+@media (min-width: 768px) { .wrap { grid-template-columns: minmax(0, 1fr) 320px; padding: 32px 24px; gap: 24px; } }
+@media (min-width: 1024px) { .wrap { grid-template-columns: minmax(0, 560px) minmax(0, 1fr); padding: 40px 32px; gap: 48px; } }
+.intro { display: flex; flex-direction: column; gap: 6px; }
+.intro h1 { font-weight: 700; }
+.form { display: flex; flex-direction: column; gap: 16px; }
+.side { display: none; }
+@media (min-width: 768px) { .side { display: flex; flex-direction: column; gap: 10px; position: sticky; top: 24px; align-items: center; } .side .eyebrow { align-self: stretch; text-align: center; } }
+@media (min-width: 1024px) { .side { padding-top: 64px; } }
+.peek { border: 1px solid var(--border); border-radius: 14px; background: var(--card); }
+.peek summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px; font-weight: 600; cursor: pointer; list-style: none; }
+.peek summary::-webkit-details-marker { display: none; }
+.peek summary svg { transition: transform .2s ease; }
+.peek[open] summary svg { transform: rotate(180deg); }
+.peek .bill { margin: 0 12px 12px; width: calc(100% - 24px); max-width: none; }
+@media (min-width: 768px) { .peek { display: none; } }
+@media (min-width: 768px) { .action-footer.m-only { display: none; } }
+.desk-actions { display: none; }
+@media (min-width: 768px) { .desk-actions { display: flex; gap: 12px; align-items: center; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="../alta-guiada/base.js"></script>
+<script src="datos.js"></script>
+<script>
+const ORDER = ['welcome', 'data', 'done'];
+
+function welcome() {
+  return `<div class="page"><div class="top">${brand(24)}</div>
+    <div class="hello ${enterClass()}">
+      <div class="copy">
+        <p class="greet">Hola, ${OWNER.first}</p>
+        <h1 class="font-heading">Primero, preséntate con tus arrendatarios</h1>
+        <p class="lead">Cada mes les llega una cuenta de cobro con tu nombre, cómo pagarte y tu firma. Déjala lista una vez y Arrendi la envía sola.</p>
+        <span class="time">${icon('clock', 15)}Unos 2 minutos</span>
+        <ol class="steps">
+          <li><span class="ic">${icon('id-card')}</span><p><b>Quién cobra</b><span>Tu nombre y documento</span></p></li>
+          <li><span class="ic">${icon('landmark')}</span><p><b>Cómo te pagan</b><span>Eliges el banco; el texto se escribe solo</span></p></li>
+          <li><span class="ic">${icon('signature')}</span><p><b>Firma y día de envío</b><span>Firmas con el dedo y eliges el día</span></p></li>
+        </ol>
+        <button class="btn btn-primary" style="align-self:flex-start" data-act="start">Empezar ${icon('arrow-right')}</button>
+      </div>
+      <div class="art" data-bill>${billPaper()}</div>
+    </div></div>`;
+}
+
+function form() {
+  return `<div class="page"><div class="top">${brand(24)}<span class="text-support muted">Paso 1 de 2 · Tus datos</span></div>
+    <div class="wrap">
+      <div class="form ${enterClass()}">
+        <div class="intro"><p class="greet">Hola, ${OWNER.first}</p><h1 class="text-title-onboarding">Así te verán tus arrendatarios</h1><p class="lead">Lo que llenes aparece en tu cuenta de cobro, tal como la recibirán. Después sigue tu inmueble.</p></div>
+        <details class="peek"><summary>Ver cómo queda tu cuenta ${icon('chevron-down')}</summary><div data-bill>${billPaper()}</div></details>
+        <form class="stack" style="gap:16px" novalidate>
+          <section class="card group" aria-labelledby="g-who">
+            <div class="group-head"><span class="ic">${icon('id-card')}</span><div><h2 id="g-who">Quién cobra</h2><p>Así firmas cada cuenta</p></div></div>
+            ${field({ path: 'owner.name', label: 'Tu nombre o razón social', autocomplete: 'name' })}
+            ${documentFields()}
+          </section>
+          <section class="card group" aria-labelledby="g-pay">
+            <div class="group-head"><span class="ic">${icon('landmark')}</span><div><h2 id="g-pay">Cómo te pagan</h2><p>Tus arrendatarios lo leen en la cuenta</p></div></div>
+            ${paymentBuilder()}
+          </section>
+          <section class="card group" aria-labelledby="g-sign">
+            <div class="group-head"><span class="ic">${icon('signature')}</span><div><h2 id="g-sign">Firma y día de envío</h2><p>Lo último</p></div></div>
+            ${signaturePad()}
+            ${sendDayChips()}
+          </section>
+          <div class="desk-actions"><button class="btn btn-primary" data-act="save">Guardar y seguir con mi inmueble</button></div>
+          <p class="why">${icon('lock', 16)}Solo tus arrendatarios ven estos datos, en sus cuentas. Los cambias cuando quieras en Ajustes.</p>
+        </form>
+      </div>
+      <aside class="side" aria-label="Vista previa"><span class="eyebrow">Así se verá tu cuenta</span><div data-bill>${billPaper()}</div></aside>
+    </div>
+    <div class="action-footer m-only"><button class="btn btn-primary btn-block" data-act="save">Guardar y seguir</button></div>
+  </div>`;
+}
+
+function render() {
+  const screen = current === 'welcome' ? welcome() : current === 'done' ? handoffScreen() : form();
+  document.getElementById('app').innerHTML = screen + themeButton();
+  mountSignature();
+}
+onDraftChange = (path) => ownerChanged(path);
+
+document.addEventListener('click', (event) => {
+  const act = event.target.closest('[data-act]')?.dataset.act;
+  if (act === 'start') go('data');
+  if (act === 'save') {
+    event.preventDefault();
+    errors = validateOwner();
+    if (Object.keys(errors).length) { render(); focusFirstError(); }
+    else go('done');
+  }
+});
+document.addEventListener('submit', (e) => e.preventDefault());
+startRouter(ORDER, { welcome: 0, data: 2, done: 4 });
+</script>
+</body>
+</html>

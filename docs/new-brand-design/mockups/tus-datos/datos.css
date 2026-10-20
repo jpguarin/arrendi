@@ -1,0 +1,132 @@
+/* What the five "tus datos" mocks add to ../alta-guiada/base.css: the bill on paper,
+   the signature pad, the send-day pickers and the payment builder. Same tokens. */
+
+/* ---------- Page frame ---------- */
+.page { min-height: 100dvh; display: flex; flex-direction: column; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; background: var(--card); border-bottom: 1px solid var(--border); }
+.greet { font-size: 16px; font-weight: 600; color: var(--foreground-soft); }
+.lead { color: var(--muted-foreground); font-size: 15px; }
+.textarea { width: 100%; min-height: 96px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--input); background: var(--card); font-size: 16px; line-height: 1.45; resize: vertical; }
+.textarea:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 30%, transparent); }
+.textarea[aria-invalid="true"] { border-color: var(--destructive); }
+.why { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--muted-foreground); }
+.why svg { width: 16px; height: 16px; margin-top: 2px; }
+
+/* ---------- Progress bar with words ---------- */
+.progress { display: flex; flex-direction: column; gap: 6px; }
+.progress-bar { height: 6px; border-radius: 999px; background: var(--muted); overflow: hidden; }
+.progress-bar span { display: block; height: 100%; border-radius: inherit; background: var(--brand-green); transition: width .3s ease; }
+.progress small { font-size: 13px; color: var(--muted-foreground); }
+
+/* ---------- The bill: a copy of the PDF the API makes (app/pdf/bill.py), always on paper ---------- */
+.bill { width: 100%; max-width: 440px; background: var(--paper); color: var(--ink); border-radius: 6px; box-shadow: 0 1px 0 var(--paper-line), var(--shadow-lg); overflow: hidden; font-size: 13px; font-family: var(--font-sans); }
+.bill-band { height: 8px; background: var(--ink); }
+.bill-in { padding: 26px 26px 14px; display: flex; flex-direction: column; gap: 14px; }
+.bill-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.bill-head h3, .bill-head .no { font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+.bill-head .no { white-space: nowrap; }
+.bill-date { margin-top: -10px; font-size: 12px; color: var(--ink-soft); }
+.bill hr { border: 0; border-top: 1px solid var(--paper-line); margin: 0; }
+.bill-parties { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 18px; }
+.bill-parties dt { font-size: 11px; color: var(--ink-soft); padding-top: 2px; }
+.bill-parties dd { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.bill-parties dd b { font-size: 14px; font-weight: 700; }
+.bill-parties dd small { font-size: 12px; color: var(--ink-soft); }
+.bill-parties dd .slot { display: flex; flex-direction: column; gap: 1px; }
+.bill-line { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.bill-line small { display: block; font-size: 12px; color: var(--ink-soft); }
+.bill-line b { white-space: nowrap; }
+.bill-total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.bill-total span { font-weight: 700; font-size: 14px; }
+.bill-total b { font-size: 24px; font-weight: 700; }
+/* The paper is light in both themes, so the box mixes its own inks, not the page's. */
+.bill-box { padding: 12px 14px; border-radius: 6px; background: color-mix(in srgb, var(--ink) 5%, var(--paper)); color: var(--ink-soft); font-size: 12.5px; line-height: 1.5; white-space: pre-line; }
+.bill-sign { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding-top: 18px; }
+.bill-sign img { height: 46px; max-width: 180px; object-fit: contain; object-position: left bottom; margin-bottom: 2px; }
+.bill-sign b { font-size: 13px; font-weight: 700; }
+.bill-sign small { font-size: 12px; color: var(--ink-soft); }
+.bill-foot { display: flex; justify-content: space-between; gap: 12px; padding-top: 8px; border-top: 1px solid var(--paper-line); font-size: 10.5px; color: var(--ink-soft); }
+.bill-logo { display: flex; justify-content: center; padding-bottom: 2px; }
+.bill-logo svg .house { fill: var(--ink); }
+.bill-logo svg .win { fill: var(--brand-green); }
+.bill-sample { font-size: 11px; color: var(--ink-soft); text-align: center; }
+/* A blank on the paper, and the spot that the focused field fills. */
+.blank { display: inline-block; height: 9px; width: 70%; border-radius: 999px; background: var(--paper-line); vertical-align: middle; }
+.slot { border-radius: 4px; transition: background-color .2s ease, box-shadow .2s ease; }
+.slot.live { background: var(--paper-highlight); box-shadow: 0 0 0 4px var(--paper-highlight); }
+.sign-empty { display: block; width: 170px; margin: 30px 0 6px; border-top: 1.5px dashed var(--ink-soft); opacity: .6; }
+
+/* ---------- Signature pad: a sheet of paper in both themes, like the bill ---------- */
+.sign-pad { display: flex; flex-direction: column; gap: 8px; }
+.sign-tabs { align-self: flex-start; }
+.sign-sheet { position: relative; height: 168px; border-radius: 12px; border: 1px solid var(--input); background: var(--paper); overflow: hidden; touch-action: none; }
+.sign-sheet[aria-invalid="true"] { border-color: var(--destructive); }
+.sign-sheet canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; }
+.sign-sheet .baseline { position: absolute; left: 20px; right: 20px; bottom: 40px; border-top: 1px dashed var(--paper-line); pointer-events: none; }
+.sign-sheet .hint { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; font-size: 13px; color: var(--ink-soft); pointer-events: none; }
+.sign-sheet img { position: absolute; inset: 12px 20px 30px; width: calc(100% - 40px); height: calc(100% - 42px); object-fit: contain; }
+.sign-sheet.big { height: 240px; }
+.sign-typed { position: absolute; inset: 0; display: grid; place-items: center; padding: 0 20px 26px; font-family: "Caveat", "Segoe Script", cursive; font-size: 46px; color: var(--ink); white-space: nowrap; overflow: hidden; }
+.sign-tools { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sign-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; height: 100%; color: var(--ink-soft); font-size: 14px; cursor: pointer; }
+.sign-upload b { color: var(--ink); }
+.sign-upload svg { width: 26px; height: 26px; }
+
+/* ---------- Send day: quick chips, and a month to tap ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--input); background: var(--card); font-size: 15px; font-weight: 600; color: var(--foreground-soft); display: inline-flex; align-items: center; gap: 6px; }
+.chip:hover { background: var(--muted); }
+.chip[aria-checked="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+.chip .tag { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: var(--positive-tint); color: var(--positive-ink); }
+.chip[aria-checked="true"] .tag { background: color-mix(in srgb, var(--primary-foreground) 20%, transparent); color: inherit; }
+.month { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.month button { min-height: 44px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); font-weight: 600; font-size: 15px; color: var(--foreground-soft); position: relative; }
+.month button:hover { background: var(--muted); }
+.month button[aria-checked="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+.month button.rec::after { content: ""; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-green); }
+
+/* ---------- Payment builder: the bank, the account, and the text it writes ---------- */
+.banks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+@media (min-width: 560px) { .banks { grid-template-columns: repeat(4, 1fr); } }
+.bank { min-height: 52px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--input); background: var(--card); font-size: 14px; font-weight: 600; color: var(--foreground-soft); display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.2; }
+.bank:hover { background: var(--muted); }
+.bank[aria-checked="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+/* The kind of account and its number: one under the other on a phone, side by side when they fit. */
+.pay-row { display: grid; gap: 12px; }
+@media (min-width: 560px) { .pay-row { grid-template-columns: 1fr 1fr; } }
+.written { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 12px; background: var(--muted); }
+.written .lbl { font-size: 12px; font-weight: 600; color: var(--muted-foreground); }
+.written p { white-space: pre-line; font-size: 15px; }
+
+/* ---------- Group card: a titled block of fields ---------- */
+.group { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+.group-head { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: center; }
+.group-head .ic { width: 40px; height: 40px; border-radius: 10px; background: var(--accent); color: var(--foreground); display: grid; place-items: center; }
+.group-head .ic svg { width: 20px; height: 20px; }
+.group-head h2 { font-family: var(--font-heading); font-size: 17px; font-weight: 800; letter-spacing: -.01em; }
+.group-head p { font-size: 13px; color: var(--muted-foreground); }
+
+/* ---------- Welcome and hand-off ---------- */
+.hello { flex: 1; width: 100%; max-width: 1040px; margin: 0 auto; padding: 32px 16px; display: grid; gap: 28px; align-content: center; }
+@media (min-width: 768px) { .hello { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; padding: 56px 32px; align-items: center; } }
+.hello h1 { font-size: 30px; line-height: 1.15; font-weight: 800; }
+@media (min-width: 1024px) { .hello h1 { font-size: 36px; } }
+.hello .copy { display: flex; flex-direction: column; gap: 16px; }
+.hello .steps { display: flex; flex-direction: column; gap: 4px; }
+.hello .steps li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; align-items: center; padding: 10px 0; }
+.hello .steps .ic { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); }
+.hello .steps .ic svg { width: 18px; height: 18px; }
+.hello .steps b { display: block; font-size: 15px; }
+.hello .steps span { font-size: 13px; color: var(--muted-foreground); }
+.hello .art { display: flex; justify-content: center; }
+.time { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; padding: 4px 10px; border-radius: 999px; background: var(--positive-tint); color: var(--positive-ink); font-size: 13px; font-weight: 600; }
+.time svg { width: 15px; height: 15px; }
+.ok { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--positive-tint); color: var(--positive-ink); }
+.ok svg { width: 32px; height: 32px; }
+.saved { display: flex; flex-direction: column; }
+.saved li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; }
+.saved li:first-child { border-top: 0; }
+.saved svg { width: 18px; height: 18px; color: var(--positive-ink); margin-top: 1px; }
+.saved b { display: block; font-weight: 600; }
+.saved span { color: var(--muted-foreground); white-space: pre-line; }
+.saved img { height: 34px; margin-top: 4px; background: var(--paper); border-radius: 6px; padding: 2px 6px; }
