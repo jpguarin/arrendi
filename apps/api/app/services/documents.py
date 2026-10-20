@@ -1,5 +1,6 @@
 import re
 import unicodedata
+from dataclasses import dataclass
 from uuid import UUID, uuid4
 
 from fastapi import BackgroundTasks
@@ -44,10 +45,6 @@ def safe_name(filename: str, extension: str, fallback: str = "contrato") -> str:
     plain = unicodedata.normalize("NFKD", stem).encode("ascii", "ignore").decode()
     plain = re.sub(r"[^A-Za-z0-9_-]+", "-", plain).strip("-_")[:MAX_NAME_LENGTH]
     return f"{plain or fallback}.{extension}"
-
-
-def _folder(lease: Lease) -> str:
-    return f"{lease.owner_id}/leases/{lease.id}"
 
 
 # The three steps of an upload, the same for a lease's document and a payment's proof.
@@ -120,33 +117,67 @@ def delete_quietly(storage: Storage, path: str) -> None:
         pass
 
 
-# The signed lease
+# The files of a lease: the signed lease and the inventory, one of each.
+
+
+@dataclass(frozen=True)
+class LeaseFile:
+    folder: str  # under the owner's folder, next to the lease's id
+    path_column: str
+    uploaded_at_column: str
+    fallback_name: str
+    # When the lease has none.
+    missing_detail: str
+    missing_code: str
+
+    def folder_of(self, lease: Lease) -> str:
+        return f"{lease.owner_id}/{self.folder}/{lease.id}"
+
+
+SIGNED_LEASE = LeaseFile(
+    "leases",
+    "document_path",
+    "document_uploaded_at",
+    "contrato",
+    "Este contrato no tiene documento.",
+    "document_not_found",
+)
+INVENTORY = LeaseFile(
+    "inventories",
+    "inventory_path",
+    "inventory_uploaded_at",
+    "inventario",
+    "Este contrato no tiene inventario.",
+    "inventory_not_found",
+)
 
 
 def create_upload_url(
-    session: Session, storage: Storage, lease_id: UUID, data: UploadUrlRequest
+    session: Session, storage: Storage, file: LeaseFile, lease_id: UUID, data: UploadUrlRequest
 ) -> UploadUrlResponse:
-    return new_upload(storage, _folder(get_lease(session, lease_id)), data, "contrato")
+    lease = get_lease(session, lease_id)
+    return new_upload(storage, file.folder_of(lease), data, file.fallback_name)
 
 
 def confirm_document(
     session: Session,
     storage: Storage,
     background: BackgroundTasks,
+    file: LeaseFile,
     lease_id: UUID,
     data: DocumentConfirm,
 ) -> LeaseResponse:
     lease = get_lease(session, lease_id)
     # Before touching storage: a path from anywhere else is not ours to read or delete.
-    if not is_upload_of(_folder(lease), data.path):
+    if not is_upload_of(file.folder_of(lease), data.path):
         raise not_found()
-    if data.path == lease.document_path:
+    previous = getattr(lease, file.path_column)
+    if data.path == previous:
         return lease_response(session, lease)
     check_upload(storage, data.path)
 
-    previous = lease.document_path
-    lease.document_path = data.path
-    lease.document_uploaded_at = func.now()
+    setattr(lease, file.path_column, data.path)
+    setattr(lease, file.uploaded_at_column, func.now())
     session.flush()
     session.refresh(lease)
     if previous:
@@ -156,8 +187,10 @@ def confirm_document(
     return lease_response(session, lease)
 
 
-def get_document_url(session: Session, storage: Storage, lease_id: UUID) -> DocumentUrlResponse:
-    lease = get_lease(session, lease_id)
-    if lease.document_path is None:
-        raise AppError(404, "Este contrato no tiene documento.", "document_not_found")
-    return download_url(storage, lease.document_path)
+def get_document_url(
+    session: Session, storage: Storage, file: LeaseFile, lease_id: UUID
+) -> DocumentUrlResponse:
+    path = getattr(get_lease(session, lease_id), file.path_column)
+    if path is None:
+        raise AppError(404, file.missing_detail, file.missing_code)
+    return download_url(storage, path)

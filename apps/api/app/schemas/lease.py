@@ -181,6 +181,9 @@ class LeaseResponse(BaseModel):
     # The signed lease, if the owner uploaded it. The file itself is behind its own route.
     document_name: str | None
     document_uploaded_at: datetime | None
+    # The inventory, if the owner uploaded it. Also behind its own route.
+    inventory_name: str | None
+    inventory_uploaded_at: datetime | None
     unit: LeaseUnit
     tenant: TenantResponse
     # The latest ones, newest first, voided ones too.

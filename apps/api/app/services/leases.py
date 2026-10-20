@@ -57,6 +57,10 @@ def _without_the_tenant(cc_emails: list[str], tenant_email: str) -> list[str]:
     return [email for email in cc_emails if email.lower() != tenant_email.lower()]
 
 
+def _file_name(path: str | None) -> str | None:
+    return path.rsplit("/", 1)[-1] if path else None
+
+
 def lease_response(session: Session, lease: Lease) -> LeaseResponse:
     unit = session.get_one(Unit, lease.unit_id)
     parent = session.get_one(Property, unit.property_id)
@@ -80,8 +84,10 @@ def lease_response(session: Session, lease: Lease) -> LeaseResponse:
         auto_send=lease.auto_send,
         cc_emails=lease.cc_emails,
         payment_details=lease.payment_details,
-        document_name=lease.document_path.rsplit("/", 1)[-1] if lease.document_path else None,
+        document_name=_file_name(lease.document_path),
         document_uploaded_at=lease.document_uploaded_at,
+        inventory_name=_file_name(lease.inventory_path),
+        inventory_uploaded_at=lease.inventory_uploaded_at,
         unit=LeaseUnit(
             id=unit.id,
             name=unit.name,
