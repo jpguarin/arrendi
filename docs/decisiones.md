@@ -81,6 +81,7 @@ Se tomaron para no bloquear el desarrollo. Impleméntalas así, de forma que cam
 | Día de pago | Entre 1 y 28 | Admitir 29 a 31 con ajuste al último día |
 | Envío de cuentas | Día fijo del mes por propietario; aprobación previa por contrato | Opción "N días antes del vencimiento" |
 | PDF de cuenta anulada | Se reemplaza por una versión marcada "ANULADA" | Conservar ambas versiones |
+| Contraseñas filtradas | Se aceptan: la protección de Supabase Auth contra contraseñas filtradas (HaveIBeenPwned) no está en el plan Free, y el aviso `auth_leaked_password_protection` del Security Advisor queda abierto en `arrendi-dev` y `arrendi-prod`. Entrar con Google no usa contraseña | Encenderla en los dos proyectos al pasar al plan Pro |
 
 ## Pendientes
 
