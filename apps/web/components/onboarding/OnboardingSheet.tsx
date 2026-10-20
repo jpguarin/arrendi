@@ -49,10 +49,13 @@ export function OnboardingSheet({ open }: { open: Part }) {
   const missing = firstMissing(draft);
   const order: Part[] = ["property", "units", "lease"];
   const blocked = missing !== null && order.indexOf(open) > order.indexOf(missing);
+  // The owner's data comes before the property (an old link, a reload).
+  const noProfile = me?.profile_complete === false;
   useEffect(() => {
-    if (ready && blocked && missing) router.replace(HREF[missing]);
-  }, [ready, blocked, missing, router]);
-  if (!ready || blocked) return null;
+    if (noProfile) router.replace("/onboarding/profile");
+    else if (ready && blocked && missing) router.replace(HREF[missing]);
+  }, [noProfile, ready, blocked, missing, router]);
+  if (!ready || blocked || noProfile) return null;
 
   const state = (part: Part): SectionState => {
     if (part === open) return "open";
@@ -76,7 +79,8 @@ export function OnboardingSheet({ open }: { open: Part }) {
               Configura tu primer inmueble
             </h1>
             <p className="text-section text-muted-foreground">
-              Tres partes en una sola hoja. Puedes volver a cualquiera antes de crearlo.
+              Tus datos ya quedaron. Ahora el inmueble: tres partes en una sola hoja; puedes volver
+              a cualquiera antes de crearlo.
             </p>
           </div>
           <OnboardingSection
