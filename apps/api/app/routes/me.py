@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.dependencies import CurrentUser, OwnerSession
 from app.errors import ErrorResponse
 from app.schemas.owner import MeResponse
-from app.services.owners import get_or_create_owner
+from app.services.owners import get_or_create_owner, missing_profile
 from app.services.properties import has_properties
 
 router = APIRouter()
@@ -17,4 +17,5 @@ def get_me(user: CurrentUser, session: OwnerSession) -> MeResponse:
         name=owner.name,
         email=owner.email,
         onboarding_complete=has_properties(session),
+        profile_complete=not missing_profile(owner),
     )

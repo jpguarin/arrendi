@@ -12,7 +12,7 @@ import {
   type LeaseValues,
 } from "@/components/leases/LeaseForm";
 import { Switch } from "@/components/ui/switch";
-import { uploadLeaseDocument } from "@/lib/api/documents";
+import { uploadLeaseDocument, uploadLeaseInventory } from "@/lib/api/documents";
 import { errorMessage, hasCode } from "@/lib/api/errors";
 import { useMarkOnboarded, useOnboard } from "@/lib/api/queries";
 
@@ -24,7 +24,8 @@ export const LEASE_FORM_ID = "onboarding-lease";
 /** Third part of the sheet: the first lease, optional, and creating it all. */
 export function LeaseStep() {
   const router = useRouter();
-  const { draft, update, file, setFile, setCreating, finish } = useOnboarding();
+  const { draft, update, file, setFile, inventory, setInventory, setCreating, finish } =
+    useOnboarding();
   const onboard = useOnboard();
   const markOnboarded = useMarkOnboarded();
   const [error, setError] = useState<string>();
@@ -60,15 +61,22 @@ export function LeaseStep() {
         router.replace("/");
         return;
       }
+      // The owner's data goes first; the API does not create the property without it.
+      if (hasCode(problem, "profile_incomplete")) {
+        router.replace("/onboarding/profile");
+        return;
+      }
       setError(errorMessage(problem));
       return;
     }
-    // Everything is created by now; only the document can still fail, and the closing
-    // screen says so.
-    const documentFailed = Boolean(
-      created.lease && file && (await uploadLeaseDocument(created.lease.id, file)),
+    // Everything is created by now; only the files can still fail, and the closing screen
+    // says so.
+    const lease = created.lease;
+    const documentFailed = Boolean(lease && file && (await uploadLeaseDocument(lease.id, file)));
+    const inventoryFailed = Boolean(
+      lease && inventory && (await uploadLeaseInventory(lease.id, inventory)),
     );
-    finish({ leaseCreated: Boolean(created.lease), documentFailed });
+    finish({ leaseCreated: Boolean(lease), documentFailed, inventoryFailed });
     setCreating(false);
     router.replace("/onboarding/done");
   }
@@ -98,6 +106,11 @@ export function LeaseStep() {
           onSubmit={create}
         >
           <DocumentPicker file={file} onChange={setFile} />
+          <DocumentPicker
+            file={inventory}
+            onChange={setInventory}
+            label="Subir inventario (opcional)"
+          />
         </LeaseForm>
       ) : (
         <form

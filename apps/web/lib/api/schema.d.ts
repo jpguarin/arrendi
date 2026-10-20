@@ -1070,6 +1070,8 @@ export interface components {
             email: string;
             /** Onboarding Complete */
             onboarding_complete: boolean;
+            /** Profile Complete */
+            profile_complete: boolean;
         };
         /** NotificationResponse */
         NotificationResponse: {

@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { fillProfile } from "./onboarding";
+
 // The whole cycle, as the owner lives it: sign in, set up the house, issue the bill of
 // the month, take a partial payment and then the rest.
 
@@ -25,6 +27,10 @@ test("onboarding, a bill, a partial payment and the rest", async ({ page }) => {
     await page.getByLabel("Correo").fill("ana.prueba@example.com");
     await page.getByLabel("Contraseña").fill("una-clave-cualquiera");
     await page.getByRole("button", { name: "Ingresar" }).click();
+  });
+
+  await test.step("onboarding: the owner's data comes first", async () => {
+    await fillProfile(page);
   });
 
   await test.step("onboarding: the property, confirmed part by part", async () => {

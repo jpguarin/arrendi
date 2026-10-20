@@ -28,6 +28,7 @@ def test_first_call_creates_the_owner_from_the_token(
         "name": "Ana Gómez",
         "email": "ana@example.com",
         "onboarding_complete": False,
+        "profile_complete": False,
     }
     assert owner_rows(admin_engine, ana) == [("Ana Gómez", "ana@example.com")]
 
@@ -110,6 +111,7 @@ def test_me_is_described_in_openapi(api: TestClient) -> None:
         "name",
         "email",
         "onboarding_complete",
+        "profile_complete",
     }
 
 

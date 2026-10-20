@@ -15,7 +15,7 @@ Arrendi es una aplicación web instalable (PWA) para que un arrendador pequeño 
 ### Entra
 
 - Registro e inicio de sesión con Google o con correo y contraseña, con los datos de cada propietario aislados.
-- Alta guiada en una sola hoja de tres partes: inmueble, unidades y primer contrato.
+- Alta guiada: primero los datos del propietario, una pregunta por pantalla, y después una sola hoja de tres partes: inmueble, unidades y primer contrato.
 - Inmuebles, unidades, arrendatarios y contratos, con el contrato firmado y el inventario de la unidad como archivos adjuntos, ambos opcionales.
 - Generación mensual de la cuenta de cobro en PDF, con consecutivo.
 - Envío por correo y dos recordatorios de vencimiento.
@@ -50,9 +50,10 @@ Las diez pantallas diseñadas están en `docs/mockups/` y descritas en `docs/dis
 | Inmuebles y unidades | Ver cada inmueble con sus unidades y su estado. Junto a la ciudad, el país, si no es Colombia | Agregar inmueble o unidad, abrir el contrato |
 | Contrato | Ver condiciones, lo que se cobra cada mes, documento, correos en copia y cuentas del contrato | Editar (también los conceptos fijos del mes, como la administración, el recargo por mora y los correos en copia), terminar, ver o reemplazar el contrato firmado y el inventario, activar envío automático |
 | Configuración | Definir datos del propietario, de pago, la firma, de envío y el tema | Editar datos, subir o dibujar la firma que cierra cada cuenta, verla y quitarla, elegir día de envío y recordatorios, cambiar entre tema claro, oscuro o el del sistema |
+| Tus datos | Dejar listo lo que va en cada cuenta de cobro, antes del primer inmueble | Cuatro preguntas: quién cobra (nombre, tipo y número de documento), cómo te pagan (banco o billetera, tipo y número de cuenta; o el texto a mano), firma (dibujada o en foto) y día de envío (el 1 sugerido). Una revisión con «Cambiar» en cada respuesta y la cuenta de ejemplo |
 | Alta 1: inmueble | Crear el primer inmueble | Nombre, dirección, ciudad, país (Colombia por defecto), tipo |
 | Alta 2: unidades | Definir los espacios que se cobran por separado | Nombre y uso de cada unidad |
-| Alta 3: primer contrato | Crear el primer contrato | Arrendatario, correo, correos en copia, canon, día de pago, fechas, subir contrato |
+| Alta 3: primer contrato | Crear el primer contrato | Arrendatario, correo, correos en copia, canon, día de pago, fechas, subir contrato e inventario |
 
 ### Pantallas y estados sin diseñar
 
@@ -71,11 +72,12 @@ Hay que construirlos siguiendo el mismo sistema visual:
 ### Alta guiada
 
 1. El propietario entra con Google, o se registra con correo y contraseña y confirma su correo.
-2. Crea su primer inmueble.
-3. Define las unidades del inmueble.
-4. Crea el primer contrato y, si quiere, sube el documento firmado. Este paso se puede saltar.
+2. Deja listos sus datos, los que salen en cada cuenta de cobro: quién cobra, cómo le pagan, su firma y el día de envío. Es una pregunta por pantalla, con una cuenta de ejemplo que muestra dónde va cada dato. Cada respuesta se guarda al continuar, así que puede salir y seguir después. Al final revisa todo y sigue con el inmueble. Solo lo ve un propietario nuevo: quien ya tiene inmuebles los cambia en Ajustes.
+3. Crea su primer inmueble.
+4. Define las unidades del inmueble.
+5. Crea el primer contrato y, si quiere, sube el documento firmado y el inventario. Este paso se puede saltar.
    Las tres partes van en una sola hoja: cada una se confirma con «Continuar» y se puede volver a abrir antes de crear. Nada se guarda hasta «Crear inmueble»; recargar la página no borra lo escrito.
-5. Ve qué quedó creado y los siguientes pasos, y llega al inicio. Los demás contratos se agregan desde cada unidad.
+6. Ve qué quedó creado y los siguientes pasos, y llega al inicio. Los demás contratos se agregan desde cada unidad.
 
 ### Ciclo mensual de cobro
 

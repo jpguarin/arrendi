@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tus datos · 2 · Una pregunta a la vez</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../alta-guiada/base.css">
+<link rel="stylesheet" href="datos.css">
+<style>
+/* Phone: the question fills the screen, the action in the fixed footer.
+   Tablet: the question grows and centers. Desktop: an index with the answers on the left. */
+.layout { flex: 1; display: grid; }
+@media (min-width: 1024px) { .layout { grid-template-columns: 320px minmax(0, 1fr); } }
+.index { display: none; }
+@media (min-width: 1024px) { .index { display: flex; flex-direction: column; gap: 4px; padding: 32px 20px; background: var(--card); border-right: 1px solid var(--border); } }
+.index h2 { font-family: var(--font-heading); font-size: 15px; font-weight: 800; padding: 0 12px 10px; color: var(--muted-foreground); }
+.index a { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px 12px; border-radius: 10px; text-decoration: none; }
+.index a:hover { background: var(--muted); }
+.index a[aria-current="step"] { background: var(--accent); }
+.index .n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; background: var(--muted); color: var(--muted-foreground); }
+.index .is-done .n { background: var(--positive-tint); color: var(--positive-ink); }
+.index .n svg { width: 15px; height: 15px; }
+.index b { display: block; font-size: 14px; }
+.index span.a { display: block; font-size: 13px; color: var(--muted-foreground); white-space: pre-line; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.index img { height: 26px; background: var(--paper); border-radius: 4px; padding: 1px 4px; margin-top: 2px; }
+.q { width: 100%; max-width: 620px; margin: 0 auto; padding: 24px 16px 32px; display: flex; flex-direction: column; gap: 22px; }
+@media (min-width: 768px) { .q { padding: 56px 24px; gap: 28px; } }
+.q h1 { font-size: 26px; line-height: 1.2; font-weight: 800; }
+@media (min-width: 768px) { .q h1 { font-size: 32px; } }
+.q .sub { color: var(--muted-foreground); font-size: 15px; margin-top: -12px; }
+.q .input { height: 56px; font-size: 18px; }
+.q-actions { display: none; }
+@media (min-width: 768px) { .q-actions { display: flex; align-items: center; gap: 14px; } .action-footer.m-only { display: none; } }
+.kbd { font-size: 13px; color: var(--muted-foreground); display: inline-flex; gap: 6px; align-items: center; }
+.kbd kbd { font: inherit; font-weight: 600; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); }
+.review { display: grid; gap: 20px; }
+@media (min-width: 768px) { .review { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; } .review .bill { position: sticky; top: 24px; } }
+.answers li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 14px 16px; border-top: 1px solid var(--border); }
+.answers li:first-child { border-top: 0; }
+.answers b { display: block; font-size: 13px; color: var(--muted-foreground); font-weight: 600; }
+.answers span { white-space: pre-line; }
+.answers img { height: 36px; background: var(--paper); border-radius: 6px; padding: 2px 6px; }
+.back { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-weight: 600; color: var(--muted-foreground); }
+.back svg { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="../alta-guiada/base.js"></script>
+<script src="datos.js"></script>
+<script>
+const QUESTIONS = [
+  { key: 'doc', title: '¿Cómo te identificas?', sub: 'Va en la cuenta, junto a tu nombre.', check: ['name', 'document_number'], label: 'Quién cobra', answer: () => `${draft.owner.name}\n${docShort(draft.owner.document_type)} ${draft.owner.document_number}`,
+    body: () => `${field({ path: 'owner.name', label: 'Tu nombre o razón social', autocomplete: 'name', help: 'Lo trajimos de tu cuenta de Google. Cámbialo si quieres.' })}${documentFields()}` },
+  { key: 'pay', title: '¿Cómo te pagan tus arrendatarios?', sub: 'Toca tu banco; escribimos el texto por ti.', check: ['payment_details'], label: 'Cómo te pagan', answer: () => draft.owner.payment_details,
+    body: () => paymentBuilder() },
+  { key: 'sign', title: 'Firma una sola vez', sub: 'Con el dedo, el mouse o una foto. Sale en todas tus cuentas.', check: ['signature'], label: 'Tu firma', answer: () => '',
+    body: () => signaturePad({ big: true }) },
+  { key: 'send', title: '¿Qué día salen tus cuentas?', sub: 'Arrendi las genera y las envía solas ese día, cada mes.', check: ['send_day'], label: 'Día de envío', answer: () => (draft.owner.send_day ? `El ${draft.owner.send_day} de cada mes` : ''),
+    body: () => sendDayChips() },
+];
+const ORDER = ['welcome', ...QUESTIONS.map((q) => q.key), 'review', 'done'];
+const ANSWERED = {};
+
+function welcome() {
+  return `<div class="page"><div class="top">${brand(24)}</div>
+    <div class="hello ${enterClass()}">
+      <div class="copy">
+        <p class="greet">Hola, ${OWNER.first}</p>
+        <h1 class="font-heading">Primero, preséntate con tus arrendatarios</h1>
+        <p class="lead">Cada mes les llega una cuenta de cobro con tu nombre, cómo pagarte y tu firma. Déjala lista una vez y Arrendi la envía sola.</p>
+        <span class="time">${icon('clock', 15)}Unos 2 minutos</span>
+        <button class="btn btn-primary" style="align-self:flex-start" data-act="start">Empezar ${icon('arrow-right')}</button>
+        <p class="kbd">Avanza con <kbd>Enter</kbd></p>
+      </div>
+      <div class="art">${billPaper()}</div>
+    </div></div>`;
+}
+function index() {
+  const pos = ORDER.indexOf(current);
+  return `<nav class="index" aria-label="Preguntas"><h2>Tus datos</h2>
+    ${QUESTIONS.map((q, i) => {
+      const done = ANSWERED[q.key];
+      const reach = done || ORDER.indexOf(q.key) <= pos;
+      const a = q.key === 'sign' && draft.owner.signature ? `<img src="${draft.owner.signature.url}" alt="Tu firma">` : `<span class="a">${esc(done ? q.answer() : '')}</span>`;
+      return `<a href="#${q.key}" ${current === q.key ? 'aria-current="step"' : ''} class="${done ? 'is-done' : ''}" ${reach ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:.55"'}><span class="n">${done ? icon('check') : i + 1}</span><span><b>${q.label}</b>${done ? a : ''}</span></a>`;
+    }).join('')}
+    <a href="#review" ${current === 'review' ? 'aria-current="step"' : ''} ${QUESTIONS.every((q) => ANSWERED[q.key]) ? '' : 'style="pointer-events:none;opacity:.55" tabindex="-1"'}><span class="n">${icon('list-checks')}</span><span><b>Revisar</b></span></a>
+  </nav>`;
+}
+function question(q) {
+  const i = QUESTIONS.indexOf(q);
+  const pct = Math.round(((i) / QUESTIONS.length) * 100);
+  return `<form class="q ${enterClass()}" novalidate>
+    <div class="progress"><div class="progress-bar"><span style="width:${pct}%"></span></div><small>Pregunta ${i + 1} de ${QUESTIONS.length}</small></div>
+    ${i > 0 ? `<a class="back" href="#${QUESTIONS[i - 1].key}" data-back>${icon('arrow-left')}Anterior</a>` : ''}
+    <h1 class="font-heading">${q.title}</h1>
+    <p class="sub">${q.sub}</p>
+    ${q.body()}
+    <div class="q-actions"><button class="btn btn-primary" data-act="next">Continuar</button><span class="kbd">o pulsa <kbd>Enter</kbd></span></div>
+  </form>`;
+}
+function review() {
+  return `<div class="q ${enterClass()}" style="max-width:900px">
+    <div class="progress"><div class="progress-bar"><span style="width:100%"></span></div><small>Revisa antes de guardar</small></div>
+    <h1 class="font-heading">¿Todo bien?</h1>
+    <p class="sub">Así quedan tus cuentas. Toca «Cambiar» en lo que quieras.</p>
+    <div class="review">
+      <!-- The answers and, right under them, the action: the bill beside them can be taller. -->
+      <div class="stack">
+        <ul class="card answers">${QUESTIONS.map((q) => `<li><p><b>${q.label}</b>${q.key === 'sign' ? `<img src="${draft.owner.signature?.url}" alt="Tu firma">` : `<span>${esc(q.answer())}</span>`}</p><a class="btn btn-ghost btn-sm" href="#${q.key}" data-back>Cambiar</a></li>`).join('')}</ul>
+        <div class="q-actions"><button class="btn btn-primary" data-act="save">Guardar y seguir con mi inmueble</button></div>
+      </div>
+      <div data-bill>${billPaper()}</div>
+    </div>
+  </div>`;
+}
+
+function render() {
+  let html;
+  if (current === 'welcome') html = welcome();
+  else if (current === 'done') html = handoffScreen();
+  else {
+    const q = QUESTIONS.find((x) => x.key === current);
+    html = `<div class="page"><div class="top">${brand(24)}<span class="text-support muted">Tus datos</span></div>
+      <div class="layout">${index()}<main>${q ? question(q) : review()}</main></div>
+      <div class="action-footer m-only">${q ? '<button class="btn btn-primary btn-block" data-act="next">Continuar</button>' : '<button class="btn btn-primary btn-block" data-act="save">Guardar y seguir</button>'}</div>
+    </div>`;
+  }
+  document.getElementById('app').innerHTML = html + themeButton();
+  mountSignature();
+}
+onDraftChange = (path) => ownerChanged(path);
+
+function next() {
+  const q = QUESTIONS.find((x) => x.key === current);
+  if (!q) return;
+  errors = validateOwner(q.check);
+  if (Object.keys(errors).length) { render(); focusFirstError(); return; }
+  ANSWERED[q.key] = true;
+  go(ORDER[ORDER.indexOf(current) + 1]);
+}
+document.addEventListener('click', (event) => {
+  if (event.target.closest('[data-back]')) direction = 'back';
+  const act = event.target.closest('[data-act]')?.dataset.act;
+  if (act === 'start') go(QUESTIONS[0].key);
+  if (act === 'next') { event.preventDefault(); next(); }
+  if (act === 'save') go('done');
+});
+document.addEventListener('submit', (e) => { e.preventDefault(); next(); });
+// Enter moves on from anywhere in a question, except a textarea where it writes a line.
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+  if (QUESTIONS.some((q) => q.key === current)) { e.preventDefault(); next(); }
+});
+// Opened directly on a later question, the earlier ones count as answered.
+const start = location.hash.slice(1);
+QUESTIONS.slice(0, Math.max(0, ORDER.indexOf(start) - 1)).forEach((q) => { ANSWERED[q.key] = true; });
+if (start === 'review' || start === 'done') QUESTIONS.forEach((q) => { ANSWERED[q.key] = true; });
+startRouter(ORDER, { welcome: 0, doc: 0, pay: 1, sign: 2, send: 3, review: 4, done: 4 });
+</script>
+</body>
+</html>

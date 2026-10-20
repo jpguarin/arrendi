@@ -51,3 +51,7 @@ La propuesta B, la elegida, tiene además el panel de unidad y contrato (`#unit/
 ## Alta guiada
 
 Cinco propuestas para el alta guiada, en `alta-guiada/`. Se abren con `alta-guiada/index.html`; el detalle está en `alta-guiada/LEEME.md`.
+
+## Tus datos en el alta
+
+Cinco propuestas para pedir los datos del propietario (documento, datos de pago, firma y día de envío) antes del primer inmueble, en `tus-datos/`. Se abren con `tus-datos/index.html`; el detalle está en `tus-datos/LEEME.md`.
