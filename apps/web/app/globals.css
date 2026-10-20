@@ -71,7 +71,7 @@
   --ink: #14264c;
   /* The paler ink and the rules of the same sheet, as the bill's PDF prints them. */
   --ink-soft: #55607a;
-  --paper-line: #dfe3ec;
+  --paper-line: #eceff4;
 }
 
 .dark {

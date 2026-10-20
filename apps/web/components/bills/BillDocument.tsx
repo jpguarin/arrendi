@@ -1,5 +1,4 @@
-import { BrandMark } from "@/components/Brand";
-import { formatBillNumber, formatDate, formatLongDate, formatPesos } from "@/lib/format";
+import { formatBillNumber, formatLongDate, formatPesos } from "@/lib/format";
 import { DOCUMENT_TYPE_LABELS, type DocumentType } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 
@@ -22,8 +21,8 @@ export type BillDocumentProps = {
   /** The signature itself, when it is at hand; without it, a signed bill only says so. */
   signatureUrl?: string;
   /**
-   * On a sheet of paper, like the PDF itself: the same in both themes, with its band on
-   * top and its footer. Without it, the bill takes the colors of the screen.
+   * On a sheet of paper, like the PDF itself: the same in both themes. Without it, the
+   * bill takes the colors of the screen.
    */
   paper?: boolean;
   className?: string;
@@ -39,7 +38,7 @@ const LOOKS = {
     signHere: "border-border-dashed",
   },
   paper: {
-    sheet: "rounded-md border-t-8 border-t-ink bg-paper px-6 pt-6 pb-4 text-ink shadow-lg",
+    sheet: "rounded-md bg-paper p-6 text-ink shadow-lg",
     muted: "text-ink-soft",
     rule: "border-paper-line",
     box: "bg-ink/5 text-ink-soft",
@@ -156,24 +155,6 @@ export function BillDocument({
           </p>
         )}
       </div>
-      {paper && (
-        // How each page of the PDF ends: its number and date, the page, and the house.
-        <>
-          <div
-            className={cn(
-              "flex justify-between gap-3 border-t pt-2 text-badge font-normal",
-              look.rule,
-              look.muted,
-            )}
-          >
-            <span>
-              {formatBillNumber(number)} · {formatDate(issueDate)}
-            </span>
-            <span>Página 1 de 1</span>
-          </div>
-          <BrandMark tone="ink" className="h-4.5 self-center" />
-        </>
-      )}
     </section>
   );
 }

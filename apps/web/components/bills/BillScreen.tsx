@@ -42,11 +42,7 @@ import {
   formatMonth,
   formatPesos,
 } from "@/lib/format";
-import {
-  DELIVERY_PROBLEMS,
-  NOTIFICATION_LABELS,
-  PAYMENT_METHOD_LABELS,
-} from "@/lib/labels";
+import { DELIVERY_PROBLEMS, NOTIFICATION_LABELS, PAYMENT_METHOD_LABELS } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 
 type Bill = components["schemas"]["BillResponse"];
@@ -55,7 +51,7 @@ const BACK = "/bills";
 const PROOF_FAILED =
   "El pago quedó guardado, pero no pudimos subir el comprobante. Elimina el pago y regístralo de nuevo si lo necesitas.";
 
-/** The bill as the tenant reads it. The stored PDF is the one that counts. */
+/** The bill as the tenant reads it, on paper like its PDF, which is the one that counts. */
 function DocumentPreview({ bill }: { bill: Bill }) {
   return (
     <BillDocument
@@ -76,6 +72,7 @@ function DocumentPreview({ bill }: { bill: Bill }) {
       dueDate={bill.due_date}
       lateFeeNotice={bill.late_fee?.notice}
       signed={bill.signed}
+      paper
     />
   );
 }
