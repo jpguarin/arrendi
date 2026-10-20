@@ -24,7 +24,7 @@ export type Draft = {
 };
 
 /** What happened when everything was created, for the closing screen. */
-export type Outcome = { leaseCreated: boolean; documentFailed: boolean };
+export type Outcome = { leaseCreated: boolean; documentFailed: boolean; inventoryFailed: boolean };
 
 type OnboardingContextValue = {
   draft: Draft;
@@ -34,6 +34,9 @@ type OnboardingContextValue = {
   /** The signed lease picked so far. A file cannot be saved on the device. */
   file: File | null;
   setFile: (file: File | null) => void;
+  /** The same, for the inventory of the unit. */
+  inventory: File | null;
+  setInventory: (file: File | null) => void;
   /** While the API creates everything: the button that started it waits. */
   creating: boolean;
   setCreating: (creating: boolean) => void;
@@ -73,6 +76,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [loadedFor, setLoadedFor] = useState<string>();
   const [file, setFile] = useState<File | null>(null);
+  const [inventory, setInventory] = useState<File | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [creating, setCreating] = useState(false);
   const ready = me !== undefined && loadedFor === me.id;
@@ -111,6 +115,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       ready,
       file,
       setFile,
+      inventory,
+      setInventory,
       creating,
       setCreating,
       outcome,
@@ -119,7 +125,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         setOutcome(result);
       },
     }),
-    [draft, update, ready, file, creating, outcome],
+    [draft, update, ready, file, inventory, creating, outcome],
   );
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
 }
