@@ -83,6 +83,9 @@ class Lease(Base):
     # Path in the private storage bucket.
     document_path: Mapped[str | None] = mapped_column(Text)
     document_uploaded_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
+    # The inventory of what the unit is handed over with; also a path in the bucket.
+    inventory_path: Mapped[str | None] = mapped_column(Text)
+    inventory_uploaded_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now()
     )

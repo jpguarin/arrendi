@@ -23,7 +23,7 @@
 | Playwright | Se agrega en la etapa 5, no en la 1 |
 | Next.js | Versión 16.4, con Turbopack. Sin `cacheComponents` ni `partialPrefetching`, que la plantilla trae activos: todas las pantallas son privadas y por propietario, y esas opciones obligan a aislar cada lectura de la sesión |
 | Suscripción y límites por plan | Fuera del MVP |
-| Documento del contrato | Se puede subir; un archivo por contrato |
+| Documento del contrato | Se puede subir el contrato firmado y el inventario de la unidad, un archivo de cada uno por contrato. Se suben al crear el contrato o desde su detalle; se reemplazan, no se borran |
 | Subida de archivos | Directa al almacenamiento con un enlace firmado que entrega la API, porque Vercel limita el cuerpo de una petición a 4,5 MB. La API valida el tipo real al confirmar |
 | Clave secreta de Supabase | Solo en el módulo de almacenamiento de la API, además de la tarea diaria, para crear enlaces firmados |
 | Cliente HTTP de la API | `httpx2`, el mismo paquete que ya usaban las pruebas; pasa a `requirements.txt` para hablar con Storage. No se usa el SDK de Supabase en la API |

@@ -23,7 +23,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { api } from "@/lib/api/client";
-import { DOCUMENT_TYPES, openTemporaryLink, uploadLeaseDocument } from "@/lib/api/documents";
+import {
+  DOCUMENT_TYPES,
+  openTemporaryLink,
+  uploadLeaseDocument,
+  uploadLeaseInventory,
+} from "@/lib/api/documents";
 import { errorMessage, hasCode } from "@/lib/api/errors";
 import {
   useEndLease,
@@ -49,7 +54,47 @@ import { DOCUMENT_TYPE_LABELS } from "@/lib/labels";
 type Lease = components["schemas"]["LeaseResponse"];
 
 const BACK = "/properties";
-const DOCUMENT_FAILED = "No pudimos subir el documento. Inténtalo de nuevo desde aquí.";
+
+/** What did not go up when the lease was created, as its screen tells it. */
+function uploadFailure(documentFailed: boolean, inventoryFailed: boolean) {
+  const what =
+    documentFailed && inventoryFailed
+      ? "el contrato firmado ni el inventario"
+      : documentFailed
+        ? "el documento"
+        : inventoryFailed
+          ? "el inventario"
+          : undefined;
+  return what && `No pudimos subir ${what}. Inténtalo de nuevo desde aquí.`;
+}
+
+/** The two files a lease can have: the signed lease and the inventory of the unit. */
+const LEASE_FILES = {
+  document: {
+    title: "Documento del contrato",
+    label: "Contrato firmado",
+    uploadLabel: "Subir contrato firmado",
+    name: (lease: Lease) => lease.document_name,
+    uploadedAt: (lease: Lease) => lease.document_uploaded_at,
+    send: uploadLeaseDocument,
+    read: (leaseId: string) =>
+      api.GET("/api/leases/{lease_id}/document", {
+        params: { path: { lease_id: leaseId } },
+      }),
+  },
+  inventory: {
+    title: "Inventario",
+    label: "Inventario",
+    uploadLabel: "Subir inventario",
+    name: (lease: Lease) => lease.inventory_name,
+    uploadedAt: (lease: Lease) => lease.inventory_uploaded_at,
+    send: uploadLeaseInventory,
+    read: (leaseId: string) =>
+      api.GET("/api/leases/{lease_id}/inventory", {
+        params: { path: { lease_id: leaseId } },
+      }),
+  },
+};
 
 function Term({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -60,26 +105,31 @@ function Term({ label, children }: { label: string; children: React.ReactNode })
   );
 }
 
-/** The signed lease: open it, replace it, or upload it for the first time. */
+/** A file of the lease: open it, replace it, or upload it for the first time. */
 function DocumentSection({
   lease,
+  kind,
   onChange,
   onError,
 }: {
   lease: Lease;
+  kind: keyof typeof LEASE_FILES;
   onChange: () => void;
   onError: (message: string | undefined) => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<"uploading" | "opening">();
+  const file = LEASE_FILES[kind];
+  const name = file.name(lease);
+  const uploadedAt = file.uploadedAt(lease);
 
   async function upload(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+    const picked = event.target.files?.[0];
     event.target.value = "";
-    if (!file) return;
+    if (!picked) return;
     setBusy("uploading");
     onError(undefined);
-    const problem = await uploadLeaseDocument(lease.id, file);
+    const problem = await file.send(lease.id, picked);
     setBusy(undefined);
     if (problem) onError(problem);
     else onChange();
@@ -88,9 +138,7 @@ function DocumentSection({
   async function open() {
     setBusy("opening");
     onError(undefined);
-    const problem = await openTemporaryLink(() =>
-      api.GET("/api/leases/{lease_id}/document", { params: { path: { lease_id: lease.id } } }),
-    );
+    const problem = await openTemporaryLink(() => file.read(lease.id));
     setBusy(undefined);
     if (problem) onError(problem);
   }
@@ -107,9 +155,9 @@ function DocumentSection({
     />
   );
 
-  if (!lease.document_name) {
+  if (!name) {
     return (
-      <section aria-label="Documento del contrato" className="flex flex-col gap-2">
+      <section aria-label={file.title} className="flex flex-col gap-2">
         {picker}
         <Button
           variant="dashed"
@@ -118,7 +166,7 @@ function DocumentSection({
           onClick={() => input.current?.click()}
         >
           <Upload aria-hidden />
-          {busy === "uploading" ? "Subiendo…" : "Subir contrato firmado"}
+          {busy === "uploading" ? "Subiendo…" : file.uploadLabel}
         </Button>
       </section>
     );
@@ -126,17 +174,18 @@ function DocumentSection({
 
   return (
     <section
-      aria-label="Documento del contrato"
+      aria-label={file.title}
       className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4"
     >
       {picker}
       <div className="flex items-center gap-3">
         <FileText aria-hidden className="size-5.5 shrink-0 text-primary" />
         <div className="flex min-w-0 flex-col gap-0.5">
-          <p className="truncate text-section font-semibold">{lease.document_name}</p>
-          {lease.document_uploaded_at && (
+          <p className="text-support text-muted-foreground">{file.label}</p>
+          <p className="truncate text-section font-semibold">{name}</p>
+          {uploadedAt && (
             <p className="text-support text-muted-foreground">
-              Subido el {formatDateTime(lease.document_uploaded_at)}
+              Subido el {formatDateTime(uploadedAt)}
             </p>
           )}
         </div>
@@ -234,10 +283,13 @@ function BillsSection({
 export function LeaseScreen({
   leaseId,
   documentFailed,
+  inventoryFailed,
 }: {
   leaseId: string;
   /** The lease was just created, but its document did not go up. */
   documentFailed: boolean;
+  /** The same, for its inventory. */
+  inventoryFailed: boolean;
 }) {
   const { data: lease, error: loadError, refetch } = useLease(leaseId);
   const refresh = useRefreshLease(leaseId);
@@ -245,9 +297,9 @@ export function LeaseScreen({
   const end = useEndLease();
   const generate = useGenerateMonthlyBill();
   const { data: settings } = useSettings();
-  // What went wrong with the document; the changes keep their own errors.
+  // What went wrong with the files; the changes keep their own errors.
   const [documentError, setDocumentError] = useState<string | undefined>(
-    documentFailed ? DOCUMENT_FAILED : undefined,
+    uploadFailure(documentFailed, inventoryFailed),
   );
   const changeError = update.error ?? end.error ?? generate.error;
   const error = documentError ?? (changeError ? errorMessage(changeError) : undefined);
@@ -335,6 +387,13 @@ export function LeaseScreen({
 
         <DocumentSection
           lease={lease}
+          kind="document"
+          onError={setDocumentError}
+          onChange={refresh}
+        />
+        <DocumentSection
+          lease={lease}
+          kind="inventory"
           onError={setDocumentError}
           onChange={refresh}
         />

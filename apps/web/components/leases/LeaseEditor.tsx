@@ -13,7 +13,7 @@ import {
   type LeaseValues,
 } from "@/components/leases/LeaseForm";
 import { LoadError, Loading } from "@/components/LoadState";
-import { uploadLeaseDocument } from "@/lib/api/documents";
+import { uploadLeaseDocument, uploadLeaseInventory } from "@/lib/api/documents";
 import { TENANT_DOCUMENT_TYPE } from "@/lib/labels";
 import { errorMessage } from "@/lib/api/errors";
 import { formatPercent } from "@/lib/format";
@@ -25,6 +25,7 @@ export function NewLeaseScreen({ unitId }: { unitId: string | undefined }) {
   const router = useRouter();
   const create = useCreateLease();
   const [file, setFile] = useState<File | null>(null);
+  const [inventory, setInventory] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   // The API has no route for one unit; the list is short and usually in memory.
   const { data: properties, error, refetch } = useProperties();
@@ -71,10 +72,14 @@ export function NewLeaseScreen({ unitId }: { unitId: string | undefined }) {
     } catch {
       return; // `create.error` has it, and the screen shows it.
     }
-    // The lease exists either way; if the document did not go up, its screen says so.
+    // The lease exists either way; if a file did not go up, its screen says so.
     setUploading(true);
-    const problem = file ? await uploadLeaseDocument(lease.id, file) : undefined;
-    router.replace(`/leases/${lease.id}${problem ? "?document=failed" : ""}`);
+    const failed = new URLSearchParams();
+    if (file && (await uploadLeaseDocument(lease.id, file))) failed.set("document", "failed");
+    if (inventory && (await uploadLeaseInventory(lease.id, inventory))) {
+      failed.set("inventory", "failed");
+    }
+    router.replace(`/leases/${lease.id}${failed.size ? `?${failed}` : ""}`);
   }
 
   return (
@@ -99,6 +104,11 @@ export function NewLeaseScreen({ unitId }: { unitId: string | undefined }) {
         onSubmit={onSubmit}
       >
         <DocumentPicker file={file} onChange={setFile} />
+        <DocumentPicker
+          file={inventory}
+          onChange={setInventory}
+          label="Subir inventario (opcional)"
+        />
       </LeaseForm>
     </FormScreen>
   );
