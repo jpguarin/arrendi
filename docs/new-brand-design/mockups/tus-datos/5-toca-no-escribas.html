@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tus datos · 5 · Toca, no escribas</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../alta-guiada/base.css">
+<link rel="stylesheet" href="datos.css">
+<style>
+/* Three short screens of taps: what can be guessed comes guessed, and the owner confirms.
+   Phone: one column and the action in the footer. Tablet and desktop: a centered card,
+   with what is already decided listed on the right from 1024 px. */
+.stage { flex: 1; width: 100%; max-width: 1040px; margin: 0 auto; padding: 20px 16px 32px; display: grid; gap: 24px; align-items: start; }
+@media (min-width: 768px) { .stage { padding: 40px 24px; } }
+@media (min-width: 1024px) { .stage { grid-template-columns: minmax(0, 600px) minmax(0, 1fr); gap: 40px; padding: 48px 32px; } }
+.panel { display: flex; flex-direction: column; gap: 22px; }
+@media (min-width: 768px) { .panel { padding: 28px; } }
+@media (max-width: 767px) { .panel.card { border: 0; background: transparent; box-shadow: none; } }
+.panel h1 { font-size: 26px; line-height: 1.2; font-weight: 800; }
+@media (min-width: 768px) { .panel h1 { font-size: 30px; } }
+.dots { display: flex; gap: 6px; }
+.dots span { height: 6px; flex: 1; border-radius: 999px; background: var(--muted); }
+.dots span.on { background: var(--brand-green); }
+.confirm { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 14px; background: var(--muted); }
+.confirm .ic { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--card); }
+.confirm b { display: block; font-size: 17px; }
+.confirm small { font-size: 13px; color: var(--muted-foreground); }
+.big-toggle .toggle { min-height: 64px; font-size: 17px; flex-direction: column; gap: 2px; }
+.big-toggle .toggle small { font-size: 12px; font-weight: 500; opacity: .8; }
+.panel .input { height: 56px; font-size: 20px; letter-spacing: .02em; }
+.decided { display: none; }
+@media (min-width: 1024px) { .decided { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 24px; padding: 20px; } }
+.decided h2 { font-family: var(--font-heading); font-size: 17px; font-weight: 800; }
+.decided li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; }
+.decided li:first-child { border-top: 0; }
+.decided li svg { width: 18px; height: 18px; }
+.decided li.ok svg { color: var(--positive-ink); }
+.decided li.wait { color: var(--muted-foreground); }
+.decided b { display: block; font-weight: 600; }
+.decided span { color: var(--muted-foreground); white-space: pre-line; }
+.decided img { height: 32px; background: var(--paper); border-radius: 4px; padding: 1px 6px; margin-top: 2px; }
+.p-actions { display: none; }
+@media (min-width: 768px) { .p-actions { display: flex; gap: 12px; align-items: center; } .action-footer.m-only { display: none; } }
+.back { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-weight: 600; color: var(--muted-foreground); text-decoration: none; }
+.back svg { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="../alta-guiada/base.js"></script>
+<script src="datos.js"></script>
+<script>
+const STEPS = [
+  { key: 'tu', label: 'Tú', check: ['name', 'document_number'] },
+  { key: 'pago', label: 'Pago', check: ['payment_details'] },
+  { key: 'firma', label: 'Firma y envío', check: ['signature', 'send_day'] },
+];
+const ORDER = ['welcome', ...STEPS.map((s) => s.key), 'done'];
+let editingName = false;
+// What can be guessed comes guessed: the suggested day and the name as a signature.
+draft.owner.send_day = RECOMMENDED_DAY;
+signMode = 'typed';
+
+function welcome() {
+  return `<div class="page"><div class="top">${brand(24)}</div>
+    <div class="hello ${enterClass()}">
+      <div class="copy">
+        <p class="greet">Hola, ${OWNER.first}</p>
+        <h1 class="font-heading">Tres toques para tus cuentas de cobro</h1>
+        <p class="lead">Ya trajimos tu nombre, sugerimos el día de envío y armamos tu firma. Tú solo confirmas y escribes el número de tu documento y de tu cuenta.</p>
+        <span class="time">${icon('clock', 15)}Alrededor de 1 minuto</span>
+        <button class="btn btn-primary" style="align-self:flex-start" data-act="start">Empezar ${icon('arrow-right')}</button>
+      </div>
+      <div class="art">${billPaper()}</div>
+    </div></div>`;
+}
+function dots() {
+  const i = STEPS.findIndex((s) => s.key === current);
+  return `<div class="progress"><div class="dots" aria-hidden="true">${STEPS.map((_, j) => `<span class="${j <= i ? 'on' : ''}"></span>`).join('')}</div><small>${i + 1} de ${STEPS.length} · ${STEPS[i].label}</small></div>`;
+}
+function stepTu() {
+  const o = draft.owner;
+  return `<h1 class="font-heading">¿Así te llamas?</h1>
+    ${editingName ? field({ path: 'owner.name', label: 'Tu nombre o razón social', autocomplete: 'name' })
+      : `<div class="confirm"><span class="ic">${icon('user')}</span><p><b>${esc(o.name)}</b><small>De tu cuenta de Google · ${esc(o.email)}</small></p><button type="button" class="btn btn-ghost btn-sm" data-act="edit-name">Cambiar</button></div>`}
+    <fieldset class="field big-toggle"><legend class="legend" style="margin-bottom:6px">Cobras como</legend>
+      <div class="toggle-group cols-2" role="radiogroup">
+        <button type="button" class="toggle" role="radio" aria-checked="${o.document_type === 'cc'}" data-pick="owner.document_type" data-value="cc">Persona<small>Cédula</small></button>
+        <button type="button" class="toggle" role="radio" aria-checked="${o.document_type === 'nit'}" data-pick="owner.document_type" data-value="nit">Empresa<small>NIT</small></button>
+      </div></fieldset>
+    ${field({ path: 'owner.document_number', label: o.document_type === 'nit' ? 'NIT' : 'Número de cédula', inputmode: 'numeric', placeholder: o.document_type === 'nit' ? '900.123.456-7' : '52.814.337' })}`;
+}
+function stepPago() {
+  return `<h1 class="font-heading">¿Dónde te consignan?</h1><p class="lead" style="margin-top:-12px">Tócalo y escribe el número. El resto lo escribimos por ti.</p>${paymentBuilder()}`;
+}
+function stepFirma() {
+  return `<h1 class="font-heading">Tu firma y el día de envío</h1>
+    ${signaturePad({ typed: true })}
+    ${sendDayMonth()}`;
+}
+function decided() {
+  const o = draft.owner;
+  const row = (ok, title, body) => `<li class="${ok ? 'ok' : 'wait'}">${icon(ok ? 'check' : 'clock')}<p><b>${title}</b>${body}</p></li>`;
+  return `<aside class="card decided" aria-label="Lo que ya está"><h2>Lo que ya está</h2><ul>
+    ${row(true, esc(o.name), `<span>${o.document_number ? `${docShort(o.document_type)} ${esc(o.document_number)}` : 'Falta el documento'}</span>`)}
+    ${row(Boolean(o.payment_details), 'Cómo te pagan', `<span>${esc(o.payment_details) || 'Falta'}</span>`)}
+    ${row(Boolean(o.signature), 'Firma', o.signature ? `<img src="${o.signature.url}" alt="Tu firma">` : '<span>Falta confirmarla</span>')}
+    ${row(Boolean(o.send_day), 'Día de envío', `<span>El ${esc(o.send_day)} de cada mes${o.send_day === RECOMMENDED_DAY ? ' (sugerido)' : ''}</span>`)}
+  </ul></aside>`;
+}
+function step() {
+  const i = STEPS.findIndex((s) => s.key === current);
+  const body = { tu: stepTu, pago: stepPago, firma: stepFirma }[current]();
+  const last = i === STEPS.length - 1;
+  return `<div class="page"><div class="top">${brand(24)}</div>
+    <div class="stage">
+      <form class="card panel ${enterClass()}" novalidate>
+        ${dots()}
+        ${i > 0 ? `<a class="back" href="#${STEPS[i - 1].key}" data-back>${icon('arrow-left')}Anterior</a>` : ''}
+        ${body}
+        <div class="p-actions"><button class="btn btn-primary" data-act="next">${last ? 'Listo, seguir con mi inmueble' : 'Continuar'}</button></div>
+      </form>
+      <div id="decided">${decided()}</div>
+    </div>
+    <div class="action-footer m-only"><button class="btn btn-primary btn-block" data-act="next">${last ? 'Listo' : 'Continuar'}</button></div>
+  </div>`;
+}
+function render() {
+  const html = current === 'welcome' ? welcome() : current === 'done' ? handoffScreen() : step();
+  document.getElementById('app').innerHTML = html + themeButton();
+  mountSignature();
+}
+onDraftChange = (path) => {
+  ownerChanged(path);
+  if (path === 'owner.document_type' && current === 'tu') render();
+  const d = document.getElementById('decided');
+  if (d) d.innerHTML = decided();
+};
+function next() {
+  const s = STEPS.find((x) => x.key === current);
+  if (!s) return;
+  errors = validateOwner(s.check);
+  if (Object.keys(errors).length) { render(); focusFirstError(); return; }
+  go(ORDER[ORDER.indexOf(current) + 1]);
+}
+document.addEventListener('click', (event) => {
+  if (event.target.closest('[data-back]')) direction = 'back';
+  const act = event.target.closest('[data-act]')?.dataset.act;
+  if (act === 'start') go('tu');
+  if (act === 'edit-name') { editingName = true; render(); document.getElementById('owner-name')?.focus(); }
+  if (act === 'next') { event.preventDefault(); next(); }
+});
+document.addEventListener('submit', (e) => { e.preventDefault(); next(); });
+startRouter(ORDER, { welcome: 0, tu: 0, pago: 1, firma: 2, done: 4 });
+</script>
+</body>
+</html>
