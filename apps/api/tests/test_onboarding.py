@@ -28,15 +28,50 @@ LEASE = {
 }
 
 
+def complete_profile(
+    api: TestClient, admin_engine: Engine, headers: dict[str, str], owner_id: UUID
+) -> None:
+    """What the owner fills in before the first property: Ajustes' data and a signature."""
+    response = api.patch(
+        "/api/settings",
+        json={"document_number": "52.814.337", "payment_details": "Bancolombia · Ahorros 123"},
+        headers=headers,
+    )
+    assert response.status_code == 200, response.text
+    # The signature has its own upload, tested in test_signature.py: here, only its path.
+    with admin_engine.begin() as connection:
+        connection.execute(
+            text("update owners set signature_path = :path where id = :id"),
+            {"path": f"{owner_id}/signature/stored/firma.png", "id": owner_id},
+        )
+
+
 @pytest.fixture
-def ana(new_user_ids: tuple[UUID, UUID], make_token: MakeToken) -> dict[str, str]:
+def new_ana(new_user_ids: tuple[UUID, UUID], make_token: MakeToken) -> dict[str, str]:
     """A user who has just signed up: the API has never seen her."""
     return bearer(make_token(new_user_ids[0]))
 
 
 @pytest.fixture
-def beto(new_user_ids: tuple[UUID, UUID], make_token: MakeToken) -> dict[str, str]:
+def new_beto(new_user_ids: tuple[UUID, UUID], make_token: MakeToken) -> dict[str, str]:
     return bearer(make_token(new_user_ids[1], email="beto@example.com"))
+
+
+@pytest.fixture
+def ana(
+    api: TestClient, admin_engine: Engine, new_ana: dict[str, str], new_user_ids: tuple[UUID, UUID]
+) -> dict[str, str]:
+    """Ana, with her data already filled in: ready for her first property."""
+    complete_profile(api, admin_engine, new_ana, new_user_ids[0])
+    return new_ana
+
+
+@pytest.fixture
+def beto(
+    api: TestClient, admin_engine: Engine, new_beto: dict[str, str], new_user_ids: tuple[UUID, UUID]
+) -> dict[str, str]:
+    complete_profile(api, admin_engine, new_beto, new_user_ids[1])
+    return new_beto
 
 
 def row_counts(admin_engine: Engine, owner_id: UUID) -> dict[str, int]:
@@ -230,6 +265,89 @@ def test_each_owner_onboards_on_their_own(
     assert [p["name"] for p in api.get("/api/properties", headers=beto).json()] == ["Casa de Beto"]
     assert [p["name"] for p in api.get("/api/properties", headers=ana).json()] == ["Casa Calle 45"]
     assert row_counts(admin_engine, new_user_ids[1]) == NOTHING | {"properties": 1, "units": 1}
+
+
+# The owner's data comes first: it goes on every bill.
+
+
+def test_a_new_owner_cannot_create_the_first_property_without_their_data(
+    api: TestClient, new_ana: dict[str, str], new_user_ids: tuple[UUID, UUID], admin_engine: Engine
+) -> None:
+    response = api.post(
+        "/api/onboarding",
+        json={"property": PROPERTY, "units": UNITS, "lease": LEASE},
+        headers=new_ana,
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "Antes de crear tu primer inmueble, completa tus datos: número de documento, "
+        "datos de pago y firma.",
+        "code": "profile_incomplete",
+    }
+    assert row_counts(admin_engine, new_user_ids[0]) == NOTHING
+
+
+@pytest.mark.parametrize(
+    ("column", "missing"),
+    [
+        ("document_number", "número de documento"),
+        ("payment_details", "datos de pago"),
+        ("signature_path", "firma"),
+    ],
+)
+def test_each_piece_of_the_owners_data_is_required(
+    api: TestClient,
+    ana: dict[str, str],
+    new_user_ids: tuple[UUID, UUID],
+    admin_engine: Engine,
+    column: str,
+    missing: str,
+) -> None:
+    with admin_engine.begin() as connection:
+        connection.execute(
+            text(f"update owners set {column} = null where id = :id"), {"id": new_user_ids[0]}
+        )
+
+    response = api.post("/api/onboarding", json={"property": PROPERTY, "units": UNITS}, headers=ana)
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": f"Antes de crear tu primer inmueble, completa tus datos: {missing}.",
+        "code": "profile_incomplete",
+    }
+    assert row_counts(admin_engine, new_user_ids[0]) == NOTHING
+
+
+def test_me_says_whether_the_owners_data_is_complete(
+    api: TestClient, new_ana: dict[str, str], new_user_ids: tuple[UUID, UUID], admin_engine: Engine
+) -> None:
+    before = api.get("/api/me", headers=new_ana).json()
+    complete_profile(api, admin_engine, new_ana, new_user_ids[0])
+    after = api.get("/api/me", headers=new_ana).json()
+
+    assert (before["profile_complete"], after["profile_complete"]) == (False, True)
+
+
+def test_one_owners_data_does_not_open_the_onboarding_of_another(
+    api: TestClient,
+    ana: dict[str, str],
+    new_beto: dict[str, str],
+    new_user_ids: tuple[UUID, UUID],
+    admin_engine: Engine,
+) -> None:
+    beto_response = api.post(
+        "/api/onboarding", json={"property": PROPERTY, "units": UNITS}, headers=new_beto
+    )
+    ana_response = api.post(
+        "/api/onboarding", json={"property": PROPERTY, "units": UNITS}, headers=ana
+    )
+
+    assert beto_response.status_code == 409
+    assert beto_response.json()["code"] == "profile_incomplete"
+    assert api.get("/api/me", headers=new_beto).json()["profile_complete"] is False
+    assert ana_response.status_code == 201
+    assert row_counts(admin_engine, new_user_ids[1]) == NOTHING
 
 
 def test_onboarding_requires_a_token(api: TestClient) -> None:
