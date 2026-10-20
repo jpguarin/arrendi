@@ -3,10 +3,17 @@ import { cn } from "@/lib/utils";
 // The paths are those of docs/new-brand-design/arrendi-logo.svg, unchanged. Its two
 // files differ only in the color of the house and the name: navy on a light surface
 // (arrendi-logo.svg), white on a dark one (arrendi-logo-blanco.svg).
-const INK = { auto: "fill-brand-navy dark:fill-white", white: "fill-white" } as const;
+const INK = {
+  auto: "fill-brand-navy dark:fill-white",
+  white: "fill-white",
+  ink: "fill-ink",
+} as const;
 
 type BrandProps = {
-  /** `auto` follows the theme; `white` is for a surface that is always dark. */
+  /**
+   * `auto` follows the theme; `white` is for a surface that is always dark, and `ink` for
+   * one that is always paper.
+   */
   tone?: keyof typeof INK;
   className?: string;
 };

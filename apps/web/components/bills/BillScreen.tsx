@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { BillDocument } from "@/components/bills/BillDocument";
 import { BillStatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
@@ -38,14 +39,11 @@ import {
   formatBillNumber,
   formatDate,
   formatDateHour,
-  formatLongDate,
   formatMonth,
   formatPesos,
 } from "@/lib/format";
 import {
   DELIVERY_PROBLEMS,
-  DOCUMENT_TYPE_LABELS,
-  type DocumentType,
   NOTIFICATION_LABELS,
   PAYMENT_METHOD_LABELS,
 } from "@/lib/labels";
@@ -57,109 +55,28 @@ const BACK = "/bills";
 const PROOF_FAILED =
   "El pago quedó guardado, pero no pudimos subir el comprobante. Elimina el pago y regístralo de nuevo si lo necesitas.";
 
-/** Who charges or who owes: the name on as many lines as it needs, its document under it. */
-function Party({
-  label,
-  name,
-  documentType,
-  documentNumber,
-}: {
-  label: string;
-  name: string;
-  documentType: DocumentType;
-  documentNumber: string | null;
-}) {
-  return (
-    <>
-      <dt className="pt-0.5 text-badge font-normal text-muted-foreground">{label}</dt>
-      <dd className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-section font-semibold break-words">{name}</span>
-        {documentNumber && (
-          <span className="text-support text-muted-foreground">
-            {DOCUMENT_TYPE_LABELS[documentType]} {documentNumber}
-          </span>
-        )}
-      </dd>
-    </>
-  );
-}
-
 /** The bill as the tenant reads it. The stored PDF is the one that counts. */
 function DocumentPreview({ bill }: { bill: Bill }) {
-  // A monthly bill says its month and its unit under the rent, its first line. A manual
-  // one has no line to say it under, so the unit goes in the heading.
-  const ofTheRent = bill.period && `${formatMonth(bill.period)} · ${bill.unit_name}`;
-
   return (
-    <section
-      aria-label="Vista previa del documento"
-      className="flex flex-col gap-3.5 rounded-md border border-border bg-card p-5"
-    >
-      <div className="flex flex-col gap-0.5">
-        <div className="flex items-baseline justify-between gap-3">
-          <p className="text-body font-bold">Cuenta de cobro</p>
-          <p className="shrink-0 text-body font-bold">{formatBillNumber(bill.number)}</p>
-        </div>
-        <p className="text-badge font-normal break-words text-muted-foreground">
-          {formatLongDate(bill.issue_date)}
-          {!bill.period && ` · ${bill.unit_name}`}
-        </p>
-      </div>
-      <hr className="border-border" />
-      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2.5">
-        <Party
-          label="Cobra"
-          name={bill.issuer.name}
-          documentType={bill.issuer.document_type}
-          documentNumber={bill.issuer.document_number}
-        />
-        <Party
-          label="Debe"
-          name={bill.tenant_name}
-          documentType={bill.tenant_document_type}
-          documentNumber={bill.tenant_document_number}
-        />
-      </dl>
-      <hr className="border-border" />
-      {bill.items.map((item, index) => (
-        <div key={index} className="flex justify-between gap-3 text-section">
-          <p className="min-w-0 break-words">
-            {item.description}
-            {index === 0 && ofTheRent && (
-              <>
-                <br />
-                <span className="text-support text-muted-foreground">{ofTheRent}</span>
-              </>
-            )}
-          </p>
-          <p className="shrink-0 font-semibold">{formatPesos(item.amount)}</p>
-        </div>
-      ))}
-      <hr className="border-border" />
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="text-section font-semibold">Total a pagar</p>
-        <p className="text-title font-bold">{formatPesos(bill.total)}</p>
-      </div>
-      <p className="rounded-md bg-background px-3 py-2.5 text-support whitespace-pre-line text-foreground-soft">
-        Vence el {formatLongDate(bill.due_date)}
-        {bill.late_fee && `\n${bill.late_fee.notice}`}
-        {bill.issuer.payment_details && `\nPagar a: ${bill.issuer.payment_details}`}
-      </p>
-      {/* How the PDF ends: the signature, or a line to sign on, then who signs. */}
-      <div className="flex flex-col gap-0.5 pt-3">
-        {bill.signed ? (
-          <p className="text-badge font-normal text-muted-foreground">Firmada</p>
-        ) : (
-          <hr aria-hidden className="mt-6 mb-1 w-40 border-border-dashed" />
-        )}
-        <p className="text-section font-semibold break-words">{bill.issuer.name}</p>
-        {bill.issuer.document_number && (
-          <p className="text-support text-muted-foreground">
-            {DOCUMENT_TYPE_LABELS[bill.issuer.document_type]} {bill.issuer.document_number}
-          </p>
-        )}
-      </div>
-    </section>
+    <BillDocument
+      number={bill.number}
+      issueDate={bill.issue_date}
+      // A monthly bill says its month and its unit under the rent, its first line. A manual
+      // one has no line to say it under, so the unit goes in the heading.
+      headingNote={bill.period ? null : bill.unit_name}
+      issuer={bill.issuer}
+      tenant={{
+        name: bill.tenant_name,
+        document_type: bill.tenant_document_type,
+        document_number: bill.tenant_document_number,
+      }}
+      items={bill.items}
+      ofTheRent={bill.period && `${formatMonth(bill.period)} · ${bill.unit_name}`}
+      total={bill.total}
+      dueDate={bill.due_date}
+      lateFeeNotice={bill.late_fee?.notice}
+      signed={bill.signed}
+    />
   );
 }
 
