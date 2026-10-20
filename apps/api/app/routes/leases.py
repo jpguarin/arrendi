@@ -44,7 +44,7 @@ def end_lease(lease_id: UUID, session: OwnerSession) -> LeaseResponse:
 def create_document_upload_url(
     lease_id: UUID, data: UploadUrlRequest, session: OwnerSession, storage: FileStorage
 ) -> UploadUrlResponse:
-    return documents.create_upload_url(session, storage, lease_id, data)
+    return documents.create_upload_url(session, storage, documents.SIGNED_LEASE, lease_id, data)
 
 
 @router.post("/leases/{lease_id}/document", responses={400: {"model": ErrorResponse}})
@@ -55,11 +55,43 @@ def confirm_document(
     storage: FileStorage,
     background: BackgroundTasks,
 ) -> LeaseResponse:
-    return documents.confirm_document(session, storage, background, lease_id, data)
+    return documents.confirm_document(
+        session, storage, background, documents.SIGNED_LEASE, lease_id, data
+    )
 
 
 @router.get("/leases/{lease_id}/document")
 def get_document_url(
     lease_id: UUID, session: OwnerSession, storage: FileStorage
 ) -> DocumentUrlResponse:
-    return documents.get_document_url(session, storage, lease_id)
+    return documents.get_document_url(session, storage, documents.SIGNED_LEASE, lease_id)
+
+
+# The inventory of the unit: the same flow, a file of its own.
+
+
+@router.post("/leases/{lease_id}/inventory/upload-url")
+def create_inventory_upload_url(
+    lease_id: UUID, data: UploadUrlRequest, session: OwnerSession, storage: FileStorage
+) -> UploadUrlResponse:
+    return documents.create_upload_url(session, storage, documents.INVENTORY, lease_id, data)
+
+
+@router.post("/leases/{lease_id}/inventory", responses={400: {"model": ErrorResponse}})
+def confirm_inventory(
+    lease_id: UUID,
+    data: DocumentConfirm,
+    session: OwnerSession,
+    storage: FileStorage,
+    background: BackgroundTasks,
+) -> LeaseResponse:
+    return documents.confirm_document(
+        session, storage, background, documents.INVENTORY, lease_id, data
+    )
+
+
+@router.get("/leases/{lease_id}/inventory")
+def get_inventory_url(
+    lease_id: UUID, session: OwnerSession, storage: FileStorage
+) -> DocumentUrlResponse:
+    return documents.get_document_url(session, storage, documents.INVENTORY, lease_id)

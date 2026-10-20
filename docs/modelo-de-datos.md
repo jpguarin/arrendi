@@ -126,6 +126,8 @@ En esta tabla, `owner_id` es la propia columna `id`.
 | `payment_details` | text, nulo | Datos de pago propios del contrato. Nulo: sus cuentas usan los del propietario |
 | `document_path` | text, nulo | Ruta en el almacenamiento |
 | `document_uploaded_at` | timestamptz, nulo | |
+| `inventory_path` | text, nulo | Ruta del inventario de la unidad en el almacenamiento |
+| `inventory_uploaded_at` | timestamptz, nulo | |
 
 Restricción: índice único parcial sobre `unit_id` donde `status = 'active'`. Decide la base, no el código, cuál gana si dos peticiones crean a la vez un contrato para la misma unidad.
 
@@ -282,6 +284,7 @@ Un solo contenedor privado. Las rutas empiezan por el propietario:
 
 ```
 {owner_id}/leases/{lease_id}/{upload_id}/{nombre}
+{owner_id}/inventories/{lease_id}/{upload_id}/{nombre}
 {owner_id}/bills/{bill_id}.pdf
 {owner_id}/proofs/{payment_id}/{upload_id}/{nombre}
 ```

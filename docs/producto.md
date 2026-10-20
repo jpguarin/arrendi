@@ -16,7 +16,7 @@ Arrendi es una aplicación web instalable (PWA) para que un arrendador pequeño 
 
 - Registro e inicio de sesión con Google o con correo y contraseña, con los datos de cada propietario aislados.
 - Alta guiada en una sola hoja de tres partes: inmueble, unidades y primer contrato.
-- Inmuebles, unidades, arrendatarios y contratos, con el contrato firmado como archivo adjunto.
+- Inmuebles, unidades, arrendatarios y contratos, con el contrato firmado y el inventario de la unidad como archivos adjuntos, ambos opcionales.
 - Generación mensual de la cuenta de cobro en PDF, con consecutivo.
 - Envío por correo y dos recordatorios de vencimiento.
 - Registro de pagos totales o parciales, con comprobante adjunto y recibo al arrendatario.
@@ -48,7 +48,7 @@ Las diez pantallas diseñadas están en `docs/mockups/` y descritas en `docs/dis
 | Detalle de cuenta | Ver el documento, su historial de envíos y el estado de su recargo por mora | Registrar pago, reenviar, descargar PDF, anular, perdonar el recargo o volver a cobrarlo |
 | Registrar pago | Anotar un pago en pocos toques | Valor, fecha, medio, comprobante, enviar recibo |
 | Inmuebles y unidades | Ver cada inmueble con sus unidades y su estado. Junto a la ciudad, el país, si no es Colombia | Agregar inmueble o unidad, abrir el contrato |
-| Contrato | Ver condiciones, lo que se cobra cada mes, documento, correos en copia y cuentas del contrato | Editar (también los conceptos fijos del mes, como la administración, el recargo por mora y los correos en copia), terminar, ver o reemplazar el documento, activar envío automático |
+| Contrato | Ver condiciones, lo que se cobra cada mes, documento, correos en copia y cuentas del contrato | Editar (también los conceptos fijos del mes, como la administración, el recargo por mora y los correos en copia), terminar, ver o reemplazar el contrato firmado y el inventario, activar envío automático |
 | Configuración | Definir datos del propietario, de pago, la firma, de envío y el tema | Editar datos, subir o dibujar la firma que cierra cada cuenta, verla y quitarla, elegir día de envío y recordatorios, cambiar entre tema claro, oscuro o el del sistema |
 | Alta 1: inmueble | Crear el primer inmueble | Nombre, dirección, ciudad, país (Colombia por defecto), tipo |
 | Alta 2: unidades | Definir los espacios que se cobran por separado | Nombre y uso de cada unidad |
@@ -96,7 +96,7 @@ Hay que construirlos siguiendo el mismo sistema visual:
 ## Requisitos no funcionales
 
 - **Aislamiento:** ningún propietario puede ver ni modificar datos de otro. Se valida en el servidor y en la base de datos.
-- **Archivos privados:** contratos y comprobantes sin acceso público. Formatos: PDF, JPG y PNG.
+- **Archivos privados:** contratos, inventarios y comprobantes sin acceso público. Formatos: PDF, JPG y PNG.
 - **Datos personales:** aplica la Ley 1581 de 2012. Hacen falta política de tratamiento y autorización desde el registro.
 - **Plataforma:** PWA instalable en el celular, usable con una mano.
 - **Tema:** claro y oscuro. Por defecto sigue al sistema; el propietario puede fijar uno en configuración.

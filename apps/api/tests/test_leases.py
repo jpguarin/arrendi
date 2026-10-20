@@ -86,6 +86,8 @@ def test_create_a_lease_with_a_new_tenant(
         "payment_details": None,
         "document_name": None,
         "document_uploaded_at": None,
+        "inventory_name": None,
+        "inventory_uploaded_at": None,
         "unit": {
             "id": vacant_unit["id"],
             "name": "Apto 1",
