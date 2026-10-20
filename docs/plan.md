@@ -178,6 +178,7 @@ Objetivo: usarlo con los 3 arrendatarios reales durante al menos un ciclo de cob
 - [x] Ajuste del piloto: en Cuentas, ordenar por vencimiento o por estado desde los encabezados de la tabla.
 - [x] Ajuste del piloto: país del inmueble, Colombia por defecto.
 - [x] Ajuste del piloto: inventario de la unidad como segundo archivo opcional del contrato.
+- [x] Ajuste del piloto: el panel de detalle se redimensiona arrastrando su borde.
 
 **Criterios de aceptación**
 
