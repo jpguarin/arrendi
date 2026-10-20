@@ -25,7 +25,14 @@ test("the signature: uploaded, on the bill, drawn and taken away", async ({ page
     });
   });
 
-  await test.step("a bill issued before there is a signature leaves a line to sign", async () => {
+  await test.step("the signature of the onboarding is taken away in Ajustes", async () => {
+    await page.goto("/settings");
+    await expect(signature).toBeVisible();
+    await page.getByRole("button", { name: "Quitar firma" }).click();
+    await expect(signature).toHaveCount(0);
+  });
+
+  await test.step("a bill issued without a signature leaves a line to sign", async () => {
     await page.getByRole("link", { name: "Inmuebles" }).click();
     await page.getByRole("link", { name: /Apto 3 · Vivienda/ }).click();
     await page.getByRole("link", { name: "Cobrar otro concepto" }).click();
