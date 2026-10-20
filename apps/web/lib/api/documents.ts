@@ -3,7 +3,12 @@ import { apiErrorMessage, CONNECTION_ERROR } from "./errors";
 
 // The same limits the API enforces; checking here saves the owner a failed upload.
 const MB = 1024 * 1024;
-type Limits = { types: readonly string[]; maxSize: number; wrongType: string; tooLarge: string };
+type Limits = {
+  types: readonly string[];
+  maxSize: number;
+  wrongType: string;
+  tooLarge: string;
+};
 
 const DOCUMENT: Limits = {
   types: ["application/pdf", "image/jpeg", "image/png"],
@@ -77,8 +82,26 @@ export function uploadLeaseDocument(leaseId: string, file: File): Promise<string
   const params = { path: { lease_id: leaseId } };
   return sendFile(
     file,
-    () => api.POST("/api/leases/{lease_id}/document/upload-url", { params, body: describe(file) }),
+    () =>
+      api.POST("/api/leases/{lease_id}/document/upload-url", {
+        params,
+        body: describe(file),
+      }),
     (path) => api.POST("/api/leases/{lease_id}/document", { params, body: { path } }),
+  );
+}
+
+/** Attaches the inventory of the unit to a lease. Returns an error message, or undefined. */
+export function uploadLeaseInventory(leaseId: string, file: File): Promise<string | undefined> {
+  const params = { path: { lease_id: leaseId } };
+  return sendFile(
+    file,
+    () =>
+      api.POST("/api/leases/{lease_id}/inventory/upload-url", {
+        params,
+        body: describe(file),
+      }),
+    (path) => api.POST("/api/leases/{lease_id}/inventory", { params, body: { path } }),
   );
 }
 
@@ -87,7 +110,11 @@ export function uploadPaymentProof(paymentId: string, file: File): Promise<strin
   const params = { path: { payment_id: paymentId } };
   return sendFile(
     file,
-    () => api.POST("/api/payments/{payment_id}/proof/upload-url", { params, body: describe(file) }),
+    () =>
+      api.POST("/api/payments/{payment_id}/proof/upload-url", {
+        params,
+        body: describe(file),
+      }),
     (path) => api.POST("/api/payments/{payment_id}/proof", { params, body: { path } }),
   );
 }
