@@ -102,11 +102,12 @@ Los cuatro rellenos se validaron como paleta (separación para daltonismo y cont
 | Ancho | Navegación | Lista y detalle |
 | --- | --- | --- |
 | Celular (menos de 768 px) | Cabecera con el isotipo y el nombre, y barra inferior navy con las cuatro secciones. Las dos se ocultan al abrir un detalle | El detalle ocupa toda la pantalla; "volver" regresa a la lista |
-| Tablet (768 px o más) | Riel navy de 68 px a la izquierda | Lista y panel de 360 px lado a lado |
-| Escritorio (1280 px o más) | Igual | El panel mide 408 px |
+| Tablet (768 px o más) | Riel navy de 68 px a la izquierda | Lista y panel de 360 px lado a lado; el panel se redimensiona |
+| Escritorio (1280 px o más) | Igual | El panel mide 408 px; se redimensiona |
 
 - **Secciones:** Resumen (`/`), Cuentas, Inmuebles y Ajustes. La sección activa lleva una marca verde.
 - **Panel:** en Cuentas e Inmuebles, toda ruta que no sea la lista se dibuja en el panel: el detalle de una cuenta, registrar un pago, el contrato y todos los formularios. Las rutas no cambiaron; lo hace el `layout` de cada sección con `ListDetail`.
+- **Panel redimensionable:** desde tablet, el borde izquierdo del panel se arrastra (mouse, lápiz o dedo) o se mueve con las flechas del teclado (de a 16 px, con Mayús de a 64; Inicio y Fin van a los límites). Va de 360 a 720 px y siempre deja al menos 360 px a la lista. El ancho elegido se guarda en el navegador y vale para Cuentas e Inmuebles; doble clic o Enter en el borde vuelven al ancho por defecto. Lo dibuja `PaneResizer` dentro de `ListDetail`.
 - **Desde el resumen,** abrir una cuenta lleva a Cuentas con esa cuenta en el panel.
 - **Fuera de la estructura:** acceso y la pantalla sin conexión van en una columna centrada de 480 px (`Column`). El alta guiada tiene su propia composición; ver «Alta guiada».
 - **Tablas que se adaptan solas:** una tabla acomoda sus filas según su propio ancho (consultas de contenedor), no el de la ventana. Por eso la misma tabla sirve a todo el ancho y apretada junto al panel: con menos de 600 px cada fila se apila en dos líneas.
@@ -119,6 +120,7 @@ Se construyen sobre shadcn/ui (con Radix), ajustando variantes y medidas a este 
 | --- | --- | --- |
 | `AppShell` | propio | Riel o barra inferior, y el contenido |
 | `ListDetail`, `ListMain` | propio | Lista y panel de detalle; el cuerpo de una lista |
+| `PaneResizer` | propio | Borde del panel para cambiar su ancho (`role="separator"`) |
 | `Column` | propio | Columna centrada de las pantallas fuera de la estructura |
 | `OnboardingSheet`, `OnboardingSection`, `OnboardingSummary` | propio | La hoja del alta guiada, cada una de sus tres partes y el resumen «Lo que vas a crear» |
 | `Brand`, `BrandMark` | propio | Isotipo, solo o con el nombre |

@@ -51,6 +51,7 @@
 | Playwright | Corre todo en local: la web, la API contra la base `arrendi_e2e` de PostgreSQL y dos servidores falsos (acceso y almacenamiento). Nunca contra Supabase |
 | Deuda de meses anteriores | El inicio la lista en "Por cobrar" y la suma aparte; las cifras del mes no la incluyen |
 | Marca y diseño (etapa 6) | Marca de `docs/new-brand-design`. De tres propuestas de interfaz se eligió la B, "Libro": riel de secciones, tablas y panel de detalle. `docs/diseno.md` se reescribió con ese sistema |
+| Panel redimensionable | Desde tablet, arrastrando su borde o con el teclado, entre 360 y 720 px y dejando 360 px a la lista. El ancho se guarda en el navegador, igual para Cuentas e Inmuebles. Componente propio, sin dependencias |
 | Panel de detalle | Se conservan las rutas: el `layout` de Cuentas y el de Inmuebles dibujan la lista y, al lado, la ruta abierta. Desde el resumen, una cuenta se abre en Cuentas. Se descartó un panel sobre cualquier pantalla con un parámetro en la dirección, que cambiaba los enlaces |
 | Fuente del PDF | Sigue Helvetica, aunque la marca pide Inter: no viaja ningún archivo de fuente con la API |
 | Gráficas | Hechas con Tailwind, sin librería: una barra de composición y barras por mes no la justifican |
