@@ -19,7 +19,8 @@ export default function NotFound() {
       <header className="px-4 py-3.5 md:px-8 md:py-5">
         <Brand />
       </header>
-      <main className="mx-auto grid w-full max-w-5xl flex-1 content-center justify-items-center gap-7 px-5 pt-4 pb-12 text-center md:grid-cols-2 md:justify-items-start md:gap-12 md:px-8 md:pb-16 md:text-left">
+      {/* grid-cols-1 on a phone: an implicit column would grow to fit a long address. */}
+      <main className="mx-auto grid w-full max-w-5xl flex-1 grid-cols-1 content-center justify-items-center gap-7 px-5 pt-4 pb-12 text-center md:grid-cols-2 md:justify-items-start md:gap-12 md:px-8 md:pb-16 md:text-left">
         <div className="flex max-w-full flex-col items-center gap-4.5 md:justify-self-end">
           <EmptyHouse />
           <NotFoundAddress />
