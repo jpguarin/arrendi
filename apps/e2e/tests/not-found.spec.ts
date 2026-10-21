@@ -22,6 +22,17 @@ test("an address that does not exist: sign in first, then the empty house", asyn
     await expect(page.getByText("/cuentas", { exact: true })).toBeVisible();
   });
 
+  await test.step("on a phone, a long address does not scroll the page sideways", async () => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const address = "/bils/4fde6292-1f15-4942-b6e0-13a0c69ae1b2/payment";
+    await page.goto(address);
+    await expect(page.getByText(address, { exact: true })).toBeAttached();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBe(0);
+  });
+
   await test.step("Volver goes back, and Ir al resumen goes home", async () => {
     await page.getByRole("link", { name: "Ir al resumen" }).click();
     await expect(page).not.toHaveURL(/\/cuentas$/);
