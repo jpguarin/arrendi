@@ -25,6 +25,7 @@ Lee el documento que corresponda antes de tocar esa parte del sistema. Si el có
 | `docs/flujo-de-trabajo-git.md` | Ramas, PR, hotfix, promoción a producción y migraciones entre ambientes |
 | `docs/guia-supabase-vercel.md` | Paso a paso para crear `arrendi-prod` en Supabase y configurar Producción y Preview en Vercel |
 | `docs/guia-correo.md` | Paso a paso del correo con dominio propio: Resend, DNS en Route 53, SMTP de Supabase, aviso de rebotes y pruebas de entrega |
+| `docs/costos.md` | Costo mensual de la infraestructura: planes actuales, escenarios y límites a vigilar |
 | `docs/new-brand-design/` | Marca nueva: colores, fuentes, logo y los mocks de la etapa 6. La propuesta elegida es `mockups/propuesta-b-libro.html` |
 | `docs/decisiones.md` | Decisiones tomadas, provisionales y pendientes |
 | `docs/mockups/` | Marcado de las 10 pantallas diseñadas, como referencia visual |
