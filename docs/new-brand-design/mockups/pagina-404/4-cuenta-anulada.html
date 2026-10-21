@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Página no encontrada · 4 · La cuenta N.º 404</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../alta-guiada/base.css">
+<link rel="stylesheet" href="nf.css">
+<style>
+/* Phone: the sheet on top, the words and buttons below. From tablet: side by side. */
+.top { padding: 14px 16px; }
+@media (min-width: 768px) { .top { padding: 20px 32px; } }
+.stage { flex: 1; width: 100%; max-width: 1080px; margin: 0 auto; padding: 8px 20px 48px; display: grid; gap: 32px; align-content: center; }
+@media (min-width: 768px) { .stage { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 48px; padding: 24px 32px 64px; } }
+.copy { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.copy h1 { font-weight: 800; }
+.copy .actions { margin-top: 12px; width: 100%; }
+
+/* The sheet copies BillDocument (paper in both themes, like the PDF), crossed out like a
+   voided bill. It is a picture, not a document: hidden from screen readers. */
+.sheet { position: relative; width: 100%; max-width: 400px; justify-self: center; background: var(--paper); color: var(--ink); border-radius: 6px; box-shadow: 0 1px 0 var(--paper-line), var(--shadow-lg); overflow: hidden; font-size: 13px; transform: rotate(-1.5deg); }
+.sheet .band { height: 8px; background: var(--ink); }
+.sheet .in { padding: 22px 22px 14px; display: flex; flex-direction: column; gap: 12px; }
+.sheet .head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 18px; font-weight: 700; }
+.sheet .date { margin-top: -8px; font-size: 12px; color: var(--ink-soft); }
+.sheet hr { border: 0; border-top: 1px solid var(--paper-line); margin: 0; }
+.sheet dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; }
+.sheet dt { font-size: 11px; color: var(--ink-soft); padding-top: 2px; }
+.sheet dd { font-weight: 700; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sheet dd code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-weight: 600; font-size: 13px; }
+.sheet .line { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.sheet .line small { display: block; font-size: 12px; color: var(--ink-soft); }
+.sheet .total { display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; }
+.sheet .total b { font-size: 22px; }
+.sheet .blank { display: block; height: 8px; border-radius: 999px; background: var(--paper-line); }
+.sheet .foot { display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px solid var(--paper-line); font-size: 10.5px; color: var(--ink-soft); }
+/* The stamp: neutral, like the "Anulada" status, with its icon and its word. */
+.stamp { position: absolute; top: 46%; left: 50%; transform: translate(-50%, -50%) rotate(-14deg); display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 3px solid var(--ink-soft); border-radius: 10px; color: var(--ink-soft); font-family: var(--font-heading); font-weight: 900; font-size: 26px; letter-spacing: .04em; background: color-mix(in srgb, var(--paper) 82%, transparent); white-space: nowrap; animation: stamp .35s cubic-bezier(.2, .8, .2, 1) .35s both; }
+.stamp svg { width: 24px; height: 24px; stroke-width: 2.5; }
+@keyframes stamp { from { opacity: 0; transform: translate(-50%, -50%) rotate(-14deg) scale(1.6); } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="../alta-guiada/base.js"></script>
+<script src="nf.js"></script>
+<script>
+function sheet() {
+  return `<div class="sheet" aria-hidden="true">
+    <div class="band"></div>
+    <div class="in">
+      <div class="head"><span>Cuenta de cobro</span><span>N.º 404</span></div>
+      <p class="date">${TODAY_404}</p>
+      <hr>
+      <dl>
+        <dt>Pide</dt><dd>Tú</dd>
+        <dt>Página</dt><dd><code>${esc(PATH)}</code></dd>
+      </dl>
+      <hr>
+      <div class="line"><span>Página solicitada<small>No existe en Arrendi</small></span><b>$0</b></div>
+      <span class="blank" style="width:70%"></span>
+      <span class="blank" style="width:45%"></span>
+      <hr>
+      <div class="total"><span>Total</span><b>$0</b></div>
+      <div class="foot"><span>N.º 404 · ${TODAY_404}</span><span>Página 0 de 0</span></div>
+    </div>
+    <span class="stamp">${icon('ban')}NO EXISTE</span>
+  </div>`;
+}
+function render() {
+  document.getElementById('app').innerHTML = `
+    <div class="page">
+      <header class="top">${brand(28)}</header>
+      <main class="stage enter">
+        ${sheet()}
+        <div class="copy">
+          <p class="eyebrow">Error 404</p>
+          <h1 class="text-title">Esta página no existe</h1>
+          <p class="lead">Como una cuenta anulada: la buscaste, pero no está. Revisa el enlace${signedIn() ? ' o vuelve a tu resumen' : ' o inicia sesión'}.</p>
+          ${signedIn() ? `<p class="reassure">${icon('shield-check')}No es una cuenta de verdad. Tus cuentas siguen intactas.</p>` : ''}
+          ${actions()}
+        </div>
+      </main>
+    </div>
+    ${themeButton()}`;
+}
+render();
+</script>
+</body>
+</html>

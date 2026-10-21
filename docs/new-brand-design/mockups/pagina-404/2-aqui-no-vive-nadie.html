@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Página no encontrada · 2 · Aquí no vive nadie</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../alta-guiada/base.css">
+<link rel="stylesheet" href="nf.css">
+<style>
+/* Phone: the house on top, the words below. From tablet: side by side. */
+.top { padding: 14px 16px; }
+@media (min-width: 768px) { .top { padding: 20px 32px; } }
+.stage { flex: 1; width: 100%; max-width: 1040px; margin: 0 auto; padding: 16px 20px 48px; display: grid; gap: 28px; align-content: center; justify-items: center; text-align: center; }
+@media (min-width: 768px) { .stage { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); justify-items: start; text-align: left; gap: 48px; padding: 24px 32px 64px; } }
+.copy { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+@media (min-width: 768px) { .copy { align-items: flex-start; } }
+.copy h1 { font-weight: 900; font-size: clamp(30px, 6vw, 44px); line-height: 1.05; letter-spacing: -.03em; }
+.copy .actions { margin-top: 14px; width: 100%; }
+@media (min-width: 560px) { .copy .actions { justify-content: center; } }
+@media (min-width: 768px) { .copy .actions { justify-content: flex-start; } }
+
+/* The isotype, empty: the house in the text color, the four windows off. */
+.house { width: min(240px, 62vw); color: var(--foreground); justify-self: center; }
+@media (min-width: 768px) { .house { width: min(340px, 100%); } }
+.house svg { width: 100%; height: auto; }
+.house .shell { fill: currentColor; }
+.house .win { fill: var(--muted); stroke: var(--border-dashed); stroke-width: 2; stroke-dasharray: 5 4; }
+/* On arrival the windows are lit, as in the logo, and go out one by one. */
+.house .win { animation: off .5s ease both; }
+.house .win:nth-of-type(1) { animation-delay: .5s; }
+.house .win:nth-of-type(2) { animation-delay: .8s; }
+.house .win:nth-of-type(3) { animation-delay: 1.1s; }
+.house .win:nth-of-type(4) { animation-delay: 1.4s; }
+@keyframes off { from { fill: var(--brand-green); stroke: transparent; } }
+.plate { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 18px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow); text-align: left; max-width: 100%; }
+.plate small { font-size: 12px; font-weight: 600; color: var(--muted-foreground); }
+.plate code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.figure { display: flex; flex-direction: column; align-items: center; justify-self: center; max-width: 100%; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="../alta-guiada/base.js"></script>
+<script src="nf.js"></script>
+<script>
+function emptyHouse() {
+  const wins = ISOTYPE_WINDOWS.map(([x, y]) => `<rect class="win" x="${x + 1}" y="${y + 1}" width="23" height="23" rx="5"/>`).join('');
+  return `<svg viewBox="-4 -4 173 143" aria-hidden="true"><path class="shell" d="${ISOTYPE_HOUSE}"/>${wins}</svg>`;
+}
+function render() {
+  document.getElementById('app').innerHTML = `
+    <div class="page">
+      <header class="top">${brand(28)}</header>
+      <main class="stage enter">
+        <div class="figure">
+          <div class="house">${emptyHouse()}</div>
+          <p class="plate"><small>Dirección</small><code>${esc(PATH)}</code></p>
+        </div>
+        <div class="copy">
+          <p class="eyebrow">Error 404</p>
+          <h1>Aquí no vive nadie</h1>
+          <p class="lead">Esta dirección no lleva a ninguna página de Arrendi. Revisa el enlace o vuelve a ${signedIn() ? 'tu resumen' : 'entrar'}.</p>
+          ${actions()}
+        </div>
+      </main>
+    </div>
+    ${themeButton()}`;
+}
+render();
+</script>
+</body>
+</html>
