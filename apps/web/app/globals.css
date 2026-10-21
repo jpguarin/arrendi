@@ -195,6 +195,20 @@
   --container-row-wide: 50rem;
   /* The panel next to a list, from tablet up. */
   --container-pane: 25.5rem;
+
+  /* The windows of the empty house (not-found page) go out one by one, as in proposal 2
+     of docs/new-brand-design/mockups/pagina-404. The delay of each one (delay-*) and the
+     duration (animation-duration-*) go inside the shorthand: on their own, the shorthand
+     would reset them. */
+  --animate-window-off: window-off var(--tw-animation-duration, 0.5s) ease
+    var(--tw-animation-delay, 0s) both;
+
+  @keyframes window-off {
+    from {
+      fill: var(--brand-green);
+      stroke: transparent;
+    }
+  }
 }
 
 @layer base {

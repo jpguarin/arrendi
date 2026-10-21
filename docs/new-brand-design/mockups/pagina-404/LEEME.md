@@ -4,6 +4,10 @@ Mocks de la página 404: lo que ve quien abre una dirección que no existe (un e
 
 Usan el mismo sistema que `../alta-guiada/`: cargan su `base.css` y su `base.js` (tokens, íconos, marca y tema), más `nf.css` y `nf.js`, que agregan lo propio de esta ronda: la dirección, el estado de la sesión, la sugerencia y los botones.
 
+## Elegida
+
+La **2 · Aquí no vive nadie** (20 oct 2026), en `apps/web/app/not-found.tsx`. Como el proxy manda a iniciar sesión a quien no tiene sesión, la aplicación solo dibuja el caso con sesión: «Ir al resumen» y «Volver». El logo de arriba no es enlace, para no repetir «Ir al resumen».
+
 ## Cómo verlos
 
 Abre `index.html` en el navegador (doble clic; no necesita servidor). Muestra las cuatro en vivo, en celular (390), tablet (820) y escritorio (1366), con un selector de sesión, uno de dirección y el interruptor de tema.
