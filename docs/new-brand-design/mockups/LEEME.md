@@ -55,3 +55,7 @@ Cinco propuestas para el alta guiada, en `alta-guiada/`. Se abren con `alta-guia
 ## Tus datos en el alta
 
 Cinco propuestas para pedir los datos del propietario (documento, datos de pago, firma y día de envío) antes del primer inmueble, en `tus-datos/`. Se abren con `tus-datos/index.html`; el detalle está en `tus-datos/LEEME.md`.
+
+## Página no encontrada
+
+Cuatro propuestas para la página 404, en `pagina-404/`. Se abren con `pagina-404/index.html`; el detalle está en `pagina-404/LEEME.md`.
