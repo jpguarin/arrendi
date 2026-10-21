@@ -1,0 +1,18 @@
+/* What the 404 mocks add to ../alta-guiada/base.css: the address chip and the actions.
+   Same tokens, so whichever proposal wins maps onto the Tailwind theme. */
+
+.page { min-height: 100dvh; display: flex; flex-direction: column; }
+.lead { color: var(--muted-foreground); font-size: 15px; max-width: 46ch; }
+
+/* The address that was not found: shown as is, never interpreted. */
+.path { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 6px 12px 6px 10px; border-radius: 999px; background: var(--muted); font-size: 13px; }
+.path span { font-weight: 600; color: var(--muted-foreground); white-space: nowrap; }
+.path code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; color: var(--foreground-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Primary first; full width on a phone, side by side from tablet. */
+.actions { display: flex; flex-direction: column; gap: 10px; }
+.actions .btn { width: 100%; }
+@media (min-width: 560px) { .actions { flex-direction: row; } .actions .btn { width: auto; } }
+
+.reassure { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--muted-foreground); }
+.reassure svg { width: 16px; height: 16px; margin-top: 2px; color: var(--positive-ink); }

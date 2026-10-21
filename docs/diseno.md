@@ -109,7 +109,7 @@ Los cuatro rellenos se validaron como paleta (separación para daltonismo y cont
 - **Panel:** en Cuentas e Inmuebles, toda ruta que no sea la lista se dibuja en el panel: el detalle de una cuenta, registrar un pago, el contrato y todos los formularios. Las rutas no cambiaron; lo hace el `layout` de cada sección con `ListDetail`.
 - **Panel redimensionable:** desde tablet, el borde izquierdo del panel se arrastra (mouse, lápiz o dedo) o se mueve con las flechas del teclado (de a 16 px, con Mayús de a 64; Inicio y Fin van a los límites). Va de 360 a 720 px y siempre deja al menos 360 px a la lista. El ancho elegido se guarda en el navegador y vale para Cuentas e Inmuebles; doble clic o Enter en el borde vuelven al ancho por defecto. Lo dibuja `PaneResizer` dentro de `ListDetail`.
 - **Desde el resumen,** abrir una cuenta lleva a Cuentas con esa cuenta en el panel.
-- **Fuera de la estructura:** acceso y la pantalla sin conexión van en una columna centrada de 480 px (`Column`). El alta guiada tiene su propia composición; ver «Alta guiada».
+- **Fuera de la estructura:** acceso y la pantalla sin conexión van en una columna centrada de 480 px (`Column`). La página no encontrada (`app/not-found.tsx`) tampoco lleva riel. Solo la ve quien tiene sesión, porque el proxy manda a quien no la tiene a iniciar sesión; por eso ofrece «Ir al resumen» y «Volver». Las ventanas de la casa se apagan una a una al llegar, como en el mock; con «reducir movimiento» se apagan en el mismo orden, sin desvanecerse. El alta guiada tiene su propia composición; ver «Alta guiada».
 - **Tablas que se adaptan solas:** una tabla acomoda sus filas según su propio ancho (consultas de contenedor), no el de la ventana. Por eso la misma tabla sirve a todo el ancho y apretada junto al panel: con menos de 600 px cada fila se apila en dos líneas.
 
 ## Componentes
@@ -139,6 +139,7 @@ Se construyen sobre shadcn/ui (con Radix), ajustando variantes y medidas a este 
 | `ActionFooter` | propio | Franja inferior fija con la acción principal de un detalle |
 | `FormMessage` | propio | Mensaje con tres tonos: `error`, `success` e `info` |
 | `Loading`, `LoadError` | propio | Carga y error de una pantalla |
+| `EmptyHouse`, `NotFoundAddress`, `BackButton` | propio, `Button` | Página no encontrada: el isotipo con las ventanas apagadas, la placa con la dirección y «Volver» (si no hay página anterior, va al resumen) |
 | `EnvironmentBanner` | propio | Franja de 24 px arriba de todas las pantallas que dice el ambiente: "ENV · develop" en ámbar suave (`warning-tint`, texto `warning-ink`) y "ENV · local" en azul fuerte (`info`, texto blanco en tema claro y `rail` en oscuro, para el contraste AA). En producción no existe |
 
 ### Identificador de ambiente
@@ -216,6 +217,7 @@ Línea de tiempo, de lo más antiguo a lo más reciente: generada, cada correo, 
 | `/leases/[id]` | Contrato | Panel de Inmuebles |
 | `/leases/[id]/edit` | Editar contrato | Panel de Inmuebles |
 | `/settings` | Ajustes | Sección |
+| Cualquier dirección que no existe | Página no encontrada («Aquí no vive nadie», propuesta 2 de `docs/new-brand-design/mockups/pagina-404/`) | Propia: el logo arriba; la casa vacía y el texto, uno debajo del otro en celular y lado a lado desde tablet |
 
 ## Diferencias entre el mock y lo que se construye
 

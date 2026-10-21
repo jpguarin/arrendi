@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Página no encontrada · 3 · Dentro de la app</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../alta-guiada/base.css">
+<link rel="stylesheet" href="nf.css">
+<style>
+/* AppShell (docs/diseno.md, "Estructura"): header and bottom bar on a phone, a 68 px rail
+   from tablet. No section is active: the page is none of them. */
+.shell { min-height: 100dvh; display: flex; flex-direction: column; }
+.m-head { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--border); }
+.rail { display: none; }
+.tabbar { position: sticky; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--rail); padding-bottom: env(safe-area-inset-bottom); }
+.nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 60px; font-size: 11px; font-weight: 600; color: var(--rail-muted); text-decoration: none; }
+.nav-item:hover { color: var(--rail-foreground); }
+.nav-item svg { width: 22px; height: 22px; }
+@media (min-width: 768px) {
+  .shell { flex-direction: row; }
+  .m-head, .tabbar { display: none; }
+  .rail { display: flex; flex-direction: column; align-items: center; gap: 6px; position: sticky; top: 0; height: 100dvh; width: 68px; flex: none; padding: 16px 0; background: var(--rail); }
+  .rail .brand { color: var(--rail-foreground); margin-bottom: 18px; }
+  .rail .nav-item { width: 60px; min-height: 56px; border-radius: 10px; }
+  .rail .nav-item:hover { background: rgba(255, 255, 255, .06); }
+}
+.content { flex: 1; min-width: 0; padding: 24px 16px 32px; display: flex; flex-direction: column; gap: 24px; }
+@media (min-width: 768px) { .content { padding: 40px 24px; } }
+@media (min-width: 1280px) { .content { padding: 48px 32px; } }
+.inner { width: 100%; max-width: 760px; display: flex; flex-direction: column; gap: 24px; }
+.intro { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.intro h1 { font-weight: 700; }
+
+/* The guess: when the first word of the address names a section in Spanish. */
+.suggest { display: flex; flex-direction: column; gap: 14px; padding: 16px; border-radius: 14px; background: var(--info-tint); color: var(--info-ink); }
+@media (min-width: 560px) { .suggest { flex-direction: row; align-items: center; justify-content: space-between; } }
+.suggest p { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
+.suggest p svg { margin-top: 2px; }
+.suggest b { color: var(--foreground); }
+.suggest .btn { flex: none; }
+
+.sections h2 { font-family: var(--font-heading); font-weight: 800; font-size: 15px; margin-bottom: 10px; }
+.tiles { display: grid; gap: 10px; }
+@media (min-width: 560px) { .tiles { grid-template-columns: 1fr 1fr; } }
+.tile { display: flex; align-items: center; gap: 14px; min-height: 72px; padding: 14px 16px; text-decoration: none; transition: background-color .15s ease; }
+.tile:hover { background: var(--muted); }
+.tile .ic { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--accent); color: var(--foreground); flex: none; }
+.tile b { display: block; font-size: 15px; }
+.tile small { display: block; font-size: 13px; color: var(--muted-foreground); }
+.tile > svg { margin-left: auto; color: var(--muted-foreground); }
+
+/* Signed out there is no shell: the same Column as sign-in, which brings you back here. */
+.column { flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 40px 20px; display: flex; flex-direction: column; justify-content: center; gap: 24px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="../alta-guiada/base.js"></script>
+<script src="nf.js"></script>
+<script>
+const navItems = () => SECTIONS.map((s) => `<a class="nav-item" href="${s.href}" data-to="${s.label}">${icon(s.icon)}${s.label}</a>`).join('');
+
+function signedInPage() {
+  const g = guess();
+  return `
+    <div class="shell">
+      <header class="m-head">${brand(26)}</header>
+      <nav class="rail" aria-label="Secciones"><span class="brand">${isotype(34)}</span>${navItems()}</nav>
+      <main class="content enter"><div class="inner">
+        <div class="intro">
+          <h1 class="text-title">No encontramos esa página</h1>
+          <p class="lead">El enlace puede estar mal escrito o ser de una página que ya no existe.</p>
+          ${pathChip()}
+        </div>
+        ${g ? `<div class="suggest">
+          <p>${icon('sparkle')}<span>¿Buscabas <b>${g.label}</b>?</span></p>
+          <a class="btn btn-primary btn-md" href="${g.href}" data-to="${g.label}">Ir a ${g.label}${icon('arrow-right')}</a>
+        </div>` : ''}
+        <section class="sections" aria-labelledby="sec-title">
+          <h2 id="sec-title">O ve a una sección</h2>
+          <div class="tiles">${SECTIONS.map((s) => `
+            <a class="tile card" href="${s.href}" data-to="${s.label}">
+              <span class="ic">${icon(s.icon)}</span>
+              <span><b>${s.label}</b><small>${s.hint}</small></span>
+              ${icon('chevron-right', 18)}
+            </a>`).join('')}
+          </div>
+        </section>
+      </div></main>
+      <nav class="tabbar" aria-label="Secciones">${navItems()}</nav>
+    </div>`;
+}
+
+function signedOutPage() {
+  const g = guess();
+  return `
+    <div class="page"><main class="column enter">
+      ${brand(30)}
+      <div class="intro">
+        <h1 class="text-title">No encontramos esa página</h1>
+        <p class="lead">El enlace puede estar mal escrito o ser de una página que ya no existe.</p>
+        ${pathChip()}
+      </div>
+      ${g ? `<p class="message tone-info">${icon('sparkle')}<span>¿Buscabas ${g.label}? Inicia sesión y te llevamos.</span></p>` : ''}
+      ${actions()}
+    </main></div>`;
+}
+
+function render() {
+  document.getElementById('app').innerHTML = (signedIn() ? signedInPage() : signedOutPage()) + themeButton();
+}
+render();
+</script>
+</body>
+</html>

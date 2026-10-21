@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Página no encontrada · cuatro propuestas</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../alta-guiada/base.css">
+<style>
+.wrap { max-width: 1320px; margin: 0 auto; padding: 0 20px; }
+header.top { padding: 28px 0 8px; }
+.hero-title { font-family: var(--font-heading); font-weight: 900; font-size: clamp(32px, 5.5vw, 56px); line-height: 1.04; letter-spacing: -.03em; margin: 32px 0 14px; max-width: 18ch; }
+.lead { font-size: 18px; color: var(--muted-foreground); max-width: 64ch; }
+.diag { margin-top: 32px; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.diag li { padding: 16px; display: flex; gap: 12px; align-items: flex-start; font-size: 15px; }
+.diag li svg { color: var(--alert-ink); margin-top: 2px; }
+.diag b { display: block; }
+.diag span { color: var(--muted-foreground); font-size: 14px; }
+.sec-title { font-family: var(--font-heading); font-weight: 800; font-size: 22px; letter-spacing: -.02em; margin: 44px 0 4px; }
+.controls { position: sticky; top: 0; z-index: 10; background: var(--background); padding: 12px 0; margin-top: 32px; border-bottom: 1px solid var(--border); }
+.controls .wrap { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.segs { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--muted); overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.segs button { min-height: 40px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--muted-foreground); white-space: nowrap; }
+.segs button[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); }
+.controls .lbl { font-size: 13px; font-weight: 600; color: var(--muted-foreground); }
+.controls .icon-btn { margin-left: auto; border-radius: 50%; }
+.proposal { padding: 52px 0 20px; border-bottom: 1px solid var(--border); }
+.p-head { display: grid; gap: 20px; margin-bottom: 26px; }
+@media (min-width: 900px) { .p-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 48px; align-items: end; } }
+.num { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: var(--primary); color: var(--primary-foreground); font-family: var(--font-heading); font-weight: 900; font-size: 22px; margin-bottom: 14px; }
+.p-head h2 { font-family: var(--font-heading); font-weight: 900; font-size: clamp(26px, 3.6vw, 38px); line-height: 1.08; letter-spacing: -.03em; }
+.idea { margin-top: 10px; font-size: 17px; max-width: 48ch; }
+.facts li { display: grid; grid-template-columns: 120px 1fr; gap: 12px; font-size: 15px; padding: 10px 0; border-top: 1px solid var(--border); }
+.facts b { font-weight: 600; color: var(--muted-foreground); }
+.open { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 999px; background: var(--primary); color: var(--primary-foreground); font-weight: 600; margin-top: 18px; text-decoration: none; }
+.open:hover { opacity: .9; }
+.devices { display: flex; gap: 28px; align-items: flex-end; overflow-x: auto; padding: 8px 4px 28px; scrollbar-width: thin; }
+.device { flex: none; }
+.device figcaption { margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--muted-foreground); }
+.screen { width: calc(var(--w) * var(--s) * 1px); height: calc(var(--h) * var(--s) * 1px); border: 8px solid var(--rail); border-radius: var(--r, 18px); overflow: hidden; background: var(--card); box-sizing: content-box; box-shadow: var(--shadow-lg); }
+.screen iframe { width: calc(var(--w) * 1px); height: calc(var(--h) * 1px); border: 0; transform: scale(var(--s)); transform-origin: 0 0; display: block; }
+.phone { --w: 390; --h: 800; --s: .72; --r: 34px; }
+.tablet { --w: 820; --h: 1180; --s: .44; --r: 24px; }
+.desktop { --w: 1366; --h: 860; --s: .56; --r: 14px; }
+.tbl { overflow-x: auto; border: 1px solid var(--border); border-radius: 16px; background: var(--card); margin-top: 16px; }
+table { width: 100%; min-width: 860px; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 16px; border-top: 1px solid var(--border); }
+thead th { border-top: 0; font-family: var(--font-heading); font-weight: 800; font-size: 16px; }
+tbody th { font-weight: 600; color: var(--muted-foreground); width: 130px; }
+.common { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); margin: 16px 0 80px; }
+.common li { padding: 16px; font-size: 15px; display: flex; gap: 12px; }
+.common li svg { color: var(--positive-ink); margin-top: 2px; }
+.common li b { display: block; }
+.common li span { font-size: 14px; color: var(--muted-foreground); }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <span class="brand" id="mark"></span>
+  <h1 class="hero-title">Página no encontrada: cuatro propuestas</h1>
+  <p class="lead">Lo que ve quien abre una dirección que no existe: un enlace viejo, uno mal copiado o una ruta escrita a mano. Las cuatro usan el sistema de diseño actual y cada marco es la propuesta en vivo. El selector cambia entre quien tiene la sesión abierta y quien no.</p>
+
+  <h2 class="sec-title">Lo que hoy pasa</h2>
+  <ul class="diag" id="diag"></ul>
+</div></header>
+
+<div class="controls"><div class="wrap">
+  <span class="lbl">Sesión</span>
+  <div class="segs" role="group" aria-label="Estado de la sesión" id="screens"></div>
+  <span class="lbl">Dirección</span>
+  <div class="segs" role="group" aria-label="Dirección que no existe" id="paths"></div>
+  <button class="icon-btn" data-act="theme" id="theme-btn"></button>
+</div></div>
+
+<main id="list"></main>
+
+<section class="wrap">
+  <h2 class="sec-title">Lado a lado</h2>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>1 · Columna sobria</th><th>2 · Aquí no vive nadie</th><th>3 · Dentro de la app</th><th>4 · La cuenta N.º 404</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Idea</th><td>La misma columna de «Sin conexión», con un 404 grande en contorno</td><td>El isotipo con las ventanas apagadas: la dirección no lleva a ninguna casa</td><td>La página dentro del riel, con las cuatro secciones a un toque y una sugerencia</td><td>Una cuenta de cobro en papel con el sello «No existe», como una anulada</td></tr>
+      <tr><th scope="row">Con sesión</th><td>Ir al resumen o volver</td><td>Ir al resumen o volver</td><td>Riel o barra inferior, «¿Buscabas Cuentas?» y las secciones</td><td>Ir al resumen o volver</td></tr>
+      <tr><th scope="row">Sin sesión</th><td>Iniciar sesión o crear cuenta</td><td>Iniciar sesión o crear cuenta</td><td>Columna sin riel; la sugerencia dice que te lleva al entrar</td><td>Iniciar sesión o crear cuenta</td></tr>
+      <tr><th scope="row">Celular</th><td>Una columna</td><td>Casa arriba, texto abajo, centrado</td><td>Cabecera y barra inferior; secciones en lista</td><td>Hoja arriba, texto abajo</td></tr>
+      <tr><th scope="row">Tablet y escritorio</th><td>La misma columna, centrada</td><td>Casa y texto lado a lado</td><td>Riel de 68 px; secciones en dos columnas</td><td>Hoja y texto lado a lado</td></tr>
+      <tr><th scope="row">Movimiento</th><td>Ninguno, salvo la entrada</td><td>Las ventanas se apagan una a una</td><td>Ninguno, salvo la entrada</td><td>El sello cae sobre la hoja</td></tr>
+      <tr><th scope="row">Carácter</th><td>Sobria, igual que el resto de errores</td><td>De marca, cálida, con humor de casero</td><td>Útil: no saca de la app</td><td>Con humor del oficio</td></tr>
+      <tr><th scope="row">Riesgo</th><td>Plana: no ayuda más que a volver</td><td>El juego de palabras no le llega a todos</td><td>La web tiene que saber si hay sesión antes de pintar</td><td>Se puede confundir con una cuenta de verdad</td></tr>
+      <tr><th scope="row">Esfuerzo</th><td>Bajo (reutiliza <code>Column</code>)</td><td>Bajo (un SVG y un <code>@keyframes</code>)</td><td>Medio (dos <code>not-found</code>, con y sin <code>AppShell</code>)</td><td>Medio (otra hoja en papel)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 class="sec-title">Lo que es igual en las cuatro</h2>
+  <ul class="common" id="common"></ul>
+</section>
+
+<script src="../alta-guiada/base.js"></script>
+<script>
+const PROPOSALS = [
+  { n: 1, file: '1-columna-sobria.html', name: 'Columna sobria', idea: 'La misma columna de 480 px de «Sin conexión»: el logo, un 404 grande en contorno, la dirección que no existe y dos botones. Abajo, una línea que tranquiliza: tus datos están bien.', facts: [['Componentes', 'Column, Brand, Button'], ['Novedad', 'La dirección se muestra tal cual, para reconocer el error'], ['Brilla en', 'Coherencia con las pantallas de error de hoy'], ['Riesgo', 'No ayuda a encontrar lo que buscabas']] },
+  { n: 2, file: '2-aqui-no-vive-nadie.html', name: 'Aquí no vive nadie', idea: 'El isotipo grande, con las cuatro ventanas encendidas que se apagan una a una. La dirección va en una placa, como la de una casa. «Esta dirección no lleva a ninguna página de Arrendi».', facts: [['Componentes', 'BrandMark grande, Button'], ['Novedad', 'Juega con el logo y con «dirección»: la de la casa y la del enlace'], ['Brilla en', 'Marca; tablet y escritorio'], ['Riesgo', 'El humor no le llega a todos']] },
+  { n: 3, file: '3-dentro-de-la-app.html', name: 'Dentro de la app', idea: 'Con sesión, la página se dibuja dentro del riel (o con la barra inferior) y nada queda activo. Si la dirección dice una sección en español, como /cuentas, sugiere ir ahí. Debajo, las cuatro secciones.', facts: [['Componentes', 'AppShell, Header, FormMessage (info)'], ['Novedad', '«¿Buscabas Cuentas?» a partir de la primera palabra de la dirección'], ['Brilla en', 'Quien escribe la dirección a mano; celular'], ['Riesgo', 'Dos versiones: con y sin el riel']] },
+  { n: 4, file: '4-cuenta-anulada.html', name: 'La cuenta N.º 404', idea: 'Una cuenta de cobro en papel, igual a la vista previa del detalle, con el número 404, la dirección como concepto y un sello «No existe», como una cuenta anulada.', facts: [['Componentes', 'BillDocument (papel), Button'], ['Novedad', 'Habla el idioma de la app: cuentas, anuladas, consecutivo'], ['Brilla en', 'Recordarse; compartir'], ['Riesgo', 'Parecer una cuenta real; por eso dice que no lo es']] },
+];
+const SCREENS = [['in', 'Con sesión'], ['out', 'Sin sesión']];
+const PATHS = [['/cuentas', '/cuentas'], ['/bills/0043-old', 'Otra']];
+const DIAG = [
+  ['Sale la página por defecto de Next.js', 'No hay app/not-found.tsx: se ve «404 | This page could not be found.», en inglés y sin la marca.'],
+  ['No hay salida', 'Ningún botón lleva al resumen ni a iniciar sesión; solo queda la barra del navegador.'],
+  ['La interfaz está en español y las rutas en inglés', 'Quien escribe /cuentas o /inmuebles a mano cae en un 404.'],
+  ['Ignora el tema de Arrendi', 'La página por defecto trae sus propios colores y no sigue el tema elegido en Ajustes.'],
+];
+const COMMON = [
+  ['La dirección, a la vista', 'Muestra la ruta que no existe, tal cual y sin interpretarla, para que se reconozca el error.'],
+  ['Una salida clara', 'Con sesión: «Ir al resumen» y «Volver». Sin sesión: «Iniciar sesión» y «Crear cuenta».'],
+  ['Solo interfaz', 'Ninguna regla de negocio: es app/not-found.tsx, que Next ya trae y no es una ruta de API.'],
+  ['Accesible', 'Un h1 por página, botones de 44 px o más, foco visible y contraste AA en claro y oscuro. El dibujo es decorativo (aria-hidden).'],
+  ['Movimiento opcional', 'Lo que se mueve respeta «reducir movimiento» del sistema.'],
+  ['Título de la pestaña', '«Página no encontrada · Arrendi», con el prefijo del ambiente fuera de producción.'],
+];
+
+let screen = 'in';
+let path = '/cuentas';
+const theme = () => document.documentElement.dataset.theme;
+const src = (p) => `${p.file}?embed=1&theme=${theme()}&path=${encodeURIComponent(path)}#${screen}`;
+const segs = (list, key, current) => list.map(([k, l]) => `<button aria-pressed="${k === current}" data-${key}="${k}">${l}</button>`).join('');
+
+function render() {
+  document.getElementById('mark').innerHTML = `${isotype(28)}Arrendi`;
+  document.getElementById('diag').innerHTML = DIAG.map(([b, s]) => `<li class="card">${icon('alert')}<p><b>${b}</b><span>${s}</span></p></li>`).join('');
+  document.getElementById('common').innerHTML = COMMON.map(([b, s]) => `<li class="card">${icon('check')}<p><b>${b}</b><span>${s}</span></p></li>`).join('');
+  document.getElementById('screens').innerHTML = segs(SCREENS, 'screen', screen);
+  document.getElementById('paths').innerHTML = segs(PATHS, 'path', path);
+  const dark = theme() === 'dark';
+  const btn = document.getElementById('theme-btn');
+  btn.innerHTML = icon(dark ? 'sun' : 'moon');
+  btn.setAttribute('aria-label', dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro');
+  document.getElementById('list').innerHTML = PROPOSALS.map((p) => `
+    <section class="proposal" id="p${p.n}"><div class="wrap">
+      <div class="p-head">
+        <div><span class="num">${p.n}</span><h2>${p.name}</h2><p class="idea">${p.idea}</p>
+          <a class="open" href="${p.file}?theme=${theme()}&path=${encodeURIComponent(path)}#${screen}" target="_blank" rel="noopener">Abrir completa ${icon('arrow-right', 18)}</a></div>
+        <ul class="facts">${p.facts.map(([k, v]) => `<li><b>${k}</b><span>${v}</span></li>`).join('')}</ul>
+      </div>
+      <div class="devices">
+        <figure class="device"><div class="screen phone"><iframe title="${p.name} en celular" loading="lazy" src="${src(p)}"></iframe></div><figcaption>Celular · 390</figcaption></figure>
+        <figure class="device"><div class="screen tablet"><iframe title="${p.name} en tablet" loading="lazy" src="${src(p)}"></iframe></div><figcaption>Tablet · 820</figcaption></figure>
+        <figure class="device"><div class="screen desktop"><iframe title="${p.name} en escritorio" loading="lazy" src="${src(p)}"></iframe></div><figcaption>Escritorio · 1366</figcaption></figure>
+      </div>
+    </div></section>`).join('');
+}
+document.addEventListener('click', (e) => {
+  const s = e.target.closest('[data-screen]');
+  if (s) { screen = s.dataset.screen; render(); }
+  const p = e.target.closest('[data-path]');
+  if (p) { path = p.dataset.path; render(); }
+});
+render();
+</script>
+</body>
+</html>

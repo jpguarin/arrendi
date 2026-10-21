@@ -180,6 +180,7 @@ Objetivo: usarlo con los 3 arrendatarios reales durante al menos un ciclo de cob
 - [x] Ajuste del piloto: inventario de la unidad como segundo archivo opcional del contrato.
 - [x] Ajuste del piloto: el panel de detalle se redimensiona arrastrando su borde.
 - [x] Ajuste del piloto: el alta pide primero los datos del propietario (documento, datos de pago, firma y día de envío) y permite subir el inventario.
+- [x] Ajuste del piloto: página no encontrada con la marca («Aquí no vive nadie», propuesta 2 de `docs/new-brand-design/mockups/pagina-404/`).
 
 **Criterios de aceptación**
 

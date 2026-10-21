@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Página no encontrada · 1 · Columna sobria</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../alta-guiada/base.css">
+<link rel="stylesheet" href="nf.css">
+<style>
+/* The same Column as the offline screen (app/~offline): 480 px, centered, brand on top. */
+.column { flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 40px 20px; display: flex; flex-direction: column; justify-content: center; gap: 24px; }
+.code { font-family: var(--font-heading); font-weight: 900; font-size: 88px; line-height: .9; letter-spacing: -.05em; color: var(--muted); -webkit-text-stroke: 1.5px var(--input); }
+@media (min-width: 768px) { .code { font-size: 112px; } }
+.copy { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.copy h1 { font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="../alta-guiada/base.js"></script>
+<script src="nf.js"></script>
+<script>
+function render() {
+  document.getElementById('app').innerHTML = `
+    <div class="page">
+      <main class="column enter">
+        ${brand(30)}
+        <p class="code" aria-hidden="true">404</p>
+        <div class="copy">
+          <h1 class="text-title">Esta página no existe</h1>
+          <p class="lead">Puede que el enlace esté mal escrito o que la página se haya movido.${signedIn() ? '' : ' Inicia sesión para ver tus cuentas.'}</p>
+          ${pathChip()}
+        </div>
+        ${actions()}
+        ${signedIn() ? `<p class="reassure">${icon('shield-check')}Tus cuentas, pagos e inmuebles siguen intactos.</p>` : ''}
+      </main>
+    </div>
+    ${themeButton()}`;
+}
+render();
+</script>
+</body>
+</html>
