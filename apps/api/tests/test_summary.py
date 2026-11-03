@@ -66,6 +66,10 @@ def house(
             ),
             {"owner": two_owners[0], "property": one.property_id},
         )
+        connection.execute(
+            text("update leases set start_date = '2026-09-01' where id = :id"),
+            {"id": one.lease_id},
+        )
     set_today(date(2026, 9, 1))
     september = monthly(api, ana, one.lease_id)
     set_today(date(2026, 10, 3))

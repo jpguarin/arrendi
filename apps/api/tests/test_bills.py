@@ -897,6 +897,10 @@ def history(
     with admin_engine.begin() as connection:
         one = create_tree(connection, two_owners[0], "uno")
         two = create_tree(connection, two_owners[0], "dos")
+        connection.execute(
+            text("update leases set start_date = '2026-09-01' where id = :id"),
+            {"id": one.lease_id},
+        )
     set_today(date(2026, 9, 1))
     september = monthly(api, ana, one.lease_id).json()
     set_today(BEFORE_DUE)
@@ -1174,3 +1178,178 @@ def test_owner_cannot_read_another_owners_bills(
     # Ana's list has only her own bill, also when she asks for Beto's unit.
     assert [bill["unit_name"] for bill in api.get("/api/bills", headers=ana).json()] == ["Apto ana"]
     assert listed(api, ana, unit_id=str(betos.unit_id)) == []
+
+
+# Which month a monthly bill is of
+
+
+def lease_starts(admin_engine: Engine, lease_id: UUID, start_date: str) -> None:
+    with admin_engine.begin() as connection:
+        connection.execute(
+            text("update leases set start_date = :start where id = :id"),
+            {"start": start_date, "id": lease_id},
+        )
+
+
+def next_period(api: TestClient, headers: dict[str, str], lease_id: UUID) -> str | None:
+    return api.get(f"/api/leases/{lease_id}", headers=headers).json()["next_bill_period"]
+
+
+def test_first_bill_is_of_the_month_the_lease_started(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], admin_engine: Engine
+) -> None:
+    anas, _ = trees
+    lease_starts(admin_engine, anas.lease_id, "2026-10-20")
+    set_today(date(2026, 11, 2))
+
+    first = monthly(api, ana, anas.lease_id)
+
+    assert first.status_code == 201
+    assert first.json()["period"] == "2026-10-01"
+    assert first.json()["due_date"] == "2026-10-05"
+    assert first.json()["issue_date"] == "2026-11-02"
+    assert first.json()["status"] == "overdue"
+
+    second = monthly(api, ana, anas.lease_id).json()
+    assert (second["period"], second["status"]) == ("2026-11-01", "pending")
+
+    third = monthly(api, ana, anas.lease_id)
+    assert third.status_code == 409
+    assert third.json()["code"] == "bill_already_exists"
+
+
+def test_bills_go_month_by_month_up_to_the_current_one(
+    api: TestClient,
+    ana: dict[str, str],
+    two_owners: tuple[UUID, UUID],
+    trees: tuple[Tree, Tree],
+    admin_engine: Engine,
+) -> None:
+    anas, _ = trees
+    lease_starts(admin_engine, anas.lease_id, "2026-08-15")
+    set_today(date(2026, 11, 2))
+
+    periods = [monthly(api, ana, anas.lease_id).json()["period"] for _ in range(4)]
+
+    assert periods == ["2026-08-01", "2026-09-01", "2026-10-01", "2026-11-01"]
+    assert numbers(admin_engine, two_owners[0]) == [1, 2, 3, 4]
+
+
+def test_months_go_across_the_end_of_the_year(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], admin_engine: Engine
+) -> None:
+    anas, _ = trees
+    lease_starts(admin_engine, anas.lease_id, "2026-12-01")
+    set_today(date(2027, 1, 10))
+
+    periods = [monthly(api, ana, anas.lease_id).json()["period"] for _ in range(2)]
+
+    assert periods == ["2026-12-01", "2027-01-01"]
+
+
+def test_lease_that_has_not_started_gets_no_bill(
+    api: TestClient,
+    ana: dict[str, str],
+    two_owners: tuple[UUID, UUID],
+    trees: tuple[Tree, Tree],
+    admin_engine: Engine,
+    storage: FakeStorage,
+) -> None:
+    anas, _ = trees
+    lease_starts(admin_engine, anas.lease_id, "2026-11-01")
+
+    response = monthly(api, ana, anas.lease_id)
+
+    assert response.status_code == 409
+    assert response.json()["code"] == "lease_not_started"
+    assert numbers(admin_engine, two_owners[0]) == []
+    assert next_number(admin_engine, two_owners[0]) == 1
+    assert storage.objects == {}
+
+
+def test_lease_that_starts_later_this_month_gets_this_months_bill(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], admin_engine: Engine
+) -> None:
+    anas, _ = trees
+    lease_starts(admin_engine, anas.lease_id, "2026-10-20")
+
+    assert monthly(api, ana, anas.lease_id).json()["period"] == "2026-10-01"
+
+
+def test_replacing_a_voided_first_bill_keeps_its_month_and_deposit(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], admin_engine: Engine
+) -> None:
+    anas, _ = trees
+    lease_starts(admin_engine, anas.lease_id, "2026-10-01")
+    with_deposit(api, ana, anas.lease_id)
+    set_today(date(2026, 11, 2))
+    first = monthly(api, ana, anas.lease_id).json()
+    api.post(f"/api/bills/{first['id']}/void", headers=ana)
+
+    assert next_period(api, ana, anas.lease_id) == "2026-10-01"
+    replacement = monthly(api, ana, anas.lease_id).json()
+
+    assert replacement["period"] == "2026-10-01"
+    assert replacement["items"] == [RENT_ITEM, DEPOSIT_ITEM]
+    # Only the first bill charges the deposit, also when it is of an earlier month.
+    november = monthly(api, ana, anas.lease_id).json()
+    assert november["period"] == "2026-11-01"
+    assert november["items"] == [RENT_ITEM]
+
+
+def test_voiding_the_latest_bill_makes_its_month_next_again(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], admin_engine: Engine
+) -> None:
+    anas, _ = trees
+    lease_starts(admin_engine, anas.lease_id, "2026-10-01")
+    set_today(date(2026, 11, 2))
+    monthly(api, ana, anas.lease_id)
+    november = monthly(api, ana, anas.lease_id).json()
+
+    api.post(f"/api/bills/{november['id']}/void", headers=ana)
+
+    assert next_period(api, ana, anas.lease_id) == "2026-11-01"
+
+
+def test_lease_says_which_month_its_next_bill_is_of(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree], admin_engine: Engine
+) -> None:
+    anas, _ = trees
+    set_today(date(2026, 11, 2))
+
+    lease_starts(admin_engine, anas.lease_id, "2026-12-01")
+    assert next_period(api, ana, anas.lease_id) is None
+
+    lease_starts(admin_engine, anas.lease_id, "2026-10-20")
+    assert next_period(api, ana, anas.lease_id) == "2026-10-01"
+    monthly(api, ana, anas.lease_id)
+    assert next_period(api, ana, anas.lease_id) == "2026-11-01"
+    monthly(api, ana, anas.lease_id)
+    assert next_period(api, ana, anas.lease_id) is None
+
+
+def test_ended_lease_has_no_next_bill(
+    api: TestClient, ana: dict[str, str], trees: tuple[Tree, Tree]
+) -> None:
+    anas, _ = trees
+
+    ended = api.post(f"/api/leases/{anas.lease_id}/end", headers=ana).json()
+
+    assert ended["next_bill_period"] is None
+
+
+def test_owner_cannot_issue_or_see_the_overdue_month_of_another_owners_lease(
+    api: TestClient,
+    ana: dict[str, str],
+    beto: dict[str, str],
+    two_owners: tuple[UUID, UUID],
+    trees: tuple[Tree, Tree],
+    admin_engine: Engine,
+) -> None:
+    anas, _ = trees
+    lease_starts(admin_engine, anas.lease_id, "2026-08-01")
+
+    assert monthly(api, beto, anas.lease_id).status_code == 404
+    assert api.get(f"/api/leases/{anas.lease_id}", headers=beto).status_code == 404
+    assert numbers(admin_engine, two_owners[0]) == []
+    assert numbers(admin_engine, two_owners[1]) == []

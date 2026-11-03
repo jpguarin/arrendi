@@ -68,6 +68,18 @@ STATUS_FILTERS: dict[BillStatusFilter, tuple[str, ...]] = {
 }
 
 
+def next_month(month: date) -> date:
+    """The first day of the month after this one."""
+    return date(month.year + month.month // 12, month.month % 12 + 1, 1)
+
+
+def _bill_already_exists() -> AppError:
+    return conflict(
+        "Este contrato ya tiene la cuenta de este mes. Anúlala antes de generar otra.",
+        "bill_already_exists",
+    )
+
+
 def _active_lease(session: Session, lease_id: UUID) -> Lease:
     lease = session.get(Lease, lease_id)
     if lease is None:
@@ -343,10 +355,7 @@ def _issue(
     except IntegrityError as error:
         # The unique index decides, so two requests at once cannot both win.
         if getattr(error.orig.diag, "constraint_name", None) == ONE_MONTHLY_PER_PERIOD:
-            raise conflict(
-                "Este contrato ya tiene la cuenta de este mes. Anúlala antes de generar otra.",
-                "bill_already_exists",
-            ) from error
+            raise _bill_already_exists() from error
         raise
     session.add_all(
         BillItem(
@@ -376,10 +385,36 @@ def _issue(
     return bill
 
 
+def next_bill_period(session: Session, lease: Lease, today: date) -> date | None:
+    """The month the next monthly bill of a lease is of. None if there is none to issue.
+
+    The first bill is of the month the lease started, and the rest follow one month at a
+    time up to the current one. A voided bill does not count, so its month comes up again
+    if no later bill was issued.
+    """
+    if lease.status != "active":
+        return None
+    current = today.replace(day=1)
+    latest = session.scalar(
+        select(func.max(Bill.period)).where(
+            Bill.lease_id == lease.id, Bill.origin == "monthly", Bill.status != "voided"
+        )
+    )
+    period = next_month(latest) if latest else lease.start_date.replace(day=1)
+    return period if period <= current else None
+
+
 def issue_monthly_bill(session: Session, storage: Storage, today: date, lease_id: UUID) -> Bill:
-    """The bill of the current month for a lease. The daily task issues the same one."""
+    """The next monthly bill of a lease. The daily task issues the same one."""
     lease = _active_lease(session, lease_id)
-    period = today.replace(day=1)
+    period = next_bill_period(session, lease, today)
+    if period is None:
+        if lease.start_date.replace(day=1) > today:
+            raise conflict(
+                "Este contrato aún no empieza. Podrás generar su cuenta en el mes de inicio.",
+                "lease_not_started",
+            )
+        raise _bill_already_exists()
     return _issue(
         session,
         storage,

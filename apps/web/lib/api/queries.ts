@@ -239,7 +239,7 @@ export function useRefreshLease(leaseId: string) {
   );
 }
 
-/** Issues the bill of the current month for a lease. */
+/** Issues the next monthly bill of a lease: the month is the API's to decide. */
 export function useGenerateMonthlyBill() {
   const client = useQueryClient();
   return $api.useMutation("post", "/api/leases/{lease_id}/bills", {

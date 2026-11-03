@@ -572,3 +572,83 @@ def test_cron_route_runs_the_task_and_reports(
     }
     assert second.json()["bills_generated"] == 0
     assert bills_of(admin_engine, two_owners[0]) == [(1, OCT, "pending")]
+
+
+# Months the lease has not been billed for yet
+
+
+SEP = date(2026, 9, 1)
+NOV = date(2026, 11, 1)
+
+
+def lease_starts(admin_engine: Engine, lease_id: UUID, start_date: str) -> None:
+    execute(
+        admin_engine,
+        "update leases set start_date = :start where id = :id",
+        start=start_date,
+        id=lease_id,
+    )
+
+
+def test_bill_of_an_earlier_month_waits_for_the_owner(
+    run, admin_engine: Engine, two_owners: tuple[UUID, UUID], trees, mailer
+) -> None:
+    ana, _ = two_owners
+    lease_starts(admin_engine, trees[0].lease_id, "2026-10-20")
+
+    run(date(2026, 11, 2))
+
+    assert bills_of(admin_engine, ana) == [(1, OCT, "overdue")]
+    assert notifications_of(admin_engine, ana) == []
+    assert "ana@example.com" not in [message.to for message in mailer.sent]
+
+
+def test_task_catches_up_one_month_a_day_and_sends_only_the_current_one(
+    run, admin_engine: Engine, two_owners: tuple[UUID, UUID], trees, mailer
+) -> None:
+    ana, _ = two_owners
+    lease_starts(admin_engine, trees[0].lease_id, "2026-09-10")
+
+    for day in (2, 3, 4, 5):
+        run(date(2026, 11, day))
+
+    assert [(period, status) for _, period, status in bills_of(admin_engine, ana)] == [
+        (SEP, "overdue"),
+        (OCT, "overdue"),
+        (NOV, "pending"),
+    ]
+    assert rows(
+        admin_engine,
+        "select b.period from notifications n join bills b on b.id = n.bill_id "
+        "where n.owner_id = :id and n.type = 'bill'",
+        id=ana,
+    ) == [(NOV,)]
+
+
+def test_running_twice_the_same_day_does_not_issue_the_next_month(
+    run, admin_engine: Engine, two_owners: tuple[UUID, UUID], trees, mailer
+) -> None:
+    ana, _ = two_owners
+    lease_starts(admin_engine, trees[0].lease_id, "2026-10-01")
+
+    run(date(2026, 11, 2))
+    second = run(date(2026, 11, 2))
+
+    assert second.bills_generated == 0
+    assert bills_of(admin_engine, ana) == [(1, OCT, "overdue")]
+
+
+def test_lease_that_has_not_started_gets_nothing_from_the_task(
+    run, admin_engine: Engine, two_owners: tuple[UUID, UUID], trees
+) -> None:
+    ana, _ = two_owners
+    lease_starts(admin_engine, trees[0].lease_id, "2026-11-01")
+
+    result = run(date(2026, 10, 1))
+
+    assert result.errors == 0
+    assert bills_of(admin_engine, ana) == []
+
+    run(date(2026, 11, 1))
+
+    assert bills_of(admin_engine, ana) == [(1, NOV, "pending")]

@@ -201,7 +201,7 @@ def create_tree(connection: Connection, owner_id: UUID, suffix: str) -> Tree:
     connection.execute(
         text(
             "insert into leases (id, owner_id, unit_id, tenant_id, rent, due_day, start_date) "
-            "values (:lease_id, :owner_id, :unit_id, :tenant_id, 950000, 5, '2026-01-01')"
+            "values (:lease_id, :owner_id, :unit_id, :tenant_id, 950000, 5, '2026-10-01')"
         ),
         params,
     )

@@ -167,6 +167,8 @@ class LeaseResponse(BaseModel):
     deposit: int | None
     # Only the first monthly bill charges it; after that this changes nothing.
     charge_deposit: bool
+    # The month the next monthly bill is of. Null if there is none to issue for now.
+    next_bill_period: date | None
     # What every monthly bill charges after the rent, in order.
     items: list[BillItemResponse]
     auto_send: bool
