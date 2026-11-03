@@ -17,7 +17,7 @@ from app.schemas.lease import (
     TenantCreate,
     TenantResponse,
 )
-from app.services.bills import lease_items, recent_bills
+from app.services.bills import lease_items, next_bill_period, recent_bills
 
 # Every query here runs inside the owner's transaction: row security already limits it to
 # their rows, so another owner's id simply finds nothing.
@@ -61,7 +61,7 @@ def _file_name(path: str | None) -> str | None:
     return path.rsplit("/", 1)[-1] if path else None
 
 
-def lease_response(session: Session, lease: Lease) -> LeaseResponse:
+def lease_response(session: Session, lease: Lease, today: date) -> LeaseResponse:
     unit = session.get_one(Unit, lease.unit_id)
     parent = session.get_one(Property, unit.property_id)
     tenant = session.get_one(Tenant, lease.tenant_id)
@@ -74,6 +74,7 @@ def lease_response(session: Session, lease: Lease) -> LeaseResponse:
         end_date=lease.end_date,
         deposit=lease.deposit,
         charge_deposit=lease.charge_deposit,
+        next_bill_period=next_bill_period(session, lease, today),
         late_fee_enabled=lease.late_fee_enabled,
         late_fee_percent=lease.late_fee_percent,
         late_fee_grace_days=lease.late_fee_grace_days,
@@ -156,16 +157,16 @@ def create_lease_for_unit(
     return lease
 
 
-def create_lease(session: Session, data: LeaseCreate) -> LeaseResponse:
+def create_lease(session: Session, today: date, data: LeaseCreate) -> LeaseResponse:
     # First, so another owner's unit is a 404 whether or not it is rented.
     unit = session.get(Unit, data.unit_id)
     if unit is None:
         raise not_found()
     lease = create_lease_for_unit(session, unit, data, data.tenant, data.tenant_id)
-    return lease_response(session, lease)
+    return lease_response(session, lease, today)
 
 
-def update_lease(session: Session, lease_id: UUID, data: LeaseUpdate) -> LeaseResponse:
+def update_lease(session: Session, today: date, lease_id: UUID, data: LeaseUpdate) -> LeaseResponse:
     lease = get_lease(session, lease_id)
     changes = data.changes()
     tenant_changes = changes.pop("tenant", None)
@@ -190,13 +191,13 @@ def update_lease(session: Session, lease_id: UUID, data: LeaseUpdate) -> LeaseRe
     # Only the bills still to come: the ones already issued keep their own items.
     if items is not None:
         _replace_items(session, lease, items)
-    return lease_response(session, lease)
+    return lease_response(session, lease, today)
 
 
-def end_lease(session: Session, lease_id: UUID) -> LeaseResponse:
+def end_lease(session: Session, today: date, lease_id: UUID) -> LeaseResponse:
     lease = get_lease(session, lease_id)
     if lease.status == "ended":
         raise AppError(400, "Este contrato ya está terminado.", "lease_already_ended")
     lease.status = "ended"
     session.flush()
-    return lease_response(session, lease)
+    return lease_response(session, lease, today)

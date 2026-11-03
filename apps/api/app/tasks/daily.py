@@ -106,10 +106,20 @@ class _Run:
                     Lease.status == "active",
                     # "Already arrived", so a missed day is made up for on the next one.
                     Owner.send_day <= self.today.day,
+                    # A lease that starts in a later month has nothing to charge yet.
+                    Lease.start_date < bills.next_month(period),
                     ~exists().where(
                         Bill.lease_id == Lease.id,
                         Bill.origin == "monthly",
                         Bill.period == period,
+                        Bill.status != "voided",
+                    ),
+                    # A lease behind on its months gets one bill a day, so running twice
+                    # the same day does not issue the following month.
+                    ~exists().where(
+                        Bill.lease_id == Lease.id,
+                        Bill.origin == "monthly",
+                        Bill.issue_date == self.today,
                         Bill.status != "voided",
                     ),
                 )
@@ -128,13 +138,18 @@ class _Run:
                 bill = bills.issue_monthly_bill(session, self.storage, self.today, lease_id)
                 # A bill that charges a late fee waits for the owner: a payment that came
                 # in time but is not entered yet would make the fee a mistake, and a bill
-                # already sent is hard to take back.
-                if auto_send and not bills.charges_late_fee(session, bill.id):
+                # already sent is hard to take back. So does the bill of an earlier month:
+                # the tenant may have paid it already, outside the app.
+                if (
+                    auto_send
+                    and bill.period == self.today.replace(day=1)
+                    and not bills.charges_late_fee(session, bill.id)
+                ):
                     notification = notifications.reserve(session, bill, "bill")
                     notification_id = notification.id if notification else None
         except AppError as error:
-            if error.code in ("bill_already_exists", "lease_not_active"):
-                # Someone got there first, or the lease ended meanwhile. Nothing to do.
+            if error.code in ("bill_already_exists", "lease_not_active", "lease_not_started"):
+                # Someone got there first, or the lease changed meanwhile. Nothing to do.
                 return
             logger.exception("could not issue the bill of lease %s", lease_id)
             self.result.errors += 1

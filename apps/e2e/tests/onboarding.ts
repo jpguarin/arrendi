@@ -8,6 +8,16 @@ type House = {
   rent: string;
 };
 
+/** The first day of the current month in Colombia, `months` before it if asked. */
+export function firstOfMonth(monthsAgo = 0): string {
+  const [year, month] = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" })
+    .format(new Date())
+    .split("-")
+    .map(Number);
+  const first = new Date(Date.UTC(year, month - 1 - monthsAgo, 1));
+  return first.toISOString().slice(0, 10);
+}
+
 /**
  * "Tus datos", the first thing a new owner meets: a cédula, a Bancolombia account picked
  * with taps, a signature uploaded as an image and the suggested send day.
@@ -44,9 +54,14 @@ export async function fillProfile(page: Page) {
 /**
  * The whole onboarding, in the order the owner meets it: their data (unless the test
  * already filled it in), then the sheet with the property, its one unit and the first
- * lease, due on the 28th and started on 1 January 2026. Ends on the home screen.
+ * lease, due on the 28th and started this month, unless `startDate` says otherwise. Ends on
+ * the home screen.
  */
-export async function setUpHouse(page: Page, house: House, { profileDone = false } = {}) {
+export async function setUpHouse(
+  page: Page,
+  house: House,
+  { profileDone = false, startDate = firstOfMonth() } = {},
+) {
   if (!profileDone) await fillProfile(page);
   await expect(page.getByRole("heading", { name: "Configura tu primer inmueble" })).toBeVisible();
   await page.getByLabel("Nombre del inmueble").fill(house.property);
@@ -61,7 +76,7 @@ export async function setUpHouse(page: Page, house: House, { profileDone = false
   await page.getByLabel("Canon mensual").fill(house.rent);
   await page.getByLabel("Día de pago").click();
   await page.getByRole("option", { name: "28 del mes" }).click();
-  await page.getByLabel("Inicio", { exact: true }).fill("2026-01-01");
+  await page.getByLabel("Inicio", { exact: true }).fill(startDate);
   await page.getByRole("button", { name: "Crear inmueble" }).click();
 
   await expect(

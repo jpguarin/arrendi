@@ -207,7 +207,7 @@ function DocumentSection({
   );
 }
 
-/** The latest bills of the lease, and the way to issue this month's by hand. */
+/** The latest bills of the lease, and the way to issue the next one by hand. */
 function BillsSection({
   lease,
   generating,
@@ -217,10 +217,7 @@ function BillsSection({
   generating: boolean;
   onGenerate: () => void;
 }) {
-  const period = `${todayInBogota().slice(0, 7)}-01`;
-  const hasThisMonth = lease.recent_bills.some(
-    (bill) => bill.period === period && bill.status !== "voided",
-  );
+  const period = lease.next_bill_period;
 
   return (
     <section aria-labelledby="lease-bills" className="flex flex-col gap-2">
@@ -265,7 +262,7 @@ function BillsSection({
       )}
       {lease.status === "active" && (
         <div className="flex flex-col gap-2 pt-1">
-          {!hasThisMonth && (
+          {period && (
             <Button variant="dashed" size="md" disabled={generating} onClick={onGenerate}>
               <Plus aria-hidden />
               {generating ? "Generando…" : `Generar cuenta de ${formatMonth(period).toLowerCase()}`}
