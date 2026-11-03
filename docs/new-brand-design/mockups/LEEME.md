@@ -59,3 +59,7 @@ Cinco propuestas para pedir los datos del propietario (documento, datos de pago,
 ## Página no encontrada
 
 Cuatro propuestas para la página 404, en `pagina-404/`. Se abren con `pagina-404/index.html`; el detalle está en `pagina-404/LEEME.md`.
+
+## Resumen: meses y total
+
+Tres propuestas para el selector de mes y el total acumulado del inicio, en `resumen-meses/`. Se abren con `resumen-meses/index.html`; el detalle está en `resumen-meses/LEEME.md`.
