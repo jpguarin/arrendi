@@ -6,7 +6,7 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 
 ### Fechas de una cuenta mensual
 
-- **Periodo:** el mes que se cobra, guardado como el primer día de ese mes (`2026-10-01`).
+- **Periodo:** el mes que se cobra, guardado como el primer día de ese mes (`2026-10-01`). La primera cuenta mensual de un contrato es del mes de su fecha de inicio, aunque se registre después. Las siguientes van en orden, un mes por cuenta, hasta el mes en curso. Un contrato que empieza en un mes futuro no genera cuentas hasta ese mes.
 - **Emisión:** el día en que se genera.
 - **Vencimiento:** el `due_day` del contrato dentro del mes del periodo. El día de pago va de 1 a 28, así que siempre existe.
 - **Total:** la suma de sus conceptos, cada uno con su valor. Un cambio posterior del canon o de los conceptos del contrato no altera cuentas ya emitidas.
@@ -52,7 +52,7 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 - **Anulación:** solo si la cuenta no tiene pagos. La cuenta anulada conserva su consecutivo y su PDF.
 - **Consecutivo:** uno por propietario, creciente y sin saltos. Se asigna en la misma transacción que crea la cuenta, bloqueando la fila del propietario (`select ... for update`).
 - **Una por periodo:** no puede haber dos cuentas mensuales no anuladas del mismo contrato y periodo. Si se anula la del mes, se puede generar otra.
-- **Mensual a mano:** además de la tarea diaria, el propietario puede generar la cuenta del mes en curso de un contrato activo. Es la misma cuenta, con las mismas reglas.
+- **Mensual a mano:** además de la tarea diaria, el propietario puede generar la siguiente cuenta pendiente de un contrato activo: la del mes más antiguo sin cobrar. Es la misma cuenta, con las mismas reglas. Anular la cuenta más reciente deja su mes disponible otra vez; una anterior no se regenera si ya hay otra posterior.
 - **Nace vencida:** si al emitir la cuenta su vencimiento es anterior a hoy (en `America/Bogota`), nace `overdue` en lugar de `pending`. Es lo mismo que haría la tarea diaria a la mañana siguiente.
 - **Cuenta manual:** el propietario puede crear una cuenta extra sobre un contrato activo, con descripción, valor y vencimiento propios. No tiene periodo.
 - **PDF:** se genera al emitir y se guarda, dentro de la misma transacción: si no se puede guardar, la cuenta no se crea. Reenviar o descargar usa ese mismo archivo. Al anular, se reemplaza por una versión marcada "ANULADA" después de confirmar la transacción.
@@ -80,13 +80,13 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 - Una unidad está **en mora** cuando su contrato activo tiene al menos una cuenta `overdue`. Si no, está en **pago parcial** cuando tiene alguna `partial`. Si no, está al día.
 - El correo del arrendatario es obligatorio.
 - **Decisión provisional:** un contrato que pasa su fecha de fin sigue activo hasta que el propietario lo termine. La aplicación lo avisa en la pantalla del contrato.
-- **Decisión provisional:** no hay prorrateo. Un contrato que empieza a mitad de mes genera su primera cuenta completa en el siguiente día de envío.
+- **Decisión provisional:** no hay prorrateo. Un contrato que empieza a mitad de mes genera su primera cuenta completa, la de ese mes.
 
 ## Correos
 
 | Correo | Cuándo sale | Contenido | Adjunto |
 | --- | --- | --- | --- |
-| `bill` | Cuando la tarea diaria la genera, si el contrato tiene envío automático; o cuando el propietario la envía | Periodo, valor, vencimiento y datos de pago | PDF de la cuenta |
+| `bill` | Cuando la tarea diaria la genera, si es del mes en curso y el contrato tiene envío automático; o cuando el propietario la envía | Periodo, valor, vencimiento y datos de pago | PDF de la cuenta |
 | `reminder_1` | Al día siguiente del vencimiento, si hay saldo | Saldo pendiente y datos de pago | PDF de la cuenta |
 | `reminder_2` | A los 7 días del vencimiento, si hay saldo | Saldo pendiente y días de atraso | PDF de la cuenta |
 | `receipt` | Al registrar un pago, si el propietario lo marca | Valor recibido, fecha, medio y saldo restante | Ninguno |
@@ -110,7 +110,7 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 
 Corre una vez al día, en la mañana de Colombia. "Hoy" es la fecha en `America/Bogota`.
 
-1. **Generar cuentas.** Para cada propietario, si su día de envío ya llegó en el mes en curso, se genera la cuenta del periodo actual de cada contrato activo que aún no la tenga. Si el contrato tiene envío automático, se envía; si no, queda sin enviar a la espera del propietario.
+1. **Generar cuentas.** Para cada propietario, si su día de envío ya llegó en el mes en curso, se genera la siguiente cuenta pendiente de cada contrato activo que aún no tenga la del periodo actual, y como mucho una por contrato al día. Si es del mes en curso y el contrato tiene envío automático, se envía. Si no, queda sin enviar a la espera del propietario: una cuenta de un mes anterior nunca sale sola, porque el arrendatario puede haberla pagado ya.
 2. **Marcar vencidas.** Las cuentas `pending` o `partial` con vencimiento anterior a hoy pasan a `overdue`.
 3. **Enviar recordatorios.** `reminder_1` a las cuentas vencidas cuyo vencimiento fue hace 1 día o más y no lo tienen; `reminder_2` a las que vencieron hace 7 días o más y no lo tienen. Solo si el propietario tiene activo ese recordatorio y la cuenta ya se envió. Como mucho un recordatorio por cuenta en cada ejecución: si una cuenta merece los dos, `reminder_2` sale en la siguiente.
 

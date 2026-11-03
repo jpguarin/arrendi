@@ -1,6 +1,7 @@
 import re
 import unicodedata
 from dataclasses import dataclass
+from datetime import date
 from uuid import UUID, uuid4
 
 from fastapi import BackgroundTasks
@@ -163,6 +164,7 @@ def confirm_document(
     session: Session,
     storage: Storage,
     background: BackgroundTasks,
+    today: date,
     file: LeaseFile,
     lease_id: UUID,
     data: DocumentConfirm,
@@ -173,7 +175,7 @@ def confirm_document(
         raise not_found()
     previous = getattr(lease, file.path_column)
     if data.path == previous:
-        return lease_response(session, lease)
+        return lease_response(session, lease, today)
     check_upload(storage, data.path)
 
     setattr(lease, file.path_column, data.path)
@@ -184,7 +186,7 @@ def confirm_document(
         # After the response, which is after the commit: if saving fails, the lease still
         # points at the previous file and it must still be there.
         background.add_task(delete_quietly, storage, previous)
-    return lease_response(session, lease)
+    return lease_response(session, lease, today)
 
 
 def get_document_url(

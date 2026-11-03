@@ -676,3 +676,19 @@ def test_waiving_needs_a_session(api: TestClient, action: str) -> None:
     bill_id = "00000000-0000-0000-0000-000000000000"
 
     assert api.post(f"/api/bills/{bill_id}/late-fee/{action}").status_code == 401
+
+
+# A bill of an earlier month
+
+
+def test_bill_of_an_earlier_month_sets_no_fee_and_the_next_does_not_charge_one(
+    api: TestClient, ana: dict[str, str], lease: UUID
+) -> None:
+    october = monthly(api, ana, lease, NOVEMBER).json()
+    november = monthly(api, ana, lease).json()
+
+    assert october["period"] == "2026-10-01"
+    assert october["late_fee"] is None
+    assert november["period"] == "2026-11-01"
+    assert november["charges_late_fee"] is False
+    assert len(november["items"]) == 1

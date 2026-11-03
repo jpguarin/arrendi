@@ -79,6 +79,7 @@ def test_create_a_lease_with_a_new_tenant(
         "auto_send": True,
         "cc_emails": [],
         "charge_deposit": True,
+        "next_bill_period": "2026-01-01",
         "items": [],
         "late_fee_enabled": False,
         "late_fee_percent": None,

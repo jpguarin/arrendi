@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.dependencies import CurrentUser, OwnerSession
+from app.dependencies import CurrentUser, OwnerSession, Today
 from app.errors import ErrorResponse
 from app.schemas.onboarding import OnboardingRequest, OnboardingResponse
 from app.services.onboarding import complete_onboarding
@@ -14,6 +14,6 @@ router = APIRouter()
     responses={401: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
 )
 def onboard(
-    data: OnboardingRequest, user: CurrentUser, session: OwnerSession
+    data: OnboardingRequest, user: CurrentUser, session: OwnerSession, today: Today
 ) -> OnboardingResponse:
-    return complete_onboarding(session, user, data)
+    return complete_onboarding(session, user, today, data)

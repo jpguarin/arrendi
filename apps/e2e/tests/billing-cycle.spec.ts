@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { fillProfile } from "./onboarding";
+import { fillProfile, firstOfMonth } from "./onboarding";
 
 // The whole cycle, as the owner lives it: sign in, set up the house, issue the bill of
 // the month, take a partial payment and then the rest.
@@ -63,7 +63,7 @@ test("onboarding, a bill, a partial payment and the rest", async ({ page }) => {
     await page.getByLabel("Canon mensual").fill("1000000");
     await page.getByLabel("Día de pago").click();
     await page.getByRole("option", { name: "28 del mes" }).click();
-    await page.getByLabel("Inicio", { exact: true }).fill("2026-01-01");
+    await page.getByLabel("Inicio", { exact: true }).fill(firstOfMonth());
     await page.getByRole("button", { name: "Crear inmueble" }).click();
 
     await expect(page.getByRole("heading", { name: "Casa Prueba ya está en Arrendi" })).toBeVisible();

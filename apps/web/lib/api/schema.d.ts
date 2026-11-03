@@ -978,6 +978,8 @@ export interface components {
             deposit: number | null;
             /** Charge Deposit */
             charge_deposit: boolean;
+            /** Next Bill Period */
+            next_bill_period: string | null;
             /** Items */
             items: components["schemas"]["BillItemResponse"][];
             /** Auto Send */

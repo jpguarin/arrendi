@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -11,7 +13,7 @@ from app.services.properties import has_properties, property_response
 
 
 def complete_onboarding(
-    session: Session, user: AuthUser, data: OnboardingRequest
+    session: Session, user: AuthUser, today: date, data: OnboardingRequest
 ) -> OnboardingResponse:
     """Creates the first property, its units and, if sent, the first lease.
 
@@ -64,5 +66,5 @@ def complete_onboarding(
 
     return OnboardingResponse(
         property=property_response(session, new_property),
-        lease=lease_response(session, lease) if lease else None,
+        lease=lease_response(session, lease, today) if lease else None,
     )
