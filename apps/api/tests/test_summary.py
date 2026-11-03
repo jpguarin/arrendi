@@ -216,6 +216,7 @@ def test_empty_summary_and_month_format(api: TestClient, ana: dict[str, str]) ->
         "receivable": [],
         "paid": [],
         "bounced": [],
+        "totals": {"billed": 0, "collected": 0, "pending": 0, "since": None},
     }
     for month in ("2026-13", "octubre", "2026-1", "2026-10-01"):
         assert api.get("/api/summary", headers=ana, params={"month": month}).status_code == 422
@@ -253,3 +254,62 @@ def test_summary_is_per_owner(
 
     assert (summary["expected"], summary["units_total"], summary["receivable"]) == (0, 0, [])
     assert api.get("/api/summary").status_code == 401
+
+
+def test_totals_add_up_every_bill_whatever_the_month(
+    api: TestClient, ana: dict[str, str], house: dict[str, dict]
+) -> None:
+    # September $950.000 unpaid; October three bills of $950.000 with $1.350.000 paid.
+    expected = {"billed": 3_800_000, "collected": 1_350_000, "pending": 2_450_000}
+
+    for params in ({}, {"month": "2026-09"}, {"month": "2026-01"}, {"month": "2027-03"}):
+        totals = api.get("/api/summary", headers=ana, params=params).json()["totals"]
+        assert totals == {**expected, "since": "2026-09-01"}
+
+
+def test_totals_leave_out_voided_bills(
+    api: TestClient, ana: dict[str, str], house: dict[str, dict]
+) -> None:
+    api.post(f"/api/bills/{house['one']['id']}/void", headers=ana)
+
+    totals = api.get("/api/summary", headers=ana).json()["totals"]
+
+    assert (totals["billed"], totals["collected"], totals["pending"]) == (
+        2_850_000,
+        1_350_000,
+        1_500_000,
+    )
+
+
+def test_totals_since_is_the_month_of_the_oldest_bill(
+    api: TestClient, ana: dict[str, str], house: dict[str, dict]
+) -> None:
+    api.post(f"/api/bills/{house['september']['id']}/void", headers=ana)
+
+    assert api.get("/api/summary", headers=ana).json()["totals"]["since"] == "2026-10-01"
+
+
+def test_totals_are_per_owner(
+    api: TestClient, ana: dict[str, str], beto: dict[str, str], house: dict[str, dict]
+) -> None:
+    totals = api.get("/api/summary", headers=beto).json()["totals"]
+
+    assert totals == {"billed": 0, "collected": 0, "pending": 0, "since": None}
+
+
+def test_a_past_month_has_its_own_figures_and_paid_bills(
+    api: TestClient, ana: dict[str, str], house: dict[str, dict]
+) -> None:
+    pay(api, ana, house["september"], 950_000, "2026-10-10")
+
+    september = api.get("/api/summary", headers=ana, params={"month": "2026-09"}).json()
+    empty = api.get("/api/summary", headers=ana, params={"month": "2026-08"}).json()
+
+    assert september["month"] == "2026-09-01"
+    assert (september["expected"], september["collected"], september["pending"]) == (
+        950_000,
+        950_000,
+        0,
+    )
+    assert [b["number"] for b in september["paid"]] == [1]
+    assert (empty["expected"], empty["paid"]) == (0, [])

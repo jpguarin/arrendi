@@ -96,7 +96,7 @@ Enviar y recordar responden con la cuenta y la notificación recién creada en e
 
 | Ruta | Qué hace |
 | --- | --- |
-| `GET /api/summary?month=AAAA-MM` | Del mes (`expected`, `collected`, `pending`); unidades en mora (`units_overdue` de `units_total`); cuentas por cobrar de cualquier mes, con lo vencido primero (`receivable`), y cuánto viene de meses anteriores (`previous_pending`); pagadas del mes (`paid`); correos rebotados (`bounced`). Sin `month`, el mes en curso en Colombia |
+| `GET /api/summary?month=AAAA-MM` | Del mes (`expected`, `collected`, `pending`); unidades en mora (`units_overdue` de `units_total`); cuentas por cobrar de cualquier mes, con lo vencido primero (`receivable`), y cuánto viene de meses anteriores (`previous_pending`); pagadas del mes (`paid`); correos rebotados (`bounced`); y el total acumulado de todas las cuentas no anuladas (`totals`: `billed`, `collected`, `pending` y `since`, el primer mes con cuentas), que no depende de `month`. Sin `month`, el mes en curso en Colombia |
 
 ## Sistema
 

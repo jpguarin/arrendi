@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { components } from "./api/schema.ts";
-import { firstDayMonthsAgo, nextSort, sortBills } from "./bills.ts";
+import { firstDayMonthsAgo, monthParam, nextSort, shiftMonth, sortBills } from "./bills.ts";
 
 type Bill = components["schemas"]["BillSummary"];
 
@@ -11,6 +11,20 @@ test("the window of months starts on the first day, across a year", () => {
   assert.equal(firstDayMonthsAgo("2026-10-12", 1), "2026-10-01");
   assert.equal(firstDayMonthsAgo("2026-03-31", 6), "2025-10-01");
   assert.equal(firstDayMonthsAgo("2026-01-01", 2), "2025-12-01");
+});
+
+test("a month moves back and forth across a year", () => {
+  assert.equal(shiftMonth("2026-10", -1), "2026-09");
+  assert.equal(shiftMonth("2026-01", -1), "2025-12");
+  assert.equal(shiftMonth("2025-12", 1), "2026-01");
+  assert.equal(shiftMonth("2026-10-01", -3), "2026-07");
+});
+
+test("only a well formed month is taken from the address", () => {
+  assert.equal(monthParam("2026-09"), "2026-09");
+  for (const value of [undefined, "", "2026-13", "2026-9", "septiembre", "2026-09-01", ["2026-09"]]) {
+    assert.equal(monthParam(value), undefined);
+  }
 });
 
 // Only what the order looks at; the rest of a bill does not matter here.

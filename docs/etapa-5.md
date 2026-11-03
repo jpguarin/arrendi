@@ -29,7 +29,7 @@ Dime si alguno no te sirve antes de empezar.
 - **Recibo:** sale después de confirmar la transacción, con la plantilla de la etapa 4, y queda como notificación `receipt`. Si falla, queda `failed` en la actividad y no se reintenta solo; puedes volver a registrar o avisar al arrendatario por tu cuenta.
 - **Estado de la unidad:** `overdue` ("En mora") si su contrato activo tiene alguna cuenta vencida; si no, `partial` ("Pago parcial") si tiene alguna parcial; si no, `up_to_date`.
 - **Inicio sin selector de inmueble ni campana.** El mockup los trae, pero `GET /api/summary` es por propietario y las notificaciones push están fuera del MVP. Los correos rebotados se muestran como un aviso en el inicio, con enlace a la cuenta.
-- **Navegar entre meses:** el inicio muestra el mes en curso. `month` existe en la API, pero la web no trae selector de mes en esta etapa.
+- **Navegar entre meses:** el inicio muestra el mes en curso. En esta etapa la web no traía selector de mes; se agregó después, junto con el total acumulado (ver `docs/decisiones.md`).
 - **Correo en Playwright:** la API corre sin proveedor configurado, así que el recibo queda "no se pudo enviar" y la prueba no lo marca. El correo ya está cubierto por pytest.
 - **Dependencia nueva:** `@playwright/test` en `apps/e2e` (la prueba de extremo a extremo).
 

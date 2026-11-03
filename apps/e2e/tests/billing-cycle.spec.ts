@@ -117,6 +117,24 @@ test("onboarding, a bill, a partial payment and the rest", async ({ page }) => {
     await expect(page.getByText("Apto 1 · Carlos Rojas")).toBeVisible();
   });
 
+  await test.step("the total adds up every bill, and an earlier month has its own figures", async () => {
+    const total = page.getByRole("region", { name: /Total acumulado/ });
+    await expect(total).toContainText(RENT);
+    await expect(total).toContainText("$400.000");
+    await expect(total).toContainText("$600.000");
+    // The first bill is of this month: there is nothing earlier to go back to, or later.
+    await expect(page.getByRole("button", { name: "Mes anterior" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Mes siguiente" })).toBeDisabled();
+
+    await page.goto("/?month=2000-01");
+    await expect(page.getByRole("heading", { name: "Enero 2000" })).toBeVisible();
+    await expect(page.getByText("No hubo cuentas en enero")).toBeVisible();
+    await expect(page.getByRole("region", { name: /Total acumulado/ })).toContainText("$600.000");
+    await expect(page.getByRole("link", { name: "Mes siguiente" })).toBeVisible();
+    await page.getByRole("link", { name: "Ir a hoy" }).click();
+    await expect(page.getByText("Recaudado este mes")).toBeVisible();
+  });
+
   await test.step("the rest, from the home screen in two taps", async () => {
     await page.getByRole("link", { name: "Registrar pago" }).click();
     await expect(page.getByLabel("Valor recibido")).toHaveValue("$600.000");

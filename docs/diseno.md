@@ -163,6 +163,8 @@ Fuera de producción, la web dice dónde está, para no confundir ambientes con 
 
 Solo en el resumen, hechas con Tailwind, sin librería.
 
+- **Total acumulado:** la primera tarjeta del resumen, en el color del riel (`bg-rail`): lo pendiente en grande, una barra de lo cobrado sobre lo facturado y tres cifras (facturado, cobrado, pendiente). No cambia con el mes. Propuesta A de `docs/new-brand-design/mockups/resumen-meses/`.
+- **Selector de mes:** el saludo arriba y, debajo, el mes como título con una flecha a cada lado (botones de 44 px). La de la derecha se apaga en el mes en curso y la de la izquierda en el primer mes con cuentas; en un mes pasado aparece «Ir a hoy». El mes viaja en la dirección (`/?month=2026-09`).
 - **Cómo va el mes:** una barra con lo esperado repartido en recaudado, saldo de abonos, por vencer y vencido. Debajo, la leyenda con etiqueta, valor y porcentaje de cada tramo.
 - **Recaudo por mes:** hasta seis meses; la pista es lo esperado y la barra, lo recaudado, con su valor encima. Se calcula del listado de cuentas.
 - Un solo eje, sin doble escala. Los colores de estado no se usan para otra cosa.
@@ -229,6 +231,7 @@ Línea de tiempo, de lo más antiguo a lo más reciente: generada, cada correo, 
 - El contrato conserva "Generar cuenta del mes", "Cobrar otro concepto" y el depósito.
 - En Cuentas, el filtro de estado no lleva contador y tiene "Anuladas" en lugar de "Vencidas".
 - En Cuentas, con la tabla ancha, los encabezados Vence y Estado son botones con una flecha: un clic ordena hacia arriba, otro hacia abajo y el tercero vuelve a la vista por mes. Vence va de la fecha más antigua a la más reciente (en un empate, la de número más alto primero). Estado va por urgencia: Vencida, Parcial, Pendiente, Pagada, Anulada (en un empate, la que vence antes primero). Mientras hay orden, la tabla es una sola lista, sin meses ni sus totales. El orden no se guarda al recargar. En el celular la tabla no tiene encabezados y la lista sigue por mes.
+- En un mes pasado, «Por cobrar» sigue mostrando la deuda real de hoy, con «Recordar» y «Registrar pago»; solo cambian las cifras del mes, «Cómo fue el mes» y «Pagadas». Si ese mes no tuvo cuentas, lo dice.
 - En el resumen, una línea dice cuánto se debe de meses anteriores y los correos rebotados salen como aviso. En celular, los botones de cada cuenta por cobrar van bajo la fila, para registrar un pago en dos toques.
 - El PDF sigue en Helvetica, que trae todo lector de PDF: así no viaja ningún archivo de fuente con la API. Lleva la paleta de la marca, una franja navy arriba y, en cada hoja, un pie bajo una línea gris: a la izquierda el número y la fecha de emisión (`N.º 0043 · 1 oct 2026`), a la derecha la página con el total (`Página 1 de 2`) y debajo, centrado, el isotipo sin el nombre, igual que los correos. Como la página va en el pie, el encabezado de las hojas siguientes solo dice de qué cuenta y de quién son.
 - Los correos llevan la paleta de la marca, sin cabecera: son del arrendador. Al pie va el isotipo, centrado. Viaja dentro del correo como imagen incrustada (PNG de `isotype.svg`, en `app/email/assets/`), porque los lectores de correo no dibujan SVG. La versión de texto plano no nombra a Arrendi.

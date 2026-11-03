@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<title>Arrendi · Resumen: meses y total</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="../../favicon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@700;800&display=swap">
+<style>
+/* Layout: barra de controles arriba, debajo un "teléfono/pantalla" con la pantalla de inicio de Arrendi en la variante elegida */
+:root {
+  --bg: #F5F6F9; --surface: #FFFFFF; --surface-2: #EEF0F5; --ink: #14264C; --muted: #55607A; --line: #DFE3EC;
+  --navy: #14264C; --on-navy: #F4F1E8; --on-navy-muted: #A9B3CC;
+  --green: #1FA36C; --green-ink: #14734B; --green-bg: #DDF3E8;
+  --pending: #4C6FC4; --overdue: #D2513A; --overdue-ink: #A3321E; --overdue-bg: #FADFD8;
+  --focus: #2F4A94;
+  --font-display: "Red Hat Display", Inter, system-ui, sans-serif;
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0A1122; --surface: #111B33; --surface-2: #18243F; --ink: #F4F1E8; --muted: #A9B3CC; --line: #26345A;
+  --navy: #1D2B4D; --on-navy: #F4F1E8; --on-navy-muted: #A9B3CC;
+  --green: #25A870; --green-ink: #6BDDAA; --green-bg: rgba(37,168,112,.18);
+  --pending: #6485DA; --overdue: #E05F47; --overdue-ink: #FF9D88; --overdue-bg: rgba(224,95,71,.2);
+  --focus: #FFC857; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0A1122; --surface: #111B33; --surface-2: #18243F; --ink: #F4F1E8; --muted: #A9B3CC; --line: #26345A;
+  --navy: #1D2B4D; --on-navy: #F4F1E8; --on-navy-muted: #A9B3CC;
+  --green: #25A870; --green-ink: #6BDDAA; --green-bg: rgba(37,168,112,.18);
+  --pending: #6485DA; --overdue: #E05F47; --overdue-ink: #FF9D88; --overdue-bg: rgba(224,95,71,.2);
+  --focus: #FFC857; color-scheme: dark; }
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 16px; line-height: 1.5;
+  padding-block: 20px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3, p, dl, dd { margin: 0; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+.display { font-family: var(--font-display); letter-spacing: -.02em; }
+
+.wrap { max-width: 960px; margin: 0 auto; display: grid; gap: 20px; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; justify-content: space-between; }
+.controls h1 { font-family: var(--font-display); font-size: 20px; letter-spacing: -.02em; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.seg button { min-height: 44px; padding: 0 16px; font-weight: 600; font-size: 14px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--navy); color: var(--on-navy); }
+.hint { color: var(--muted); font-size: 14px; max-width: 65ch; }
+
+.screen { border: 1px solid var(--line); border-radius: 20px; background: var(--bg); padding: 20px; display: grid; gap: 16px; }
+.head { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.head .who { color: var(--muted); font-size: 14px; padding-bottom: 12px; }
+.month { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.month h2 { font-family: var(--font-display); font-size: 26px; letter-spacing: -.02em; min-width: 9ch; text-align: center; text-transform: capitalize; }
+.arrow { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; }
+.arrow:disabled { opacity: .35; cursor: not-allowed; }
+.today-btn { font-size: 13px; font-weight: 600; color: var(--green-ink); min-height: 44px; padding: 0 8px; }
+
+.figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.fig { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; min-width: 0; }
+.fig dt { color: var(--muted); font-size: 13px; }
+.fig dd { font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin-top: 2px; overflow-wrap: anywhere; }
+.fig small { display: block; color: var(--muted); font-size: 12px; }
+.fig.late dd { color: var(--overdue-ink); }
+
+.comp { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+.comp h3, .sec h3 { font-size: 14px; font-weight: 600; }
+.bar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--surface-2); }
+.bar i { display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.legend b { color: var(--ink); font-weight: 600; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+
+.total { background: var(--navy); color: var(--on-navy); border-radius: 16px; padding: 18px; display: grid; gap: 12px; }
+.total .lbl { font-size: 13px; color: var(--on-navy-muted); }
+.total .big { font-family: var(--font-display); font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+.total .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.total .trio dt { font-size: 12px; color: var(--on-navy-muted); }
+.total .trio dd { font-family: var(--font-display); font-weight: 700; font-size: 16px; overflow-wrap: anywhere; }
+.total .bar { background: rgba(255,255,255,.18); height: 10px; }
+.total .bar i { background: #28B779; }
+.total .since { font-size: 12px; color: var(--on-navy-muted); }
+
+.strip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; background: var(--surface); border: 1px dashed var(--line); border-radius: 14px; padding: 12px 14px; font-size: 14px; }
+.strip .t { font-weight: 600; }
+.strip span b { font-family: var(--font-display); }
+.strip .pct { margin-left: auto; color: var(--green-ink); font-weight: 600; }
+
+.cols { display: grid; gap: 16px; }
+@media (min-width: 760px) { .cols.two { grid-template-columns: minmax(0, 1fr) 280px; align-items: start; } }
+details.fold { border-radius: 16px; }
+details.fold > summary { list-style: none; min-height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: var(--navy); color: var(--on-navy); border-radius: 16px; font-weight: 600; cursor: pointer; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold[open] > summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+details.fold[open] .total { border-top-left-radius: 0; border-top-right-radius: 0; }
+@media (min-width: 760px) { details.fold > summary { display: none; } details.fold:not([open]) .total { display: grid; } }
+
+.sec { display: grid; gap: 8px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+.row .u { font-weight: 600; font-size: 15px; }
+.row .d { color: var(--muted); font-size: 13px; }
+.row .a { text-align: right; font-weight: 600; }
+.pill { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+.pill.o { background: var(--overdue-bg); color: var(--overdue-ink); }
+.pill.p { background: var(--green-bg); color: var(--green-ink); }
+.note { font-size: 12px; color: var(--muted); }
+.empty { text-align: center; color: var(--muted); padding: 24px 12px; background: var(--surface); border: 1px dashed var(--line); border-radius: 14px; }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="controls">
+    <h1>Resumen · meses y total</h1>
+    <div class="seg" role="group" aria-label="Propuesta">
+      <button id="va" aria-pressed="true">A · Tarjeta arriba</button>
+      <button id="vb" aria-pressed="false">B · Franja</button>
+      <button id="vc" aria-pressed="false">C · Lateral</button>
+    </div>
+    <button class="seg" id="theme" style="min-height:44px;padding:0 16px;font-weight:600;font-size:14px;color:var(--muted)">Cambiar tema</button>
+  </div>
+  <p class="hint" id="hint"></p>
+  <div class="screen" id="screen" aria-live="polite"></div>
+  <p class="hint">Los datos son de ejemplo (casa de 3 unidades, arriendo de $1.200.000 cada una). Prueba las flechas del mes: el total acumulado no cambia entre meses, las cifras del mes sí. Hoy simulado: 3 nov 2026.</p>
+</div>
+
+<script>
+var MONTHS = [
+  { key: '2026-07', name: 'julio 2026', exp: 3600000, col: 3600000, late: 0 },
+  { key: '2026-08', name: 'agosto 2026', exp: 3600000, col: 3600000, late: 0 },
+  { key: '2026-09', name: 'septiembre 2026', exp: 3600000, col: 3600000, late: 0 },
+  { key: '2026-10', name: 'octubre 2026', exp: 3600000, col: 2400000, late: 1 },
+  { key: '2026-11', name: 'noviembre 2026', exp: 3600000, col: 1200000, late: 0 }
+];
+var TOTAL = { billed: 18000000, col: 14400000, pend: 3600000 };
+var HINTS = {
+  a: 'A · El total va primero, en una tarjeta azul oscura. Es lo más visible: sirve si quieres ver la foto completa antes que el mes.',
+  b: 'B · El total es una franja discreta debajo del mes. El mes sigue siendo el protagonista y el total acompaña.',
+  c: 'C · En escritorio el total vive en una columna lateral; en el celular es un panel plegable. Mantiene el mes limpio.'
+};
+var state = { v: 'a', i: MONTHS.length - 1 };
+var $ = function (id) { return document.getElementById(id); };
+function p(n) { return '$' + n.toLocaleString('es-CO'); }
+function pct(a, b) { return b ? Math.round(a * 100 / b) : 0; }
+
+function totalCard() {
+  var c = pct(TOTAL.col, TOTAL.billed);
+  return '<div class="total"><div class="lbl">Total acumulado · desde jul 2026</div>' +
+    '<div class="big num">' + p(TOTAL.pend) + '</div><div class="lbl" style="margin-top:-8px">por cobrar en total</div>' +
+    '<div class="bar" role="img" aria-label="Cobrado ' + c + '%"><i style="width:' + c + '%"></i></div>' +
+    '<dl class="trio" style="margin:0"><div><dt>Facturado</dt><dd class="num">' + p(TOTAL.billed) + '</dd></div>' +
+    '<div><dt>Cobrado</dt><dd class="num">' + p(TOTAL.col) + '</dd></div>' +
+    '<div><dt>Pendiente</dt><dd class="num">' + p(TOTAL.pend) + '</dd></div></dl></div>';
+}
+function strip() {
+  return '<div class="strip"><span class="t">Total acumulado</span>' +
+    '<span>Facturado <b class="num">' + p(TOTAL.billed) + '</b></span>' +
+    '<span>Cobrado <b class="num">' + p(TOTAL.col) + '</b></span>' +
+    '<span>Pendiente <b class="num">' + p(TOTAL.pend) + '</b></span>' +
+    '<span class="pct num">' + pct(TOTAL.col, TOTAL.billed) + '% cobrado</span></div>';
+}
+function figures(m, cur) {
+  var pend = m.exp - m.col, w = cur ? 'este mes' : 'en ' + m.name.split(' ')[0];
+  return '<dl class="figures" style="margin:0" aria-label="Resumen del mes">' +
+    '<div class="fig"><dt>Esperado</dt><dd class="num">' + p(m.exp) + '</dd></div>' +
+    '<div class="fig"><dt>Recaudado ' + w + '</dt><dd class="num">' + p(m.col) + '</dd><small>' + pct(m.col, m.exp) + '% de ' + p(m.exp) + '</small></div>' +
+    '<div class="fig"><dt>Pendiente</dt><dd class="num">' + p(pend) + '</dd></div>' +
+    '<div class="fig' + (m.late ? ' late' : '') + '"><dt>En mora</dt><dd class="num">' + m.late + ' de 3</dd><small>unidades</small></div></dl>';
+}
+function comp(m, cur) {
+  var c = pct(m.col, m.exp), r = 100 - c;
+  var overdue = m.late ? 33 : 0, upcoming = Math.max(0, r - overdue);
+  return '<div class="comp"><h3>Cómo va ' + (cur ? 'el mes' : m.name.split(' ')[0]) + '</h3>' +
+    '<div class="bar"><i style="width:' + c + '%;background:var(--green)"></i><i style="width:' + upcoming + '%;background:var(--pending)"></i><i style="width:' + overdue + '%;background:var(--overdue)"></i></div>' +
+    '<div class="legend"><span><i class="dot" style="background:var(--green)"></i>Recaudado <b class="num">' + p(m.col) + '</b></span>' +
+    '<span><i class="dot" style="background:var(--pending)"></i>Por vencer <b class="num">' + p(Math.round(m.exp * upcoming / 100)) + '</b></span>' +
+    '<span><i class="dot" style="background:var(--overdue)"></i>Vencido <b class="num">' + p(Math.round(m.exp * overdue / 100)) + '</b></span></div></div>';
+}
+function receivable() {
+  return '<div class="sec"><h3>Por cobrar</h3>' +
+    '<div class="row"><div><div class="u">Piso 3</div><div class="d">Octubre · venció 5 oct</div></div><div class="a num">' + p(1200000) + ' <span class="pill o">Vencida</span></div></div>' +
+    '<div class="row"><div><div class="u">Piso 2</div><div class="d">Noviembre · vence 5 nov</div></div><div class="a num">' + p(1200000) + ' <span class="pill p">Por vencer</span></div></div>' +
+    '<p class="note">Esta lista es la deuda real de hoy y no cambia al moverte entre meses.</p></div>';
+}
+function render() {
+  var m = MONTHS[state.i], cur = state.i === MONTHS.length - 1;
+  var head = '<div class="head"><div class="who">Hola, Juan</div><div class="month">' +
+    '<button class="arrow" id="prev" aria-label="Mes anterior"' + (state.i === 0 ? ' disabled' : '') + '>‹</button>' +
+    '<h2>' + m.name + '</h2>' +
+    '<button class="arrow" id="next" aria-label="Mes siguiente"' + (cur ? ' disabled' : '') + '>›</button>' +
+    (cur ? '' : '<button class="today-btn" id="now">Ir a hoy</button>') +
+    '</div></div>';
+  var body;
+  if (state.v === 'a') body = totalCard() + figures(m, cur) + comp(m, cur) + receivable();
+  else if (state.v === 'b') body = figures(m, cur) + comp(m, cur) + strip() + receivable();
+  else body = '<div class="cols two"><div class="cols">' + figures(m, cur) + comp(m, cur) + receivable() + '</div>' +
+    '<details class="fold" open><summary>Total acumulado <span class="num">' + p(TOTAL.pend) + ' por cobrar</span></summary>' + totalCard() + '</details></div>';
+  $('screen').innerHTML = head + body;
+  $('hint').textContent = HINTS[state.v];
+  ['a', 'b', 'c'].forEach(function (k) { $('v' + k).setAttribute('aria-pressed', String(state.v === k)); });
+  $('prev').onclick = function () { state.i--; render(); $('prev').disabled ? $('next') && 0 : $('prev').focus(); };
+  $('next').onclick = function () { state.i++; render(); };
+  if ($('now')) $('now').onclick = function () { state.i = MONTHS.length - 1; render(); };
+}
+['a', 'b', 'c'].forEach(function (k) { $('v' + k).onclick = function () { state.v = k; render(); }; });
+$('theme').onclick = function () {
+  var r = document.documentElement, dark = r.getAttribute('data-theme') === 'dark' ||
+    (!r.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+  r.setAttribute('data-theme', dark ? 'light' : 'dark');
+};
+render();
+</script>
+
+</body>
+</html>
