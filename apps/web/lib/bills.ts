@@ -12,6 +12,18 @@ export function firstDayMonthsAgo(today: string, count: number): string {
   return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}-01`;
 }
 
+/** A month (`2026-10`, or a date in it) moved by `delta` months, as `2026-09`. */
+export function shiftMonth(month: string, delta: number): string {
+  const [year, number] = month.split("-").map(Number);
+  const index = year * 12 + (number - 1) + delta;
+  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
+}
+
+/** The month asked for in the address (`?month=2026-09`), or nothing if it is not one. */
+export function monthParam(value: string | string[] | undefined): string | undefined {
+  return typeof value === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(value) ? value : undefined;
+}
+
 export type BillSort = { by: "due" | "status"; direction: "asc" | "desc" };
 
 // From what has to be collected first to what needs nothing.

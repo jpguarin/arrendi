@@ -1,19 +1,18 @@
 "use client";
 
-import { Bell, LoaderCircle } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { BillRow, BillTable } from "@/components/bills/BillRow";
 import { FormMessage } from "@/components/FormMessage";
-import { Header } from "@/components/Header";
 import { LoadError, Loading } from "@/components/LoadState";
 import { Button } from "@/components/ui/button";
 import { errorMessage } from "@/lib/api/errors";
 import { useBills, useMe, useRemindBill, useSummary } from "@/lib/api/queries";
 import type { components } from "@/lib/api/schema";
-import { firstDayMonthsAgo, monthOf } from "@/lib/bills";
+import { firstDayMonthsAgo, monthOf, shiftMonth } from "@/lib/bills";
 import { formatBillNumber, formatMonth, formatPesos, todayInBogota } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -22,12 +21,16 @@ type Bill = components["schemas"]["BillSummary"];
 
 const percentOf = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 
+/** "este mes" for the current month, "en septiembre" for any other. */
+const inMonth = (summary: Summary, current: boolean) =>
+  current ? "este mes" : `en ${formatMonth(summary.month).split(" ")[0].toLowerCase()}`;
+
 /** The month in four figures: expected, collected, pending and units behind. */
-function Figures({ summary }: { summary: Summary }) {
+function Figures({ summary, current }: { summary: Summary; current: boolean }) {
   const figures = [
     { label: "Esperado", value: formatPesos(summary.expected) },
     {
-      label: "Recaudado este mes",
+      label: `Recaudado ${inMonth(summary, current)}`,
       value: formatPesos(summary.collected),
       detail: `${percentOf(summary.collected, summary.expected)} % · de ${formatPesos(summary.expected)} esperados`,
     },
@@ -66,7 +69,7 @@ function Figures({ summary }: { summary: Summary }) {
  * What became of each peso expected this month, as one bar. Every part is also in the
  * legend with its label and value, so nothing rests on color alone.
  */
-function Composition({ summary }: { summary: Summary }) {
+function Composition({ summary, current }: { summary: Summary; current: boolean }) {
   const month = summary.month.slice(0, 7);
   const owed = (status: Bill["status"]) =>
     summary.receivable
@@ -84,7 +87,9 @@ function Composition({ summary }: { summary: Summary }) {
   return (
     <figure className="flex flex-col rounded-xl border border-border bg-card p-4">
       <figcaption>
-        <p className="text-section font-semibold">Cómo va el mes</p>
+        <p className="text-section font-semibold">
+          {current ? "Cómo va el mes" : `Cómo fue ${formatMonth(summary.month).split(" ")[0].toLowerCase()}`}
+        </p>
         <p className="text-badge text-muted-foreground">
           Lo esperado, según el estado de cada cuenta
         </p>
@@ -118,6 +123,54 @@ function Composition({ summary }: { summary: Summary }) {
         ))}
       </ul>
     </figure>
+  );
+}
+
+/**
+ * Everything ever billed, whatever the month on screen: what is still owed in large
+ * type, and how much of the total has come in.
+ */
+function Totals({ summary }: { summary: Summary }) {
+  const { billed, collected, pending, since } = summary.totals;
+  const share = percentOf(collected, billed);
+  const figures = [
+    { label: "Facturado", value: billed },
+    { label: "Cobrado", value: collected },
+    { label: "Pendiente", value: pending },
+  ];
+
+  return (
+    <section
+      aria-labelledby="totals"
+      className="flex flex-col gap-3 rounded-xl bg-rail p-4.5 text-rail-foreground"
+    >
+      <div>
+        <h2 id="totals" className="text-badge font-medium text-rail-muted">
+          Total acumulado{since && ` · desde ${formatMonth(since, "short").toLowerCase()}`}
+        </h2>
+        <p className="font-heading text-figure leading-tight font-extrabold tracking-tight">
+          {formatPesos(pending)}
+        </p>
+        <p className="text-badge text-rail-muted">por cobrar en total</p>
+      </div>
+      <div
+        role="img"
+        aria-label={`Cobrado: ${share} % de lo facturado`}
+        className="h-2.5 overflow-hidden rounded-full bg-rail-active"
+      >
+        <span className="block h-full rounded-full bg-brand-green" style={{ width: `${share}%` }} />
+      </div>
+      <dl className="grid grid-cols-3 gap-3">
+        {figures.map((figure) => (
+          <div key={figure.label} className="min-w-0">
+            <dt className="text-badge text-rail-muted">{figure.label}</dt>
+            <dd className="font-heading text-section font-bold break-words">
+              {formatPesos(figure.value)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
 
@@ -184,11 +237,14 @@ function MonthlyChart() {
   );
 }
 
-function MonthSummary({ summary }: { summary: Summary }) {
+function MonthSummary({ summary, current }: { summary: Summary; current: boolean }) {
   const remind = useRemindBill();
   const [reminded, setReminded] = useState<string>();
+  // A past month with no bills of its own says so, even while older debt is listed below.
   const nothingYet =
-    summary.expected === 0 && summary.receivable.length === 0 && summary.paid.length === 0;
+    summary.expected === 0 &&
+    summary.paid.length === 0 &&
+    (!current || summary.receivable.length === 0);
 
   function sendReminder(bill: Bill) {
     setReminded(undefined);
@@ -200,7 +256,8 @@ function MonthSummary({ summary }: { summary: Summary }) {
 
   return (
     <>
-      <Figures summary={summary} />
+      <Totals summary={summary} />
+      <Figures summary={summary} current={current} />
 
       {summary.previous_pending > 0 && (
         <p className="text-support text-muted-foreground">
@@ -222,19 +279,25 @@ function MonthSummary({ summary }: { summary: Summary }) {
         <div className="flex flex-col items-center gap-4 py-8 text-center">
           <div className="flex flex-col gap-1">
             <p className="font-heading text-title-back font-extrabold">
-              Aún no hay cuentas este mes
+              {current
+                ? "Aún no hay cuentas este mes"
+                : `No hubo cuentas ${inMonth(summary, current)}`}
             </p>
-            <p className="text-section text-muted-foreground">
-              Se generan solas el día de envío, o puedes generarlas desde cada contrato.
-            </p>
+            {current && (
+              <p className="text-section text-muted-foreground">
+                Se generan solas el día de envío, o puedes generarlas desde cada contrato.
+              </p>
+            )}
           </div>
-          <Button asChild variant="outline" size="md">
-            <Link href="/properties">Ir a mis contratos</Link>
-          </Button>
+          {current && (
+            <Button asChild variant="outline" size="md">
+              <Link href="/properties">Ir a mis contratos</Link>
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid gap-3 @3xl:grid-cols-[1.6fr_1fr]">
-          <Composition summary={summary} />
+          <Composition summary={summary} current={current} />
           <MonthlyChart />
         </div>
       )}
@@ -309,13 +372,63 @@ function MonthSummary({ summary }: { summary: Summary }) {
   );
 }
 
-/** The summary: how the month is going and who owes what. */
-export function HomeScreen() {
+/**
+ * The greeting, then the month with an arrow to each side. The month goes in the
+ * address (`?month=2026-09`), so going back to a screen shows the same month.
+ */
+function MonthHeader({ summary, greeting }: { summary?: Summary; greeting?: string }) {
+  const shown = summary?.month.slice(0, 7);
+  const current = todayInBogota().slice(0, 7);
+  const since = summary?.totals.since?.slice(0, 7);
+  const href = (month: string) => (month === current ? "/" : `/?month=${month}`);
+  const arrow = "text-foreground";
+
+  return (
+    <header className="flex flex-col items-start px-4 pt-5 pb-4 md:px-6 md:pt-6 xl:px-8">
+      {greeting && <p className="pb-3 text-support text-muted-foreground">{greeting}</p>}
+      <div className="flex flex-wrap items-center gap-3">
+        {shown && since && shown > since ? (
+          <Button asChild variant="outline" size="icon" className={arrow}>
+            <Link href={href(shiftMonth(shown, -1))} aria-label="Mes anterior">
+              <ChevronLeft aria-hidden />
+            </Link>
+          </Button>
+        ) : (
+          <Button variant="outline" size="icon" className={arrow} disabled aria-label="Mes anterior">
+            <ChevronLeft aria-hidden />
+          </Button>
+        )}
+        <h1 className="min-w-[9ch] text-center text-title font-extrabold">
+          {summary ? formatMonth(summary.month) : "Resumen"}
+        </h1>
+        {shown && shown < current ? (
+          <Button asChild variant="outline" size="icon" className={arrow}>
+            <Link href={href(shiftMonth(shown, 1))} aria-label="Mes siguiente">
+              <ChevronRight aria-hidden />
+            </Link>
+          </Button>
+        ) : (
+          <Button variant="outline" size="icon" className={arrow} disabled aria-label="Mes siguiente">
+            <ChevronRight aria-hidden />
+          </Button>
+        )}
+        {shown && shown < current && (
+          <Button asChild variant="ghost" size="md">
+            <Link href="/">Ir a hoy</Link>
+          </Button>
+        )}
+      </div>
+    </header>
+  );
+}
+
+/** The summary: how a month is going, who owes what and the total of everything. */
+export function HomeScreen({ month }: { month?: string }) {
   const router = useRouter();
   const { data: me } = useMe();
   // Nothing to show yet: the owner starts by creating their first property.
   const onboarding = me?.onboarding_complete === false;
-  const { data: summary, error, refetch } = useSummary();
+  const { data: summary, error, refetch } = useSummary(month);
 
   useEffect(() => {
     // A new owner starts with their own data, which goes on every bill.
@@ -325,15 +438,18 @@ export function HomeScreen() {
 
   return (
     <>
-      <Header
-        title={summary ? formatMonth(summary.month) : "Resumen"}
-        subtitle={me && !onboarding ? `Hola, ${me.name}` : undefined}
+      <MonthHeader
+        summary={summary}
+        greeting={me && !onboarding ? `Hola, ${me.name}` : undefined}
       />
       <main className="@container flex flex-1 flex-col gap-3 px-4 pb-8 md:px-6 xl:px-8">
         {onboarding ? (
           <Loading label="Abriendo el alta" />
         ) : summary ? (
-          <MonthSummary summary={summary} />
+          <MonthSummary
+            summary={summary}
+            current={summary.month.slice(0, 7) === todayInBogota().slice(0, 7)}
+          />
         ) : error ? (
           <LoadError message={errorMessage(error)} onRetry={refetch} />
         ) : (
