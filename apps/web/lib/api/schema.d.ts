@@ -1343,6 +1343,21 @@ export interface components {
             paid: components["schemas"]["BillSummary"][];
             /** Bounced */
             bounced: components["schemas"]["BouncedEmail"][];
+            totals: components["schemas"]["SummaryTotals"];
+        };
+        /**
+         * SummaryTotals
+         * @description Every bill ever issued and not voided, whatever the month on screen.
+         */
+        SummaryTotals: {
+            /** Billed */
+            billed: number;
+            /** Collected */
+            collected: number;
+            /** Pending */
+            pending: number;
+            /** Since */
+            since: string | null;
         };
         /** TenantCreate */
         TenantCreate: {
