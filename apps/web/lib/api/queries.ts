@@ -49,8 +49,9 @@ export const useProperties = () => $api.useQuery("get", "/api/properties");
 export const useLease = (leaseId: string) =>
   $api.useQuery("get", "/api/leases/{lease_id}", { params: { path: { lease_id: leaseId } } });
 
-/** The home screen: the figures of the current month and who owes what. */
-export const useSummary = () => $api.useQuery("get", "/api/summary");
+/** The home screen: the figures of a month (`2026-10`; the current one without it) and who owes what. */
+export const useSummary = (month?: string) =>
+  $api.useQuery("get", "/api/summary", { params: { query: { month } } });
 
 export const useSettings = () => $api.useQuery("get", "/api/settings");
 // A temporary link to the owner's signature. It lasts five minutes, so it is asked for

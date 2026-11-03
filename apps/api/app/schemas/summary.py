@@ -16,6 +16,16 @@ class BouncedEmail(BaseModel):
     recipient: str
 
 
+class SummaryTotals(BaseModel):
+    """Every bill ever issued and not voided, whatever the month on screen."""
+
+    billed: int
+    collected: int
+    pending: int
+    # Month of the oldest of those bills; none while there are no bills.
+    since: date | None
+
+
 class SummaryResponse(BaseModel):
     # First day of the month the figures are about.
     month: date
@@ -33,3 +43,4 @@ class SummaryResponse(BaseModel):
     # The paid bills of the month.
     paid: list[BillSummary]
     bounced: list[BouncedEmail]
+    totals: SummaryTotals

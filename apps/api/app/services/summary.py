@@ -4,7 +4,7 @@ from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
 from app.models import Bill, Lease, Notification, Tenant, Unit
-from app.schemas.summary import BouncedEmail, SummaryResponse
+from app.schemas.summary import BouncedEmail, SummaryResponse, SummaryTotals
 from app.services.bills import BILL_MONTH, bill_summaries
 
 # Every query here runs inside the owner's transaction: row security already limits it to
@@ -56,6 +56,10 @@ def get_summary(session: Session, month: date) -> SummaryResponse:
     # One line per bill, however many of its emails bounced.
     bounced = list({row[0]: row for row in bounced}.values())
 
+    every = bill_summaries(session, select(Bill).where(Bill.status != "voided"))
+    billed = sum(bill.total for bill in every)
+    since = session.scalar(select(func.min(BILL_MONTH)).where(Bill.status != "voided"))
+
     return SummaryResponse(
         month=month,
         expected=expected,
@@ -66,6 +70,12 @@ def get_summary(session: Session, month: date) -> SummaryResponse:
         units_overdue=units_overdue,
         receivable=receivable,
         paid=[bill for bill in of_the_month if bill.status == "paid"],
+        totals=SummaryTotals(
+            billed=billed,
+            collected=billed - sum(bill.balance for bill in every),
+            pending=sum(bill.balance for bill in every),
+            since=since,
+        ),
         bounced=[
             BouncedEmail(
                 bill_id=bill_id,
