@@ -123,3 +123,21 @@ def test_without_a_secret_configured_every_notice_is_refused(
 
     assert webhook.post("/api/webhooks/email", content=body, headers=headers).status_code == 401
     assert status(admin_engine) == "sent"
+
+
+@pytest.mark.parametrize(
+    "header, value",
+    [
+        # A signature in anything but ASCII cannot be compared as text.
+        ("svix-signature", "v1,firmá".encode("latin-1")),
+        # An integer too large to subtract from the clock.
+        ("svix-timestamp", b"9" * 400),
+    ],
+)
+def test_malformed_headers_are_refused_not_an_error(
+    webhook: TestClient, sent, admin_engine: Engine, header: str, value: bytes
+) -> None:
+    body, headers = signed(BOUNCE)
+    response = webhook.post("/api/webhooks/email", content=body, headers={**headers, header: value})
+    assert response.status_code == 401
+    assert status(admin_engine) == "sent"

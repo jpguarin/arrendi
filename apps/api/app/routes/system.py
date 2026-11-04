@@ -81,16 +81,17 @@ def is_signed_by_provider(
 ) -> bool:
     try:
         key = base64.b64decode(secret.removeprefix(SECRET_PREFIX))
-        sent_at = int(timestamp)
-    except ValueError:
-        return False
-    # An old notice replayed later is not accepted.
-    if abs(now - sent_at) > WEBHOOK_TOLERANCE_SECONDS:
+        # An old notice replayed later is not accepted.
+        if abs(now - int(timestamp)) > WEBHOOK_TOLERANCE_SECONDS:
+            return False
+    # The header comes from anyone: its number may not even fit in a float.
+    except (ValueError, OverflowError):
         return False
     signed = message_id.encode() + b"." + timestamp.encode() + b"." + body
-    expected = base64.b64encode(hmac.new(key, signed, hashlib.sha256).digest()).decode()
+    expected = base64.b64encode(hmac.new(key, signed, hashlib.sha256).digest())
     return any(
-        version == "v1" and hmac.compare_digest(signature, expected)
+        # As bytes: comparing text fails on anything that is not ASCII.
+        version == "v1" and hmac.compare_digest(signature.encode(), expected)
         for version, _, signature in (item.partition(",") for item in signatures.split())
     )
 
