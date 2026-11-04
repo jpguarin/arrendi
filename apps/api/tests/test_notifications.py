@@ -116,6 +116,7 @@ def test_the_copies_of_the_lease_get_every_email_of_the_tenant(
     trees: tuple[Tree, Tree],
     bill: dict,
     mailer: FakeEmailSender,
+    admin_engine: Engine,
 ) -> None:
     copies = ["pedro@example.com", "pagos@empresa.example.com"]
     api.patch(f"/api/leases/{trees[0].lease_id}", json={"cc_emails": copies}, headers=ana)
@@ -123,6 +124,11 @@ def test_the_copies_of_the_lease_get_every_email_of_the_tenant(
     api.post(f"/api/bills/{bill['id']}/send", headers=ana)
     api.post(f"/api/bills/{bill['id']}/send", headers=ana)
     api.post(f"/api/bills/{bill['id']}/remind", headers=ana)
+    # Every kind of email is more than a bill can take in one day: these were yesterday's.
+    with admin_engine.begin() as connection:
+        connection.execute(
+            text("update notifications set created_at = created_at - interval '1 day'")
+        )
     api.post(
         f"/api/bills/{bill['id']}/payments",
         json={

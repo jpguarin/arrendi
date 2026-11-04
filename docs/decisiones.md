@@ -80,6 +80,7 @@ Se tomaron para no bloquear el desarrollo. Impleméntalas así, de forma que cam
 | Contrato que llega a su fecha de fin | Sigue activo hasta que el propietario lo termine | Renovación o terminación automática |
 | Cuentas anuladas en el listado | Ocultas, visibles con un filtro | Siempre visibles |
 | Tamaño máximo de archivos | 10 MB | Otro valor, según el límite de Vercel |
+| Límite de correos por día | 3 por cuenta y 20 por propietario, contra abuso. No es un límite por plan: todo correo sale con el nombre de Arrendi y gasta un cupo diario que comparten todos los propietarios | Otros valores, según el uso real y el plan de Resend |
 | Día de pago | Entre 1 y 28 | Admitir 29 a 31 con ajuste al último día |
 | Envío de cuentas | Día fijo del mes por propietario; aprobación previa por contrato | Opción "N días antes del vencimiento" |
 | PDF de cuenta anulada | Se reemplaza por una versión marcada "ANULADA" | Conservar ambas versiones |
