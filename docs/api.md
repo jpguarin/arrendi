@@ -68,8 +68,8 @@ Un recurso de otro propietario siempre responde 404, nunca 403, para no revelar 
 | `POST /api/bills` | Crea una cuenta manual sobre un contrato activo: `lease_id`, `items` (de 1 a 10, cada uno con `description` y `amount`) y `due_date`, una sola para toda la cuenta. El `total` es la suma de los conceptos. Acepta `payment_details` (opcional, hasta 500 caracteres), solo para esa cuenta. Responde 201. 400 `lease_not_active` si el contrato está terminado |
 | `GET /api/bills/{id}` | Devuelve la cuenta con conceptos, saldo (`balance`), unidad, arrendatario y los datos del propietario que muestra el documento. Trae sus pagos (`payments`) y sus notificaciones (`notifications`), de lo más nuevo a lo más viejo |
 | `GET /api/bills/{id}/pdf` | Devuelve un enlace temporal al PDF (`url`, `name` y `expires_in`, 5 minutos) |
-| `POST /api/bills/{id}/send` | Envía la cuenta por correo, o la reenvía si ya se había enviado. 400 `bill_voided` si está anulada |
-| `POST /api/bills/{id}/remind` | Envía un recordatorio manual. 400 `bill_has_no_balance` si no tiene saldo; 400 `bill_voided` si está anulada |
+| `POST /api/bills/{id}/send` | Envía la cuenta por correo, o la reenvía si ya se había enviado. 400 `bill_voided` si está anulada; 429 `email_limit_reached` si se pasa del límite de correos del día |
+| `POST /api/bills/{id}/remind` | Envía un recordatorio manual. 400 `bill_has_no_balance` si no tiene saldo; 400 `bill_voided` si está anulada; 429 `email_limit_reached` si se pasa del límite de correos del día |
 | `POST /api/bills/{id}/void` | Anula la cuenta. 400 `bill_has_payments` si tiene pagos; 400 `bill_already_voided` si ya estaba anulada; 400 `late_fee_charged_elsewhere` si su recargo por mora ya se cobró en otra cuenta |
 | `POST /api/bills/{id}/late-fee/waive` | El propietario decide no cobrar el recargo por mora de esa cuenta: ninguna cuenta posterior lo incluirá. Responde con la cuenta. 400 `bill_has_no_late_fee` si no tiene recargo (o está anulada); 400 `late_fee_already_charged` si ya salió en otra cuenta |
 | `POST /api/bills/{id}/late-fee/restore` | Deshace lo anterior: la siguiente cuenta del mes lo cobra. Mismos errores |
@@ -86,7 +86,7 @@ Enviar y recordar responden con la cuenta y la notificación recién creada en e
 
 | Ruta | Qué hace |
 | --- | --- |
-| `POST /api/bills/{id}/payments` | Registra un pago: `amount`, `payment_date`, `method` y `send_receipt`. Recalcula el estado y responde 201 con la cuenta. 400 `bill_voided`, `bill_already_paid`, `payment_exceeds_balance` o `payment_date_in_future` |
+| `POST /api/bills/{id}/payments` | Registra un pago: `amount`, `payment_date`, `method` y `send_receipt`. Recalcula el estado y responde 201 con la cuenta. 400 `bill_voided`, `bill_already_paid`, `payment_exceeds_balance` o `payment_date_in_future`. Con `send_receipt`, 429 `email_limit_reached` si se pasa del límite de correos del día: el pago no se registra, y se puede registrar sin recibo |
 | `POST /api/payments/{id}/proof/upload-url` | Primer paso del comprobante: devuelve el enlace firmado de subida y la ruta |
 | `POST /api/payments/{id}/proof` | Segundo paso: valida el archivo y lo asocia al pago. Responde con la cuenta |
 | `GET /api/payments/{id}/proof` | Devuelve un enlace temporal al comprobante. 404 `document_not_found` si no tiene |

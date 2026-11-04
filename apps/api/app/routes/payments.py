@@ -18,11 +18,12 @@ from app.services import bills, notifications, payments
 
 router = APIRouter(responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}})
 BAD_REQUEST = {400: {"model": ErrorResponse}}
+EMAIL_LIMIT = {429: {"model": ErrorResponse}}
 
 # Every change answers with the whole bill: its status and balance are what changed.
 
 
-@router.post("/bills/{bill_id}/payments", status_code=201, responses=BAD_REQUEST)
+@router.post("/bills/{bill_id}/payments", status_code=201, responses=BAD_REQUEST | EMAIL_LIMIT)
 def register_payment(
     bill_id: UUID,
     data: PaymentCreate,
@@ -33,6 +34,11 @@ def register_payment(
     today: Today,
     background: BackgroundTasks,
 ) -> BillResponse:
+    if data.send_receipt:
+        # Before the bill is locked: everything that takes both locks takes the owner's first.
+        notifications.check_email_limits(
+            session, bills.get_bill(session, bill_id), "Registra el pago sin recibo."
+        )
     bill, payment = payments.register_payment(session, today, bill_id, data)
     if data.send_receipt:
         # Set aside here; the email goes out after the response, which is after the commit.
