@@ -10,10 +10,11 @@ from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
-from sqlalchemy import Engine, func, select
+from sqlalchemy import Date, Engine, cast, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.dates import BOGOTA
 from app.db import set_owner_id
 from app.email.content import BillEmail, render_email
 from app.email.sender import Attachment, EmailError, EmailMessage, EmailSender
@@ -194,6 +195,48 @@ def deliver(
 
 # What the owner asks for by hand
 
+# Provisional, against abuse: every email goes out under Arrendi's name and uses up a daily
+# allowance all owners share. See docs/decisiones.md.
+MAX_EMAILS_PER_BILL = 3
+MAX_EMAILS_PER_OWNER = 20
+# What an owner can set off. A bill the daily task sent counts too, because in the table it
+# looks the same as one sent by hand. Reminders from the task do not: nobody asked for them.
+LIMITED_TYPES = ("bill", "resend", "manual_reminder", "receipt")
+
+
+def _emails_today(session: Session, *condition: object) -> int:
+    local_time = func.timezone(BOGOTA.key, Notification.created_at)
+    return session.scalar(
+        select(func.count()).where(
+            Notification.type.in_(LIMITED_TYPES),
+            cast(local_time, Date) == cast(func.timezone(BOGOTA.key, func.now()), Date),
+            *condition,
+        )
+    )
+
+
+def check_email_limits(
+    session: Session, bill: Bill, next_step: str = "Podrás enviar más mañana."
+) -> None:
+    """Refuses one more email when the bill or its owner has had enough of them today.
+
+    Only for what the owner asks for: the daily task does not come through here. Locks the
+    owner until the transaction ends, so requests at once count one after the other.
+    """
+    session.execute(select(Owner.id).where(Owner.id == bill.owner_id).with_for_update())
+    if _emails_today(session, Notification.bill_id == bill.id) >= MAX_EMAILS_PER_BILL:
+        raise AppError(
+            429,
+            f"Ya enviaste {MAX_EMAILS_PER_BILL} correos de esta cuenta hoy. {next_step}",
+            "email_limit_reached",
+        )
+    if _emails_today(session, Notification.owner_id == bill.owner_id) >= MAX_EMAILS_PER_OWNER:
+        raise AppError(
+            429,
+            f"Llegaste al límite de {MAX_EMAILS_PER_OWNER} correos por hoy. {next_step}",
+            "email_limit_reached",
+        )
+
 
 def _sendable(bill: Bill) -> None:
     if bill.status == "voided":
@@ -203,6 +246,7 @@ def _sendable(bill: Bill) -> None:
 def reserve_send(session: Session, bill: Bill) -> Notification:
     """The bill by email: the first time as `bill`, after that as a resend."""
     _sendable(bill)
+    check_email_limits(session, bill)
     return reserve(session, bill, "bill") or reserve(session, bill, "resend")
 
 
@@ -212,4 +256,5 @@ def reserve_reminder(session: Session, bill: Bill) -> Notification:
         raise AppError(
             400, "Esta cuenta ya está pagada: no hay nada que recordar.", "bill_has_no_balance"
         )
+    check_email_limits(session, bill)
     return reserve(session, bill, "manual_reminder")

@@ -89,7 +89,7 @@ def restore_late_fee(bill_id: UUID, session: OwnerSession, today: Today) -> Bill
 # which is after the commit: never inside the transaction.
 
 DbEngine = Annotated[Engine, Depends(get_db_engine)]
-EMAIL = NOT_FOUND | {400: {"model": ErrorResponse}}
+EMAIL = NOT_FOUND | {400: {"model": ErrorResponse}, 429: {"model": ErrorResponse}}
 
 
 @router.post("/bills/{bill_id}/send", responses=EMAIL)

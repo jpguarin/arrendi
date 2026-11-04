@@ -97,7 +97,8 @@ Estas reglas se implementan en `apps/api/app/services/` y cada una tiene su prue
 - **Copias del contrato:** el contrato puede tener hasta 3 correos más (`cc_emails`), como un codeudor. Reciben en copia visible (CC) todos los correos del arrendatario: cuenta, reenvío, recordatorios y recibo. La notificación sigue siendo del arrendatario. Se leen al enviar: un cambio en la lista vale para los envíos siguientes.
 - El propietario puede activar o desactivar cada recordatorio automático y recibir copia de cada correo.
 - Cada envío crea una fila en `notifications`.
-- Los correos automáticos (`bill`, `reminder_1`, `reminder_2`) salen una sola vez por cuenta. Los manuales y los reenvíos no tienen ese límite.
+- Los correos automáticos (`bill`, `reminder_1`, `reminder_2`) salen una sola vez por cuenta. Los manuales y los reenvíos no tienen ese límite, pero sí el siguiente.
+- **Límite de correos por día:** lo que pide el propietario (enviar, reenviar, recordar y el recibo de un pago) se rechaza con 429 `email_limit_reached` si la cuenta ya lleva 3 correos hoy o el propietario ya lleva 20. Cuentan `bill`, `resend`, `manual_reminder` y `receipt`, aunque el correo haya fallado; una `bill` de la tarea diaria también cuenta, porque en la tabla no se distingue de una enviada a mano. La tarea diaria nunca se detiene por este límite. "Hoy" es el día en Colombia. Un pago con recibo que supera el límite no se registra: se puede registrar sin recibo.
 - Si el proveedor avisa de un rebote, la notificación queda `bounced` y el inicio lo muestra.
 - El correo se envía después de confirmar la transacción.
 - **A mano no se envía solo:** la cuenta que el propietario genera a mano (la mensual desde el contrato o una manual) queda sin enviar hasta que él la envía, aunque el contrato tenga envío automático.
