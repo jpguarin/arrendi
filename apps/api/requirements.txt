@@ -5,5 +5,7 @@ pydantic-settings==2.15.0
 pyjwt[crypto]==2.15.1
 sqlalchemy==2.1.4
 reportlab==5.0.1
-pillow==12.3.0
+pillow==13.0.0
 jinja2==3.1.6
+# Not used directly: pinned because older versions trust compromised root certificates.
+certifi==2026.10.23
