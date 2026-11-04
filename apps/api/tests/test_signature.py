@@ -11,6 +11,7 @@ from sqlalchemy import Engine, text
 
 from app.dates import today_in_bogota
 from app.main import app
+from app.services import signature as signature_service
 from tests.conftest import FakeStorage, MakeToken, Tree, bearer
 
 MB = 1024 * 1024
@@ -492,3 +493,17 @@ def test_every_route_requires_a_token(api: TestClient, method: str, path: str) -
     response = getattr(api, method)(path)
 
     assert response.status_code == 401
+
+
+def test_only_the_accepted_formats_are_ever_parsed(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Pillow reads a file with whichever of its plugins claims it, unless it is told which."""
+    opened_with = []
+    real_open = Image.open
+
+    def spy(*args, **kwargs):
+        opened_with.append(kwargs.get("formats"))
+        return real_open(*args, **kwargs)
+
+    monkeypatch.setattr(Image, "open", spy)
+    assert signature_service.normalize(PNG)
+    assert opened_with == [signature_service.FORMATS]
