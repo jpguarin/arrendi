@@ -96,10 +96,9 @@ def _ink(image: Image.Image) -> Image.Image:
 def normalize(raw: bytes) -> bytes:
     """The signature as it is stored: its ink on nothing, cut to it, no larger than `BOX`."""
     try:
-        with Image.open(BytesIO(raw)) as opened:
+        # Only these parsers ever see the file: Pillow would otherwise try all it has.
+        with Image.open(BytesIO(raw), formats=FORMATS) as opened:
             # Read from the header, before any pixel is decoded.
-            if opened.format not in FORMATS:
-                raise InvalidImage
             if opened.width * opened.height > MAX_PIXELS[opened.format]:
                 raise InvalidImage
             # A JPG can come out of the decoder already smaller, at a fraction of the memory.
